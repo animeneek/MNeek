@@ -16,8 +16,8 @@ fetch('slider.html')
     .then(data => {
         document.getElementById('slider-container').innerHTML = data;
         loadTrending('week'); // Load trending for the week by default
-        document.getElementById('switch-today').addEventListener('click', () => loadTrending('day'));
-        document.getElementById('switch-week').addEventListener('click', () => loadTrending('week'));
+        document.getElementById('today').addEventListener('change', () => loadTrending('day'));
+        document.getElementById('this-week').addEventListener('change', () => loadTrending('week'));
     });
 
 document.getElementById('home-button').addEventListener('click', function() {
