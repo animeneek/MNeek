@@ -24,8 +24,9 @@ body::after {
 }
 
 header {
-    position: absolute;
+    position: fixed;
     top: 0;
+    left: 0;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -45,12 +46,12 @@ header img {
     position: relative;
     z-index: 2;
     text-align: center;
-    margin-top: 150px;
+    margin-top: 100px; /* Adjusted based on header height */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    height: calc(100vh - 100px); /* Adjusted based on header height */
     width: 100%;
 }
 
@@ -84,9 +85,19 @@ header img {
 }
 
 @media (max-width: 768px) {
+    body {
+        background-size: cover;
+    }
+
     header {
+        padding: 10px;
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
+    }
+
+    .container {
+        margin-top: 80px; /* Adjusted based on mobile header height */
+        height: calc(100vh - 80px); /* Adjusted based on mobile header height */
     }
 
     #search-bar {
