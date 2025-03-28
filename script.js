@@ -15,7 +15,7 @@ fetch('slider.html')
     .then(response => response.text())
     .then(data => {
         document.getElementById('slider-container').innerHTML = data;
-        loadTrending('week'); // Load trending for the week by default
+        loadTrending('day'); // Load trending for today by default
         document.getElementById('today').addEventListener('change', () => loadTrending('day'));
         document.getElementById('this-week').addEventListener('change', () => loadTrending('week'));
     });
