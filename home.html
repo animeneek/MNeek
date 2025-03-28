@@ -3,15 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - Movie Neek</title>
     <link rel="stylesheet" href="styles.css">
+    <title>Home</title>
 </head>
 <body>
-    <div id="header-container"></div>
-    <div id="menu-container"></div>
+    <header id="header-container"></header>
+    <nav id="menu-container"></nav>
     <div class="container">
-        <h1>Welcome to Movie Neek!</h1>
-        <p>Start exploring movies now.</p>
+        <input type="text" id="search-bar" placeholder="Search...">
+        <div class="trending-slider-container">
+            <div class="trending-switch">
+                <button id="today-button" class="active">Today</button>
+                <button id="week-button">This Week</button>
+            </div>
+            <div class="trending-slider" id="trending-slider">
+                <!-- Slider content will be injected here -->
+            </div>
+        </div>
+        <button id="home-button">Go to Home</button>
     </div>
     <script src="script.js"></script>
 </body>
