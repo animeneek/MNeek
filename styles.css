@@ -228,20 +228,81 @@ header img {
     overflow: hidden;
     position: relative;
     z-index: 2;
+    padding: 20px; /* Add padding around the slider */
+    box-sizing: border-box;
+}
+
+.slider-heading {
+    font-family: 'Tektur', sans-serif;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.slider-switch {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.slider-switch button {
+    font-family: 'Tektur', sans-serif;
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 5px;
+    cursor: pointer;
+    border-radius: 25px;
+    transition: background-color 0.3s ease;
+}
+
+.slider-switch button:hover {
+    background-color: #e03e3e;
 }
 
 .slider {
     display: flex;
-    transition: transform 0.5s ease-in-out;
+    overflow-x: auto;
+    scroll-behavior: smooth;
 }
 
 .slider-item {
     min-width: 200px;
     margin: 0 10px;
+    position: relative;
+    text-align: center;
 }
 
 .slider-item img {
     width: 100%;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.slider-title {
+    font-family: 'Tektur', sans-serif;
+    margin-top: 5px;
+    font-size: 18px;
+}
+
+.slider-release-date {
+    font-size: 14px;
+    color: #ccc;
+}
+
+.rating-circle {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: conic-gradient(#ff4444 0%, #444 0%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Tektur', sans-serif;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
 }
