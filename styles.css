@@ -68,20 +68,63 @@ header img {
     outline: none;
 }
 
-#home-button {
-    width: 80%;
-    max-width: 500px;
-    padding: 15px;
-    font-size: 18px;
-    border-radius: 25px;
-    background-color: #ff4444;
+.floating-btn {
+    display: block;
+    font-family: 'Oswald', sans-serif;
+    max-width: 200px;
+    background: #6F8AB7;
+    position: relative;
+    z-index: 1;
+    padding: 20px 40px;
     color: white;
-    border: none;
-    cursor: pointer;
+    margin: auto;
+    box-shadow: 0 2px 0 #615D6C;
+    text-decoration: none;
+    border-radius: 5px;
+    animation: bounce 2s ease-in-out forwards;
+    animation-iteration-count: infinite;
 }
 
-#home-button:hover {
-    background-color: #cc0000;
+.shadow {
+    display: block;
+    width: 20%;
+    height: 0px;
+    position: absolute;
+    bottom: -30px;
+    left: 0;
+    right: 0;
+    margin: auto;
+    background: #6F8AB7;
+    border-radius: 50%;
+    animation: bounce-shadow 2s ease-in-out forwards;
+    animation-iteration-count: infinite;
+}
+
+@keyframes bounce {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(20px);
+    }
+}
+
+@keyframes bounce-shadow {
+    0% {
+        width: 1%;
+        height: 2px;
+        opacity: 0.1;
+    }
+    50% {
+        width: 90%;
+        height: 6px;
+        opacity: 0.3;
+    }
+    100% {
+        width: 1%;
+        height: 0px;
+        opacity: 0;
+    }
 }
 
 @media (max-width: 768px) {
@@ -105,7 +148,8 @@ header img {
         font-size: 16px;
     }
 
-    #home-button {
+    .floating-btn, #home-button {
         font-size: 16px;
+        padding: 15px 30px;
     }
 }
