@@ -71,17 +71,16 @@ header img {
 .floating-btn {
     display: block;
     font-family: 'Oswald', sans-serif;
-    max-width: 200px;
-    background: #6F8AB7;
+    max-width: 100%; /* Adjusted to 100% */
+    background: #ff4444; /* Updated to original color */
     position: relative;
     z-index: 1;
     padding: 20px 40px;
     color: white;
-    margin: auto;
     box-shadow: 0 2px 0 #615D6C;
     text-decoration: none;
     border-radius: 5px;
-    animation: bounce 2s ease-in-out forwards;
+    animation: bounce 5s ease-in-out forwards; /* Adjusted animation timing */
     animation-iteration-count: infinite;
 }
 
@@ -94,9 +93,9 @@ header img {
     left: 0;
     right: 0;
     margin: auto;
-    background: #6F8AB7;
+    background: #ff4444; /* Updated to original color */
     border-radius: 50%;
-    animation: bounce-shadow 2s ease-in-out forwards;
+    animation: bounce-shadow 5s ease-in-out forwards; /* Adjusted animation timing */
     animation-iteration-count: infinite;
 }
 
