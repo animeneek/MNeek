@@ -1,11 +1,14 @@
 <div class="slider-container">
     <div class="slider-header">
         <h2 class="slider-heading">Trending Now</h2>
-        <div class="slider-switch">
-            <input type="radio" id="switch-today" name="time-window" checked>
-            <label for="switch-today">Today</label>
-            <input type="radio" id="switch-week" name="time-window">
-            <label for="switch-week">This Week</label>
+        <div class="toggle-container">
+            <input type="radio" id="today" name="toggle" checked>
+            <label for="today" class="toggle-label">Today</label>
+
+            <input type="radio" id="this-week" name="toggle">
+            <label for="this-week" class="toggle-label">This Week</label>
+
+            <div class="toggle-slider"></div>
         </div>
     </div>
     <div class="slider" id="trending-slider">
