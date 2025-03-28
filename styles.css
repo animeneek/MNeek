@@ -224,12 +224,13 @@ header img {
 
 /* Slider styles */
 .slider-container {
-    width: 80%;
-    margin: 0 auto;
+    width: 90%;
+    max-width: 1200px;
+    margin: 70px auto;
     overflow: hidden;
     position: relative;
     z-index: 2;
-    padding: 20px; /* Add padding around the slider */
+    padding: 20px;
     box-sizing: border-box;
     background: rgba(0, 0, 0, 0.7); /* Lightbox style background */
     border-radius: 15px;
@@ -237,36 +238,52 @@ header img {
 
 .slider-heading {
     font-family: 'Tektur', sans-serif;
-    text-align: center;
+    text-align: left;
     margin-bottom: 10px;
+    display: inline-block;
 }
 
 .slider-switch {
-    display: flex;
-    justify-content: center;
+    display: inline-block;
+    float: right;
     margin-bottom: 10px;
 }
 
-.slider-switch button {
+.slider-switch input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider-switch label {
     font-family: 'Tektur', sans-serif;
     background-color: #ff4444;
     color: white;
-    border: none;
     padding: 10px 20px;
-    margin: 0 5px;
     cursor: pointer;
     border-radius: 25px;
     transition: background-color 0.3s ease;
 }
 
-.slider-switch button:hover {
+.slider-switch input[type="radio"]:checked + label {
     background-color: #e03e3e;
 }
 
 .slider {
     display: flex;
-    overflow-x: auto;
+    overflow: hidden;
     scroll-behavior: smooth;
+}
+
+.slider::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+.slider::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
 }
 
 .slider-item {
@@ -295,8 +312,8 @@ header img {
 
 .rating-circle {
     position: absolute;
-    bottom: 165px;
-    left: 15px;
+    bottom: 115px;
+    left: 10px;
     width: 45px;
     height: 45px;
     border-radius: 50%;
