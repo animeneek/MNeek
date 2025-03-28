@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Neucha&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Tektur&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'); /* Font Awesome for icons */
 
 body {
     margin: 0;
@@ -75,6 +76,11 @@ header img {
     text-shadow: 0 0 10px #ff4444;
 }
 
+.menu-icon {
+    display: none; /* Hide icons by default */
+    margin-right: 5px;
+}
+
 .container {
     position: relative;
     z-index: 2;
@@ -141,10 +147,20 @@ header img {
     }
 
     .menu-items {
-        flex-direction: column; /* Stack menu items vertically */
+        flex-direction: row; /* Keep menu items in one line */
+        justify-content: space-around; /* Space out menu items */
         width: 100%;
-        text-align: center;
         padding: 10px 0;
+    }
+
+    .menu-icon {
+        display: inline-block; /* Show icons on mobile */
+    }
+
+    .menu-items li a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .container {
@@ -161,4 +177,29 @@ header img {
         padding: 15px 30px;
         white-space: normal; /* Allow text to wrap in narrow screens */
     }
+}
+
+/* Icons */
+#icon-home::before {
+    content: "\f015"; /* Font Awesome home icon */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+}
+
+#icon-movies::before {
+    content: "\f008"; /* Font Awesome film icon */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+}
+
+#icon-tvseries::before {
+    content: "\f26c"; /* Font Awesome television icon */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+}
+
+#icon-livetv::before {
+    content: "\f1e6"; /* Font Awesome broadcast-tower icon */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
 }
