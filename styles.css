@@ -241,9 +241,10 @@ header img {
 
 .slider-header {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr auto;
     width: 100%;
     align-items: center;
+    justify-content: space-between;
 }
 
 .slider-heading {
@@ -256,12 +257,13 @@ header img {
     display: flex;
     position: relative;
     width: 200px; /* Adjust width */
-    height: 50px;
+    height: 40px;
     background: #444;
     border-radius: 25px;
     align-items: center;
     padding: 5px;
     box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+    justify-self: end;
 }
 
 .toggle-container input {
@@ -285,7 +287,7 @@ header img {
     top: 5px;
     left: 5px;
     width: 90px;
-    height: 40px;
+    height: 30px;
     background: #ff4444;
     border-radius: 20px;
     transition: 0.3s;
