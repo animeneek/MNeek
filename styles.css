@@ -86,10 +86,11 @@ header img {
     white-space: nowrap; /* Ensure text stays in single line */
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
 }
 
 #home-button:hover {
-    background-color: #cc0000; /* Darker shade on hover */
+    background-color: #e03e3e; /* Slightly darker shade on hover */
 }
 
 @media (max-width: 768px) {
