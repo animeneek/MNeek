@@ -15,37 +15,57 @@ fetch('slider.html')
     .then(response => response.text())
     .then(data => {
         document.getElementById('slider-container').innerHTML = data;
-        loadTrendingMovies(); // Load trending movies after slider is added
+        loadTrendingMovies('week'); // Load trending for the week by default
+        document.getElementById('switch-today').addEventListener('click', () => loadTrendingMovies('day'));
+        document.getElementById('switch-week').addEventListener('click', () => loadTrendingMovies('week'));
     });
 
 document.getElementById('home-button').addEventListener('click', function() {
     window.location.href = 'home.html';
 });
 
-// Function to load trending movies from TMDB
-function loadTrendingMovies() {
+// Function to load trending movies and TV series from TMDB
+function loadTrendingMovies(time_window) {
     const apiKey = 'e3afd4c89e3351edad9e875ff7a01f0c';
-    const url = `https://api.themoviedb.org/3/trending/movie/week?api_key=${apiKey}`;
+    const url = `https://api.themoviedb.org/3/trending/all/${time_window}?api_key=${apiKey}`;
 
     fetch(url)
         .then(response => response.json())
         .then(data => {
             const slider = document.getElementById('trending-slider');
-            data.results.forEach(movie => {
-                const movieDiv = document.createElement('div');
-                movieDiv.classList.add('slider-item');
+            slider.innerHTML = ''; // Clear previous content
+            data.results.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('slider-item');
 
                 const img = document.createElement('img');
-                img.src = `https://image.tmdb.org/t/p/w500/${movie.poster_path}`;
-                img.alt = movie.title;
+                img.src = `https://image.tmdb.org/t/p/w500/${item.poster_path}`;
+                img.alt = item.title || item.name;
 
-                movieDiv.appendChild(img);
-                slider.appendChild(movieDiv);
+                const title = document.createElement('h3');
+                title.textContent = item.title || item.name;
+                title.classList.add('slider-title');
+
+                const releaseDate = document.createElement('p');
+                releaseDate.textContent = item.release_date || item.first_air_date;
+                releaseDate.classList.add('slider-release-date');
+
+                const rating = document.createElement('div');
+                rating.classList.add('rating-circle');
+                const ratingValue = Math.round(item.vote_average * 10);
+                rating.innerHTML = `<span>${ratingValue}%</span>`;
+                rating.style.background = `conic-gradient(#ff4444 ${ratingValue}%, #444 ${ratingValue}%)`;
+
+                itemDiv.appendChild(img);
+                itemDiv.appendChild(title);
+                itemDiv.appendChild(rating);
+                itemDiv.appendChild(releaseDate);
+                slider.appendChild(itemDiv);
             });
 
-            initializeSlider(); // Initialize the slider after movies are added
+            initializeSlider(); // Initialize the slider after items are added
         })
-        .catch(error => console.error('Error fetching trending movies:', error));
+        .catch(error => console.error('Error fetching trending data:', error));
 }
 
 // Function to initialize the slider (requires external library or custom implementation)
