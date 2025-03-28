@@ -53,10 +53,8 @@ function loadTrending(time_window) {
                 const rating = document.createElement('div');
                 rating.classList.add('rating-circle');
                 const ratingValue = Math.round(item.vote_average * 10);
-                rating.innerHTML = `<span>${ratingValue}%</span>`;
-                const innerCircle = document.createElement('div');
-                innerCircle.classList.add('inner-circle');
-                rating.appendChild(innerCircle);
+                rating.innerHTML = `<span class="rating-text">${ratingValue}%</span>`;
+                rating.style.background = `conic-gradient(#ff4444 ${ratingValue}%, #444 ${ratingValue}%)`;
 
                 itemDiv.appendChild(img);
                 itemDiv.appendChild(title);
