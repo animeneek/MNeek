@@ -45,6 +45,41 @@ header img {
     max-width: 150px;
 }
 
+.menu {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    background-color: #000;
+    padding: 10px 0;
+}
+
+.menu-items {
+    list-style-type: none;
+    display: flex;
+    gap: 20px;
+}
+
+.menu-items li a {
+    color: white;
+    text-decoration: none;
+    font-family: 'Neucha', cursive;
+}
+
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    margin-left: auto;
+    padding: 10px;
+}
+
+.menu-toggle span {
+    height: 3px;
+    width: 25px;
+    background-color: white;
+    margin: 4px;
+}
+
 .container {
     position: relative;
     z-index: 2;
@@ -106,9 +141,26 @@ header img {
         background: rgba(0, 0, 0, 0.5); /* Ensure this is applied in mobile */
     }
 
+    .menu-items {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        text-align: center;
+        padding: 10px 0;
+        background-color: #000;
+    }
+
+    .menu-toggle {
+        display: flex;
+    }
+
+    .menu.open .menu-items {
+        display: flex;
+    }
+
     .container {
-        margin-top: 80px; /* Adjusted based on mobile header height */
-        height: calc(100vh - 80px); /* Adjusted based on mobile header height */
+        margin-top: 140px; /* Adjusted based on mobile header and menu height */
+        height: calc(100vh - 140px); /* Adjusted based on mobile header and menu height */
     }
 
     #search-bar {
