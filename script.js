@@ -15,9 +15,9 @@ fetch('slider.html')
     .then(response => response.text())
     .then(data => {
         document.getElementById('slider-container').innerHTML = data;
-        loadTrendingMovies('week'); // Load trending for the week by default
-        document.getElementById('switch-today').addEventListener('click', () => loadTrendingMovies('day'));
-        document.getElementById('switch-week').addEventListener('click', () => loadTrendingMovies('week'));
+        loadTrending('week'); // Load trending for the week by default
+        document.getElementById('switch-today').addEventListener('click', () => loadTrending('day'));
+        document.getElementById('switch-week').addEventListener('click', () => loadTrending('week'));
     });
 
 document.getElementById('home-button').addEventListener('click', function() {
@@ -25,7 +25,7 @@ document.getElementById('home-button').addEventListener('click', function() {
 });
 
 // Function to load trending movies and TV series from TMDB
-function loadTrendingMovies(time_window) {
+function loadTrending(time_window) {
     const apiKey = 'e3afd4c89e3351edad9e875ff7a01f0c';
     const url = `https://api.themoviedb.org/3/trending/all/${time_window}?api_key=${apiKey}`;
 
@@ -47,7 +47,7 @@ function loadTrendingMovies(time_window) {
                 title.classList.add('slider-title');
 
                 const releaseDate = document.createElement('p');
-                releaseDate.textContent = item.release_date || item.first_air_date;
+                releaseDate.textContent = new Date(item.release_date || item.first_air_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                 releaseDate.classList.add('slider-release-date');
 
                 const rating = document.createElement('div');
