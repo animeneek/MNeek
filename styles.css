@@ -9,6 +9,7 @@ body {
     align-items: center;
     color: white;
     backdrop-filter: blur(10px);
+    overflow: hidden;
 }
 
 body::after {
@@ -29,15 +30,15 @@ header {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 10px;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     background: rgba(0, 0, 0, 0.5);
     z-index: 2;
 }
 
-.logo {
-    max-width: 200px;
+header img {
+    max-width: 150px;
 }
 
 .container {
@@ -45,21 +46,17 @@ header {
     z-index: 2;
     text-align: center;
     margin-top: 150px;
-}
-
-.bluroverlay {
-    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    border-radius: 14px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    padding: 20px;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
 }
 
 #search-bar {
-    width: 100%;
+    width: 80%;
+    max-width: 500px;
     padding: 15px;
     font-size: 18px;
     margin-bottom: 20px;
@@ -71,16 +68,32 @@ header {
 }
 
 #home-button {
-    width: 100%;
+    width: 80%;
+    max-width: 500px;
     padding: 15px;
     font-size: 18px;
     border-radius: 25px;
-    background-color: rgba(0, 123, 255, 0.8);
+    background-color: #ff4444;
     color: white;
     border: none;
     cursor: pointer;
 }
 
 #home-button:hover {
-    background-color: rgba(0, 123, 255, 1);
+    background-color: #cc0000;
+}
+
+@media (max-width: 768px) {
+    header {
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+
+    #search-bar {
+        font-size: 16px;
+    }
+
+    #home-button {
+        font-size: 16px;
+    }
 }
