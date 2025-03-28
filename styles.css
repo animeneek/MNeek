@@ -75,37 +75,6 @@ header img {
     text-shadow: 0 0 10px #ff4444;
 }
 
-.menu-toggle {
-    display: none;
-    flex-direction: column;
-    cursor: pointer;
-    padding: 10px;
-    position: absolute;
-    right: 10px; /* Move the menu toggle to the right */
-}
-
-.menu-toggle span {
-    height: 3px;
-    width: 25px;
-    background-color: white;
-    margin: 4px;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.menu.open .menu-toggle span:nth-child(1) {
-    transform: rotate(45deg);
-    transform-origin: 5px 5px;
-}
-
-.menu.open .menu-toggle span:nth-child(2) {
-    opacity: 0;
-}
-
-.menu.open .menu-toggle span:nth-child(3) {
-    transform: rotate(-45deg);
-    transform-origin: 5px 5px;
-}
-
 .container {
     position: relative;
     z-index: 2;
@@ -167,26 +136,20 @@ header img {
         background: rgba(0, 0, 0, 0.5); /* Ensure this is applied in mobile */
     }
 
+    .menu {
+        top: 50px; /* Adjust based on header height */
+    }
+
     .menu-items {
-        display: none;
-        flex-direction: column;
+        flex-direction: column; /* Stack menu items vertically */
         width: 100%;
         text-align: center;
         padding: 10px 0;
     }
 
-    .menu-toggle {
-        display: flex;
-        right: 10px; /* Move the menu toggle to the right */
-    }
-
-    .menu.open .menu-items {
-        display: flex;
-    }
-
     .container {
-        margin-top: 35px; /* Adjusted based on mobile header and menu height */
-        height: calc(100vh - 35px); /* Adjusted based on mobile header and menu height */
+        margin-top: 85px; /* Adjusted based on mobile header and menu height */
+        height: calc(100vh - 85px); /* Adjusted based on mobile header and menu height */
     }
 
     #search-bar {
