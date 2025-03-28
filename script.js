@@ -54,7 +54,9 @@ function loadTrending(time_window) {
                 rating.classList.add('rating-circle');
                 const ratingValue = Math.round(item.vote_average * 10);
                 rating.innerHTML = `<span>${ratingValue}%</span>`;
-                rating.style.background = `conic-gradient(#ff4444 ${ratingValue}%, #444 ${ratingValue}%)`;
+                const innerCircle = document.createElement('div');
+                innerCircle.classList.add('inner-circle');
+                rating.appendChild(innerCircle);
 
                 itemDiv.appendChild(img);
                 itemDiv.appendChild(title);
