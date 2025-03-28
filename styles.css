@@ -252,31 +252,55 @@ header img {
     margin-bottom: 10px;
 }
 
-.slider-switch {
-    text-align: right;
-    margin-bottom: 10px;
-}
-
-.slider-switch input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider-switch label {
-    font-family: 'Tektur', sans-serif;
-    background-color: #ff4444;
-    color: white;
-    padding: 10px 20px;
-    cursor: pointer;
+.toggle-container {
+    display: flex;
+    position: relative;
+    width: 200px; /* Adjust width */
+    height: 50px;
+    background: #444;
     border-radius: 25px;
-    transition: background-color 0.3s ease;
-    margin-left: 10px;
+    align-items: center;
+    padding: 5px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.slider-switch input[type="radio"]:checked + label {
-    background-color: #e03e3e;
+.toggle-container input {
+    display: none;
+}
+
+.toggle-label {
+    flex: 1;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    z-index: 2;
+    cursor: pointer;
+    padding: 12px 0;
+    transition: color 0.3s;
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 90px;
+    height: 40px;
+    background: #ff4444;
+    border-radius: 20px;
+    transition: 0.3s;
+}
+
+#this-week:checked ~ .toggle-slider {
+    left: calc(100% - 95px);
+}
+
+#today:checked + label {
+    color: black;
+}
+
+#this-week:checked + label {
+    color: black;
 }
 
 .slider {
@@ -351,69 +375,4 @@ header img {
     border-radius: 50%;
     top: 5px; /* Adjusting top position to fit within the rating-circle */
     left: 5px; /* Adjusting left position to fit within the rating-circle */
-}
-
-/* Custom toggle switch */
-.can-toggle {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-input[type="checkbox"] {
-  opacity: 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
-
-label {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
-
-.can-toggle__switch {
-  position: relative;
-  width: 100px; /* Adjust width as needed */
-  height: 36px;
-  background: #777;
-  border-radius: 18px;
-  transition: background-color 0.3s ease;
-}
-
-input[type="checkbox"]:checked ~ label .can-toggle__switch {
-  background: #5fc054;
-}
-
-.can-toggle__switch:before,
-.can-toggle__switch:after {
-  content: attr(data-unchecked);
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 50%;
-  text-align: center;
-  transition: transform 0.3s ease;
-}
-
-.can-toggle__switch:before {
-  left: 0;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.can-toggle__switch:after {
-  right: 0;
-  color: white;
-}
-
-input[type="checkbox"]:checked ~ label .can-toggle__switch:before {
-  transform: translate3d(-100%, -50%, 0);
-}
-
-input[type="checkbox"]:checked ~ label .can-toggle__switch:after {
-  transform: translate3d(100%, -50%, 0);
 }
