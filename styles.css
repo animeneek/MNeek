@@ -79,8 +79,9 @@ header img {
     display: none;
     flex-direction: column;
     cursor: pointer;
-    margin-left: auto;
     padding: 10px;
+    position: absolute;
+    right: 10px; /* Move the menu toggle to the right */
 }
 
 .menu-toggle span {
@@ -92,7 +93,8 @@ header img {
 }
 
 .menu.open .menu-toggle span:nth-child(1) {
-    transform: translateY(7px) rotate(45deg);
+    transform: rotate(45deg);
+    transform-origin: 5px 5px;
 }
 
 .menu.open .menu-toggle span:nth-child(2) {
@@ -100,19 +102,20 @@ header img {
 }
 
 .menu.open .menu-toggle span:nth-child(3) {
-    transform: translateY(-7px) rotate(-45deg);
+    transform: rotate(-45deg);
+    transform-origin: 5px 5px;
 }
 
 .container {
     position: relative;
     z-index: 2;
     text-align: center;
-    margin-top: 140px; /* Adjusted based on header and menu height */
+    margin-top: 35px; /* Adjusted based on header and menu height */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: calc(100vh - 140px); /* Adjusted based on header and menu height */
+    height: calc(100vh - 35px); /* Adjusted based on header and menu height */
     width: 100%;
 }
 
@@ -174,7 +177,7 @@ header img {
 
     .menu-toggle {
         display: flex;
-        margin-right: 10px; /* Move the menu toggle to the right */
+        right: 10px; /* Move the menu toggle to the right */
     }
 
     .menu.open .menu-items {
@@ -182,8 +185,8 @@ header img {
     }
 
     .container {
-        margin-top: 160px; /* Adjusted based on mobile header and menu height */
-        height: calc(100vh - 160px); /* Adjusted based on mobile header and menu height */
+        margin-top: 35px; /* Adjusted based on mobile header and menu height */
+        height: calc(100vh - 35px); /* Adjusted based on mobile header and menu height */
     }
 
     #search-bar {
