@@ -78,7 +78,7 @@ header img {
 
 .menu-icon {
     margin-right: 5px;
-    font-size: 1.5em;
+    font-size: 1.2em; /* Reduced icon size */
 }
 
 .menu-text {
@@ -197,7 +197,7 @@ header img {
 }
 
 #icon-livetv::before {
-    content: "\f1e6"; /* Font Awesome broadcast-tower icon */
+    content: "\f7c0"; /* Font Awesome satellite dish icon */
     font-family: "Font Awesome 5 Free";
     font-weight: 900;
 }
