@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Salaar&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Batman&display=swap');
 
 body {
     margin: 0;
@@ -75,7 +75,7 @@ header img {
     max-width: 500px;
     padding: 15px;
     font-size: 18px;
-    font-family: 'Salaar', sans-serif; /* Using Salaar movie title font */
+    font-family: 'Batman', sans-serif; /* Using Batman font */
     border-radius: 25px;
     background-color: #ff4444; /* Original color */
     color: white;
@@ -83,6 +83,9 @@ header img {
     cursor: pointer;
     text-align: center;
     text-decoration: none;
+    white-space: nowrap; /* Ensure text stays in single line */
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 #home-button:hover {
@@ -113,5 +116,6 @@ header img {
     #home-button {
         font-size: 16px;
         padding: 15px 30px;
+        white-space: normal; /* Allow text to wrap in narrow screens */
     }
 }
