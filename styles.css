@@ -195,6 +195,14 @@ header img {
         padding: 15px 30px;
         white-space: normal; /* Allow text to wrap in narrow screens */
     }
+    .slider-container {
+        width: 95%;
+        padding: 10px;
+    }
+
+    .slider-item {
+        max-width: 180px; /* Reduce size on smaller screens */
+    }
 }
 
 /* Icons */
@@ -224,19 +232,11 @@ header img {
 
 /* Slider styles */
 .slider-container {
-    width: 100%;
+    width: 90%; /* Instead of 100% to allow padding on smaller screens */
     max-width: 1200px;
     margin: 70px auto;
-    overflow: hidden;
-    position: relative;
-    z-index: 2;
     padding: 20px;
     box-sizing: border-box;
-    background: rgba(0, 0, 0, 0.7); /* Lightbox style background */
-    border-radius: 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
 .slider-header {
@@ -309,7 +309,10 @@ header img {
     display: flex;
     overflow-x: auto;
     scroll-behavior: smooth;
+    gap: 10px; /* Prevent items from sticking together */
     width: 100%;
+    max-width: 100%;
+    flex-wrap: nowrap; /* Ensure horizontal scrolling */
 }
 
 .slider::-webkit-scrollbar {
@@ -323,10 +326,9 @@ header img {
 }
 
 .slider-item {
-    min-width: 200px;
-    margin: 0 10px;
-    position: relative;
-    text-align: center;
+    flex: 0 0 auto; /* Prevent items from shrinking */
+    width: 100%; /* Make it flexible */
+    max-width: 250px; /* Limit max size on larger screens */
 }
 
 .slider-item img {
