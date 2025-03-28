@@ -58,8 +58,11 @@ header img {
 .menu-items {
     list-style-type: none;
     display: flex;
+    justify-content: center; /* Center the menu items */
     gap: 20px;
     font-family: 'Tektur', sans-serif; /* Using Tektur font */
+    margin: 0; /* Ensure no extra margin */
+    padding: 0; /* Ensure no extra padding */
 }
 
 .menu-items li a {
