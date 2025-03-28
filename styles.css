@@ -239,18 +239,22 @@ header img {
     align-items: center;
 }
 
+.slider-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    align-items: center;
+}
+
 .slider-heading {
     font-family: 'Tektur', sans-serif;
     text-align: left;
     margin-bottom: 10px;
-    display: inline-block;
 }
 
 .slider-switch {
-    display: inline-block;
-    float: right;
+    text-align: right;
     margin-bottom: 10px;
-    margin-left: auto;
 }
 
 .slider-switch input[type="radio"] {
@@ -268,6 +272,7 @@ header img {
     cursor: pointer;
     border-radius: 25px;
     transition: background-color 0.3s ease;
+    margin-left: 10px;
 }
 
 .slider-switch input[type="radio"]:checked + label {
