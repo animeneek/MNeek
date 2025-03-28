@@ -77,8 +77,12 @@ header img {
 }
 
 .menu-icon {
-    display: none; /* Hide icons by default */
     margin-right: 5px;
+    font-size: 1.5em;
+}
+
+.menu-text {
+    display: inline; /* Show text by default */
 }
 
 .container {
@@ -142,10 +146,6 @@ header img {
         background: rgba(0, 0, 0, 0.5); /* Ensure this is applied in mobile */
     }
 
-    .menu {
-        top: 50px; /* Adjust based on header height */
-    }
-
     .menu-items {
         flex-direction: row; /* Keep menu items in one line */
         justify-content: space-around; /* Space out menu items */
@@ -153,14 +153,12 @@ header img {
         padding: 10px 0;
     }
 
-    .menu-icon {
-        display: inline-block; /* Show icons on mobile */
+    .menu-text {
+        display: none; /* Hide text on mobile */
     }
 
-    .menu-items li a {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .menu-icon {
+        display: block; /* Show icons on mobile */
     }
 
     .container {
