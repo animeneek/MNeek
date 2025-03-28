@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Salaar&display=swap');
+
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -68,62 +70,23 @@ header img {
     outline: none;
 }
 
-.floating-btn {
-    display: block;
-    font-family: 'Oswald', sans-serif;
-    max-width: 100%; /* Adjusted to 100% */
-    background: #ff4444; /* Updated to original color */
-    position: relative;
-    z-index: 1;
-    padding: 20px 40px;
+#home-button {
+    width: 80%;
+    max-width: 500px;
+    padding: 15px;
+    font-size: 18px;
+    font-family: 'Salaar', sans-serif; /* Using Salaar movie title font */
+    border-radius: 25px;
+    background-color: #ff4444; /* Original color */
     color: white;
-    box-shadow: 0 2px 0 #615D6C;
+    border: none;
+    cursor: pointer;
+    text-align: center;
     text-decoration: none;
-    border-radius: 5px;
-    animation: bounce 5s ease-in-out forwards; /* Adjusted animation timing */
-    animation-iteration-count: infinite;
 }
 
-.shadow {
-    display: block;
-    width: 20%;
-    height: 0px;
-    position: absolute;
-    bottom: -30px;
-    left: 0;
-    right: 0;
-    margin: auto;
-    background: #ff4444; /* Updated to original color */
-    border-radius: 50%;
-    animation: bounce-shadow 5s ease-in-out forwards; /* Adjusted animation timing */
-    animation-iteration-count: infinite;
-}
-
-@keyframes bounce {
-    0% {
-        transform: translateY(0px);
-    }
-    50% {
-        transform: translateY(20px);
-    }
-}
-
-@keyframes bounce-shadow {
-    0% {
-        width: 1%;
-        height: 2px;
-        opacity: 0.1;
-    }
-    50% {
-        width: 90%;
-        height: 6px;
-        opacity: 0.3;
-    }
-    100% {
-        width: 1%;
-        height: 0px;
-        opacity: 0;
-    }
+#home-button:hover {
+    background-color: #cc0000; /* Darker shade on hover */
 }
 
 @media (max-width: 768px) {
@@ -147,7 +110,7 @@ header img {
         font-size: 16px;
     }
 
-    .floating-btn, #home-button {
+    #home-button {
         font-size: 16px;
         padding: 15px 30px;
     }
