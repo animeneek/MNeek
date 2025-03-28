@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Batman&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tektur&display=swap');
 
 body {
     margin: 0;
@@ -75,7 +75,7 @@ header img {
     max-width: 500px;
     padding: 15px;
     font-size: 18px;
-    font-family: 'Batman', sans-serif; /* Using Batman font */
+    font-family: 'Tektur', sans-serif; /* Using Batman font */
     border-radius: 25px;
     background-color: #ff4444; /* Original color */
     color: white;
