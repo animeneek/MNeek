@@ -13,7 +13,7 @@ body {
     align-items: center;
     color: white;
     backdrop-filter: blur(10px);
-    overflow-y: scroll; /* Enable vertical scrolling */
+    overflow: hidden;
 }
 
 body::after {
@@ -114,7 +114,7 @@ header img {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: auto; /* Adjusted to allow content to dictate height */
+    height: calc(100vh - 35px); /* Adjusted based on header and menu height */
     width: 100%;
 }
 
@@ -183,15 +183,15 @@ header img {
 
     .container {
         margin-top: 85px; /* Adjusted based on mobile header and menu height */
-        height: auto; /* Adjusted to allow content to dictate height */
+        height: calc(100vh - 85px); /* Adjusted based on mobile header and menu height */
     }
 
     #search-bar {
-        font-size: 14px; /* Reduced font size on mobile */
+        font-size: 16px;
     }
 
     #home-button {
-        font-size: 14px; /* Reduced font size on mobile */
+        font-size: 16px;
         padding: 15px 30px;
         white-space: normal; /* Allow text to wrap in narrow screens */
     }
@@ -250,7 +250,6 @@ header img {
     font-family: 'Tektur', sans-serif;
     text-align: left;
     margin-bottom: 10px;
-    font-size: 24px; /* Smaller font size for the heading */
 }
 
 .toggle-container {
