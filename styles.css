@@ -184,8 +184,10 @@ header img {
 
 @media (max-width: 768px) {
     body {
+        background: url('assets/BG_001.jpg') no-repeat center center;
         background-size: cover;
         font-size: 12px; /* Reduced text size on mobile */
+        background-attachment: scroll; /* Fixes issues on mobile */
     }
 
     header {
