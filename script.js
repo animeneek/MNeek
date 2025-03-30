@@ -72,6 +72,11 @@ function loadTrending(time_window) {
                 itemDiv.appendChild(rating);
                 itemDiv.appendChild(releaseDate);
                 slider.appendChild(itemDiv);
+
+                // Add click event to navigate to the movie detail page
+                itemDiv.addEventListener('click', function() {
+                    window.location.href = `movie.html?id=${item.id}`;
+                });
             });
 
             initializeSlider(); // Initialize the slider after items are added
@@ -120,11 +125,57 @@ function loadWhatsNew() {
                 itemDiv.appendChild(rating);
                 itemDiv.appendChild(releaseDate);
                 slider.appendChild(itemDiv);
+
+                // Add click event to navigate to the movie detail page
+                itemDiv.addEventListener('click', function() {
+                    window.location.href = `movie.html?id=${item.id}`;
+                });
             });
 
             initializeSlider(); // Initialize the slider after items are added
         })
         .catch(error => console.error('Error fetching new data:', error));
+}
+
+// Function to load movie details from TMDB
+function loadMovieDetails(movieId) {
+    const apiKey = 'e3afd4c89e3351edad9e875ff7a01f0c';
+    const url = `https://api.themoviedb.org/3/movie/${movieId}?api_key=${apiKey}&append_to_response=credits,reviews`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('movie-poster').src = `https://image.tmdb.org/t/p/w500/${data.poster_path}`;
+            document.getElementById('movie-title').textContent = data.title;
+            document.getElementById('movie-rating').textContent = `Rating: ${data.vote_average}`;
+            document.getElementById('movie-synopsis').textContent = data.overview;
+
+            const castList = document.getElementById('movie-cast-list');
+            castList.innerHTML = '';
+            data.credits.cast.forEach(member => {
+                const listItem = document.createElement('li');
+                listItem.textContent = member.name + ' as ' + member.character;
+                castList.appendChild(listItem);
+            });
+
+            const reviewsList = document.getElementById('movie-reviews-list');
+            reviewsList.innerHTML = '';
+            data.reviews.results.forEach(review => {
+                const listItem = document.createElement('li');
+                listItem.textContent = review.author + ': ' + review.content;
+                reviewsList.appendChild(listItem);
+            });
+        })
+        .catch(error => console.error('Error fetching movie details:', error));
+}
+
+// Example of how to call loadMovieDetails when navigating to the movie page
+// Assuming the movie ID is passed as a query parameter in the URL
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const movieId = urlParams.get('id');
+if (movieId) {
+    loadMovieDetails(movieId);
 }
 
 // Function to initialize the slider (requires external library or custom implementation)
