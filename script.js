@@ -153,7 +153,6 @@ function loadMovieDetails(movieId) {
             document.getElementById('original-title').textContent = data.original_title;
             document.getElementById('genre').textContent = data.genres.map(genre => genre.name).join(', ');
             document.getElementById('movie-synopsis').textContent = data.overview;
-            document.getElementById('original-name').textContent = data.original_title;
             document.getElementById('status').textContent = data.status;
             document.getElementById('original-language').textContent = data.original_language;
 
@@ -200,7 +199,6 @@ function loadSeriesDetails(seriesId) {
             document.getElementById('original-title').textContent = data.original_name;
             document.getElementById('genre').textContent = data.genres.map(genre => genre.name).join(', ');
             document.getElementById('movie-synopsis').textContent = data.overview;
-            document.getElementById('original-name').textContent = data.original_name;
             document.getElementById('status').textContent = data.status;
             document.getElementById('original-language').textContent = data.original_language;
 
