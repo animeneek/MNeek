@@ -10,7 +10,7 @@ html, body {
 
 body {
     font-family: 'Neucha', cursive; /* Using Neucha font */
-    background: url('assets/BG_001.jpg') no-repeat center center;
+    background: url('assets/BG_001.jpg') no-repeat center center fixed;
     background-size: cover;
     min-height: 100vh; /* Ensure minimum height covers full viewport height */
     display: flex;
@@ -184,7 +184,7 @@ header img {
 
 @media (max-width: 768px) {
     body {
-        background: url('assets/BG_001.jpg') no-repeat center center;
+        background: url('assets/BG_002.jpg') no-repeat center center fixed; /* Use BG_002.jpg for mobile */
         background-size: cover;
         font-size: 12px; /* Reduced text size on mobile */
         background-attachment: scroll; /* Fixes issues on mobile */
