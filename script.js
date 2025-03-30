@@ -235,14 +235,14 @@ function loadSeriesDetails(seriesId) {
 // Check if we are on a movie or series detail page and load the appropriate details
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
-const movieId = urlParams.get('id');
+const mediaId = urlParams.get('id');
 const pageType = window.location.pathname.includes('movie.html') ? 'movie' : 'series';
 
-if (movieId) {
+if (mediaId) {
     if (pageType === 'movie') {
-        loadMovieDetails(movieId);
+        loadMovieDetails(mediaId);
     } else {
-        loadSeriesDetails(movieId);
+        loadSeriesDetails(mediaId);
     }
 }
 
