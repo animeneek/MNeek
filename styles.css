@@ -17,7 +17,7 @@ body {
     flex-direction: column;
     align-items: center;
     color: white;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px) no-repeat center center fixed;
     overflow-y: auto; /* Allow vertical scrolling */
     overflow-x: hidden; /* Disable horizontal scrolling */
     font-size: 14px; /* Reduced text size */
@@ -416,7 +416,7 @@ header img {
     position: relative;
     z-index: 1;
     padding: 40px 20px;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px) no-repeat center center fixed;
 }
 
 .movie-detail-container {
