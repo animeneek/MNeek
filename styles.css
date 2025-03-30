@@ -6,7 +6,6 @@ body {
     margin: 0;
     font-family: 'Neucha', cursive; /* Using Neucha font */
     background: url('assets/BG_001.jpg') no-repeat center center fixed;
-    background-size: cover;
     min-height: 100vh; /* Ensure minimum height covers full viewport height */
     display: flex;
     flex-direction: column;
@@ -15,6 +14,7 @@ body {
     backdrop-filter: blur(10px);
     overflow-y: auto; /* Allow vertical scrolling */
     overflow-x: hidden; /* Disable horizontal scrolling */
+    font-size: 14px; /* Reduced text size */
 }
 
 /* Custom vertical scrollbar */
@@ -130,12 +130,12 @@ header img {
     position: relative;
     z-index: 2;
     text-align: center;
-    margin-top: 35px; /* Adjusted based on header and menu height */
+    margin-top: 20px; /* Reduced gap between sliders */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: calc(100vh - 35px); /* Adjusted based on header and menu height */
+    height: calc(100vh - 20px); /* Adjusted based on header and menu height */
     width: 100%;
 }
 
@@ -143,7 +143,7 @@ header img {
     width: 80%;
     max-width: 500px;
     padding: 15px;
-    font-size: 18px;
+    font-size: 16px; /* Reduced text size */
     margin-bottom: 20px;
     border: 2px solid white;
     border-radius: 25px;
@@ -156,7 +156,7 @@ header img {
     width: 80%;
     max-width: 500px;
     padding: 15px;
-    font-size: 18px;
+    font-size: 16px; /* Reduced text size */
     font-family: 'Tektur', sans-serif; /* Using Tektur font for button */
     border-radius: 25px;
     background-color: #ff4444; /* Original color */
@@ -178,6 +178,7 @@ header img {
 @media (max-width: 768px) {
     body {
         background-size: cover;
+        font-size: 12px; /* Reduced text size on mobile */
     }
 
     header {
@@ -208,11 +209,11 @@ header img {
     }
 
     #search-bar {
-        font-size: 16px;
+        font-size: 14px; /* Reduced text size on mobile */
     }
 
     #home-button {
-        font-size: 16px;
+        font-size: 14px; /* Reduced text size on mobile */
         padding: 15px 30px;
         white-space: normal; /* Allow text to wrap in narrow screens */
     }
@@ -246,7 +247,7 @@ header img {
 /* Slider styles */
 .slider-container {
     width: 95vw;
-    margin: 70px auto;
+    margin: 20px auto; /* Reduced gap between sliders */
     overflow: hidden;
     position: relative;
     z-index: 2;
@@ -271,6 +272,7 @@ header img {
     font-family: 'Tektur', sans-serif;
     text-align: left;
     margin-bottom: 10px;
+    font-size: 16px; /* Reduced text size */
 }
 
 .toggle-container {
@@ -293,7 +295,7 @@ header img {
 .toggle-label {
     flex: 1;
     text-align: center;
-    font-size: 16px;
+    font-size: 14px; /* Reduced text size */
     font-weight: bold;
     color: white;
     z-index: 2;
@@ -358,7 +360,7 @@ header img {
 .slider-title {
     font-family: 'Tektur', sans-serif;
     margin-top: 5px;
-    font-size: 18px;
+    font-size: 16px; /* Reduced text size */
 }
 
 .slider-release-date {
