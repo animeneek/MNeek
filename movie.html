@@ -9,21 +9,31 @@
 <body>
     <div id="header-container"></div>
     <div id="menu-container"></div>
-    <div class="movie-detail-container">
-        <div class="movie-poster">
-            <img id="movie-poster" src="" alt="Movie Poster">
-        </div>
-        <div class="movie-info">
-            <h1 id="movie-title">Movie Title</h1>
-            <div class="movie-rating" id="movie-rating">Rating: N/A</div>
-            <p id="movie-synopsis">Movie synopsis goes here...</p>
-            <div class="movie-cast">
-                <h2>Cast</h2>
-                <ul id="movie-cast-list"></ul>
+    <div class="movie-detail-bg">
+        <div class="movie-detail-container">
+            <div class="movie-poster">
+                <img id="movie-poster" src="" alt="Movie Poster">
             </div>
-            <div class="movie-reviews">
-                <h2>Reviews</h2>
-                <ul id="movie-reviews-list"></ul>
+            <div class="movie-info">
+                <h1 id="movie-title">Movie Title (2025)</h1>
+                <div class="movie-details">
+                    <span id="certificate" class="certificate">PG-13</span>
+                    <span id="original-title">Original Title</span>
+                </div>
+                <div id="genre">Genre</div>
+                <p id="movie-synopsis">Movie synopsis goes here...</p>
+                <div class="movie-meta">
+                    <p><strong>Original Name:</strong> <span id="original-name">Original Name</span></p>
+                    <p><strong>Status:</strong> <span id="status">Released</span></p>
+                    <p><strong>Original Language:</strong> <span id="original-language">English</span></p>
+                </div>
+                <div class="source-buttons">
+                    <button id="watch-button">Watch Now</button>
+                </div>
+                <div class="recommendations">
+                    <h2>Recommendations</h2>
+                    <div id="recommendation-list"></div>
+                </div>
             </div>
         </div>
     </div>
