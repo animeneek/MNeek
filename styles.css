@@ -409,12 +409,25 @@ header img {
     left: 5px; /* Adjusting left position to fit within the rating-circle */
 }
 
+.movie-detail-bg {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    z-index: 1;
+    padding: 40px 20px;
+    backdrop-filter: blur(10px);
+}
+
 .movie-detail-container {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-direction: row;
+    align-items: flex-start;
     padding: 20px;
     color: white;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 15px;
 }
 
 .movie-poster img {
@@ -424,30 +437,64 @@ header img {
 }
 
 .movie-info {
-    max-width: 800px;
-    text-align: center;
-    margin-top: 20px;
+    margin-left: 20px;
+    max-width: 600px;
 }
 
 .movie-info h1 {
+    font-family: 'Tektur', sans-serif;
     font-size: 2em;
     margin-bottom: 10px;
 }
 
-.movie-rating {
-    font-size: 1.2em;
-    margin-bottom: 20px;
+.movie-details {
+    display: flex;
+    align-items: center;
 }
 
-.movie-cast, .movie-reviews {
+.certificate {
+    border: 1px solid white;
+    padding: 2px 6px;
+    margin-right: 10px;
+}
+
+.movie-meta {
     margin-top: 20px;
 }
 
-.movie-cast ul, .movie-reviews ul {
-    list-style: none;
-    padding: 0;
+.source-buttons {
+    margin-top: 20px;
 }
 
-.movie-cast li, .movie-reviews li {
-    margin-bottom: 10px;
+#watch-button {
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#watch-button:hover {
+    background-color: #e03e3e;
+}
+
+.recommendations {
+    margin-top: 40px;
+}
+
+.recommendations h2 {
+    font-family: 'Tektur', sans-serif;
+    margin-bottom: 20px;
+}
+
+#recommendation-list {
+    display: flex;
+    overflow-x: auto;
+}
+
+#recommendation-list .slider-item {
+    min-width: 150px;
+    margin-right: 10px;
 }
