@@ -13,9 +13,7 @@ body {
     align-items: center;
     color: white;
     backdrop-filter: blur(10px);
-    overflow: auto; /* Allows scrolling */
-    scrollbar-width: thin; /* Makes scrollbar thinner (for Firefox) */
-    scrollbar-color: rgba(255, 255, 255, 0.5) transparent; /* Custom scrollbar */
+    overflow: hidden;
 }
 
 body::after {
@@ -27,20 +25,6 @@ body::after {
     height: 100%;
     background: linear-gradient(transparent, black);
     z-index: 1;
-}
-
-/* Custom scrollbar for Webkit browsers (Chrome, Edge, Safari) */
-body::-webkit-scrollbar {
-    width: 5px;
-}
-
-body::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.5);
-    border-radius: 10px;
-}
-
-body::-webkit-scrollbar-track {
-    background: transparent; /* Makes track invisible */
 }
 
 header {
