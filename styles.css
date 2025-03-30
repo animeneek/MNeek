@@ -2,10 +2,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Tektur&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'); /* Font Awesome for icons */
 
-body {
+html, body {
     margin: 0;
+    padding: 0;
+    height: 100%; /* Ensure the body and html elements take up full height */
+}
+
+body {
     font-family: 'Neucha', cursive; /* Using Neucha font */
     background: url('assets/BG_001.jpg') no-repeat center center fixed;
+    background-size: cover;
     min-height: 100vh; /* Ensure minimum height covers full viewport height */
     display: flex;
     flex-direction: column;
