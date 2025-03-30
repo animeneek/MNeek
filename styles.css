@@ -12,7 +12,7 @@ body {
     font-family: 'Neucha', cursive; /* Using Neucha font */
     background: url('assets/BG_001.jpg') no-repeat center center fixed;
     background-size: cover;
-    min-height: 100vh; /* Ensure minimum height covers full viewport height */
+    height: 100vh; /* Ensure the body takes up full viewport height */
     display: flex;
     flex-direction: column;
     align-items: center;
