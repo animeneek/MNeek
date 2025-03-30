@@ -17,7 +17,7 @@ body {
     flex-direction: column;
     align-items: center;
     color: white;
-    backdrop-filter: blur(10px) no-repeat center center fixed;
+    backdrop-filter: blur(10px);
     overflow-y: auto; /* Allow vertical scrolling */
     overflow-x: hidden; /* Disable horizontal scrolling */
     font-size: 14px; /* Reduced text size */
@@ -407,4 +407,47 @@ header img {
     border-radius: 50%;
     top: 5px; /* Adjusting top position to fit within the rating-circle */
     left: 5px; /* Adjusting left position to fit within the rating-circle */
+}
+
+.movie-detail-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    color: white;
+}
+
+.movie-poster img {
+    max-width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.movie-info {
+    max-width: 800px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.movie-info h1 {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.movie-rating {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+.movie-cast, .movie-reviews {
+    margin-top: 20px;
+}
+
+.movie-cast ul, .movie-reviews ul {
+    list-style: none;
+    padding: 0;
+}
+
+.movie-cast li, .movie-reviews li {
+    margin-bottom: 10px;
 }
