@@ -73,9 +73,10 @@ function loadTrending(time_window) {
                 itemDiv.appendChild(releaseDate);
                 slider.appendChild(itemDiv);
 
-                // Add click event to navigate to the movie detail page
+                // Add click event to navigate to the movie or series detail page
                 itemDiv.addEventListener('click', function() {
-                    window.location.href = `movie.html?id=${item.id}`;
+                    const mediaType = item.media_type === 'movie' ? 'movie' : 'series';
+                    window.location.href = `${mediaType}.html?id=${item.id}`;
                 });
             });
 
@@ -146,36 +147,103 @@ function loadMovieDetails(movieId) {
         .then(response => response.json())
         .then(data => {
             document.getElementById('movie-poster').src = `https://image.tmdb.org/t/p/w500/${data.poster_path}`;
-            document.getElementById('movie-title').textContent = data.title;
-            document.getElementById('movie-rating').textContent = `Rating: ${data.vote_average}`;
+            document.querySelector('.movie-detail-bg').style.backgroundImage = `url(https://image.tmdb.org/t/p/w1280/${data.backdrop_path})`;
+            document.getElementById('movie-title').textContent = `${data.title} (${new Date(data.release_date).getFullYear()})`;
+            document.getElementById('certificate').textContent = data.certification || 'N/A';
+            document.getElementById('original-title').textContent = data.original_title;
+            document.getElementById('genre').textContent = data.genres.map(genre => genre.name).join(', ');
             document.getElementById('movie-synopsis').textContent = data.overview;
+            document.getElementById('original-name').textContent = data.original_title;
+            document.getElementById('status').textContent = data.status;
+            document.getElementById('original-language').textContent = data.original_language;
 
-            const castList = document.getElementById('movie-cast-list');
-            castList.innerHTML = '';
-            data.credits.cast.forEach(member => {
-                const listItem = document.createElement('li');
-                listItem.textContent = member.name + ' as ' + member.character;
-                castList.appendChild(listItem);
-            });
+            const recommendationsUrl = `https://api.themoviedb.org/3/movie/${movieId}/recommendations?api_key=${apiKey}`;
+            fetch(recommendationsUrl)
+                .then(response => response.json())
+                .then(recommendationsData => {
+                    const recommendationList = document.getElementById('recommendation-list');
+                    recommendationList.innerHTML = ''; // Clear previous content
+                    recommendationsData.results.forEach(recommendation => {
+                        const recommendationItem = document.createElement('div');
+                        recommendationItem.classList.add('slider-item');
 
-            const reviewsList = document.getElementById('movie-reviews-list');
-            reviewsList.innerHTML = '';
-            data.reviews.results.forEach(review => {
-                const listItem = document.createElement('li');
-                listItem.textContent = review.author + ': ' + review.content;
-                reviewsList.appendChild(listItem);
-            });
+                        const recommendationImg = document.createElement('img');
+                        recommendationImg.src = `https://image.tmdb.org/t/p/w500/${recommendation.poster_path}`;
+                        recommendationImg.alt = recommendation.title || recommendation.name;
+
+                        const recommendationTitle = document.createElement('h3');
+                        recommendationTitle.textContent = recommendation.title || recommendation.name;
+                        recommendationTitle.classList.add('slider-title');
+
+                        recommendationItem.appendChild(recommendationImg);
+                        recommendationItem.appendChild(recommendationTitle);
+                        recommendationList.appendChild(recommendationItem);
+                    });
+                })
+                .catch(error => console.error('Error fetching recommendations:', error));
         })
         .catch(error => console.error('Error fetching movie details:', error));
 }
 
-// Example of how to call loadMovieDetails when navigating to the movie page
-// Assuming the movie ID is passed as a query parameter in the URL
+// Function to load series details from TMDB
+function loadSeriesDetails(seriesId) {
+    const apiKey = 'e3afd4c89e3351edad9e875ff7a01f0c';
+    const url = `https://api.themoviedb.org/3/tv/${seriesId}?api_key=${apiKey}&append_to_response=credits,reviews`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('movie-poster').src = `https://image.tmdb.org/t/p/w500/${data.poster_path}`;
+            document.querySelector('.movie-detail-bg').style.backgroundImage = `url(https://image.tmdb.org/t/p/w1280/${data.backdrop_path})`;
+            document.getElementById('movie-title').textContent = `${data.name} (${new Date(data.first_air_date).getFullYear()})`;
+            document.getElementById('certificate').textContent = data.certification || 'N/A';
+            document.getElementById('original-title').textContent = data.original_name;
+            document.getElementById('genre').textContent = data.genres.map(genre => genre.name).join(', ');
+            document.getElementById('movie-synopsis').textContent = data.overview;
+            document.getElementById('original-name').textContent = data.original_name;
+            document.getElementById('status').textContent = data.status;
+            document.getElementById('original-language').textContent = data.original_language;
+
+            const recommendationsUrl = `https://api.themoviedb.org/3/tv/${seriesId}/recommendations?api_key=${apiKey}`;
+            fetch(recommendationsUrl)
+                .then(response => response.json())
+                .then(recommendationsData => {
+                    const recommendationList = document.getElementById('recommendation-list');
+                    recommendationList.innerHTML = ''; // Clear previous content
+                    recommendationsData.results.forEach(recommendation => {
+                        const recommendationItem = document.createElement('div');
+                        recommendationItem.classList.add('slider-item');
+
+                        const recommendationImg = document.createElement('img');
+                        recommendationImg.src = `https://image.tmdb.org/t/p/w500/${recommendation.poster_path}`;
+                        recommendationImg.alt = recommendation.name || recommendation.title;
+
+                        const recommendationTitle = document.createElement('h3');
+                        recommendationTitle.textContent = recommendation.name || recommendation.title;
+                        recommendationTitle.classList.add('slider-title');
+
+                        recommendationItem.appendChild(recommendationImg);
+                        recommendationItem.appendChild(recommendationTitle);
+                        recommendationList.appendChild(recommendationItem);
+                    });
+                })
+                .catch(error => console.error('Error fetching recommendations:', error));
+        })
+        .catch(error => console.error('Error fetching series details:', error));
+}
+
+// Check if we are on a movie or series detail page and load the appropriate details
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 const movieId = urlParams.get('id');
+const pageType = window.location.pathname.includes('movie.html') ? 'movie' : 'series';
+
 if (movieId) {
-    loadMovieDetails(movieId);
+    if (pageType === 'movie') {
+        loadMovieDetails(movieId);
+    } else {
+        loadSeriesDetails(movieId);
+    }
 }
 
 // Function to initialize the slider (requires external library or custom implementation)
