@@ -428,6 +428,8 @@ header img {
     z-index: 2;
     background: rgba(0, 0, 0, 0.7);
     border-radius: 15px;
+    max-width: 1200px;
+    width: 100%;
 }
 
 .movie-poster img {
@@ -466,7 +468,7 @@ header img {
     margin-top: 20px;
 }
 
-#watch-button {
+#source1-button, #source2-button {
     background-color: #ff4444;
     color: white;
     border: none;
@@ -474,9 +476,10 @@ header img {
     border-radius: 25px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    margin-right: 10px;
 }
 
-#watch-button:hover {
+#source1-button:hover, #source2-button:hover {
     background-color: #e03e3e;
 }
 
