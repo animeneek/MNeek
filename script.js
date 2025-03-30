@@ -24,9 +24,7 @@ fetch('whatsnew-slider.html')
     .then(response => response.text())
     .then(data => {
         document.getElementById('whatsnew-slider-container').innerHTML = data;
-        loadWhatsNew('movie'); // Load new movies by default
-        document.getElementById('new-movies').addEventListener('change', () => loadWhatsNew('movie'));
-        document.getElementById('new-series').addEventListener('change', () => loadWhatsNew('tv'));
+        loadWhatsNew(); // Load new movies by default
     });
 
 document.getElementById('home-button').addEventListener('click', function() {
@@ -81,10 +79,10 @@ function loadTrending(time_window) {
         .catch(error => console.error('Error fetching trending data:', error));
 }
 
-// Function to load new movies and TV series from TMDB
-function loadWhatsNew(type) {
+// Function to load new movies from TMDB
+function loadWhatsNew() {
     const apiKey = 'e3afd4c89e3351edad9e875ff7a01f0c';
-    const url = `https://api.themoviedb.org/3/${type}/now_playing?api_key=${apiKey}&region=US`;
+    const url = `https://api.themoviedb.org/3/movie/now_playing?api_key=${apiKey}&region=US`;
 
     fetch(url)
         .then(response => response.json())
