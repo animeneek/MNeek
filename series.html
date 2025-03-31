@@ -24,17 +24,18 @@
                 <p id="series-synopsis">Series synopsis goes here...</p>
                 <div class="movie-meta">
                     <p><strong>Status:</strong> <span id="status">Released</span></p>
+                    <p><strong>Release Date:</strong> <span id="release-date">2025-01-01</span></p>
                     <p><strong>Original Language:</strong> <span id="original-language">English</span></p>
                 </div>
-                <div class="source-buttons">
-                    <button id="source1-button">Source 1</button>
-                    <button id="source2-button">Source 2</button>
-                </div>
-                <div class="recommendations">
-                    <h2>Recommendations</h2>
-                    <div id="recommendation-list"></div>
-                </div>
             </div>
+        </div>
+        <div class="source-buttons">
+            <button id="source1-button">Source 1</button>
+            <button id="source2-button">Source 2</button>
+        </div>
+        <div class="recommendations">
+            <h2>Recommendations</h2>
+            <div id="recommendation-list"></div>
         </div>
     </div>
     <script>
@@ -54,10 +55,20 @@
                     document.getElementById('genre').textContent = data.genres.map(genre => genre.name).join(', ');
                     document.getElementById('series-synopsis').textContent = data.overview;
                     document.getElementById('status').textContent = data.status;
-                    document.getElementById('original-language').textContent = data.original_language;
+                    document.getElementById('release-date').textContent = new Date(data.first_air_date).toLocaleDateString();
+                    document.getElementById('original-language').textContent = getFullLanguageName(data.original_language);
                 })
                 .catch(error => console.error('Error fetching series details:', error));
         });
+
+        function getFullLanguageName(code) {
+            const languageMap = {
+                "en": "English",
+                "ja": "Japanese",
+                // Add other language codes and their full names as needed
+            };
+            return languageMap[code] || code;
+        }
     </script>
 </body>
 </html>
