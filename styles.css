@@ -6,6 +6,7 @@ html, body {
     margin: 0;
     padding: 0;
     height: 100%; /* Ensure the body and html elements take up full height */
+    overflow-x: hidden; /* Disable horizontal scrolling */
 }
 
 body {
@@ -21,6 +22,7 @@ body {
     overflow-y: auto; /* Allow vertical scrolling */
     overflow-x: hidden; /* Disable horizontal scrolling */
     font-size: 14px; /* Reduced text size */
+    max-width: 100vw; /* Prevent horizontal scrolling */
 }
 
 /* Custom vertical scrollbar */
@@ -434,13 +436,14 @@ header img {
 
 .movie-poster img {
     max-width: 100%;
+    max-height: 50vw;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
 }
 
 .movie-info {
     margin-left: 20px;
-    max-width: 600px;
+    max-width: 50vw;
 }
 
 .movie-info h1 {
@@ -466,6 +469,9 @@ header img {
 
 .source-buttons {
     margin-top: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
 }
 
 #source1-button, #source2-button {
@@ -485,6 +491,10 @@ header img {
 
 .recommendations {
     margin-top: 40px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .recommendations h2 {
@@ -500,4 +510,33 @@ header img {
 #recommendation-list .slider-item {
     min-width: 150px;
     margin-right: 10px;
+}
+
+#cast-container {
+    margin-top: 20px;
+}
+
+#cast-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.cast-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 100px;
+}
+
+.cast-item img {
+    max-width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.cast-item p {
+    font-size: 12px;
+    text-align: center;
+    margin-top: 5px;
 }
