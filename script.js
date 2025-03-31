@@ -72,6 +72,12 @@ function loadTrending(time_window) {
                 itemDiv.appendChild(rating);
                 itemDiv.appendChild(releaseDate);
                 slider.appendChild(itemDiv);
+
+                // Add click event to navigate to the movie or series detail page
+                itemDiv.addEventListener('click', function() {
+                    const mediaType = item.media_type === 'movie' ? 'movie' : 'series';
+                    window.location.href = `${mediaType}.html?id=${item.id}`;
+                });
             });
 
             initializeSlider(); // Initialize the slider after items are added
@@ -120,6 +126,11 @@ function loadWhatsNew() {
                 itemDiv.appendChild(rating);
                 itemDiv.appendChild(releaseDate);
                 slider.appendChild(itemDiv);
+
+                // Add click event to navigate to the movie or series detail page
+                itemDiv.addEventListener('click', function() {
+                    window.location.href = `movie.html?id=${item.id}`;
+                });
             });
 
             initializeSlider(); // Initialize the slider after items are added
