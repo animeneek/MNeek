@@ -153,7 +153,7 @@ function loadMovieDetails(movieId) {
 
             document.getElementById('movie-poster').src = data.poster_path 
                 ? `https://image.tmdb.org/t/p/w500/${data.poster_path}` 
-                : 'placeholder-image.jpg';
+                : 'placeholder-image.jpg'; // Use a placeholder if no poster
 
             document.querySelector('.movie-detail-bg').style.backgroundImage = data.backdrop_path 
                 ? `url(https://image.tmdb.org/t/p/w1280/${data.backdrop_path})` 
@@ -176,58 +176,15 @@ function loadMovieDetails(movieId) {
             }
             document.getElementById('certificate').textContent = certification;
 
-            loadRecommendations(movieId, 'movie');
+            loadRecommendations(movieId);
         })
         .catch(error => console.error('Error fetching movie details:', error));
 }
 
-// Function to load series details from TMDB
-function loadSeriesDetails(seriesId) {
+// Function to load recommendations
+function loadRecommendations(movieId) {
     const apiKey = 'e3afd4c89e3351edad9e875ff7a01f0c';
-    const url = `https://api.themoviedb.org/3/tv/${seriesId}?api_key=${apiKey}&append_to_response=content_ratings`;
-
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (!data || data.success === false) {
-                console.error('Series data not found:', data);
-                return;
-            }
-
-            document.getElementById('movie-poster').src = data.poster_path 
-                ? `https://image.tmdb.org/t/p/w500/${data.poster_path}` 
-                : 'placeholder-image.jpg';
-
-            document.querySelector('.movie-detail-bg').style.backgroundImage = data.backdrop_path 
-                ? `url(https://image.tmdb.org/t/p/w1280/${data.backdrop_path})` 
-                : 'none';
-
-            document.getElementById('movie-title').textContent = `${data.name} (${new Date(data.first_air_date).getFullYear()})`;
-            document.getElementById('original-title').textContent = `Original Title: ${data.original_name || 'N/A'}`;
-            document.getElementById('genre').textContent = data.genres.map(genre => genre.name).join(', ') || 'N/A';
-            document.getElementById('movie-synopsis').textContent = data.overview || 'No synopsis available.';
-            document.getElementById('status').textContent = data.status || 'N/A';
-            document.getElementById('original-language').textContent = data.original_language.toUpperCase() || 'N/A';
-
-            // Get content rating (TV rating)
-            let certification = 'N/A';
-            if (data.content_ratings && data.content_ratings.results) {
-                let usRating = data.content_ratings.results.find(r => r.iso_3166_1 === 'US');
-                if (usRating) {
-                    certification = usRating.rating || 'N/A';
-                }
-            }
-            document.getElementById('certificate').textContent = certification;
-
-            loadRecommendations(seriesId, 'tv');
-        })
-        .catch(error => console.error('Error fetching series details:', error));
-}
-
-// Function to load recommendations for movies or series
-function loadRecommendations(mediaId, type) {
-    const apiKey = 'e3afd4c89e3351edad9e875ff7a01f0c';
-    const url = `https://api.themoviedb.org/3/${type}/${mediaId}/recommendations?api_key=${apiKey}`;
+    const url = `https://api.themoviedb.org/3/movie/${movieId}/recommendations?api_key=${apiKey}`;
 
     fetch(url)
         .then(response => response.json())
@@ -248,10 +205,10 @@ function loadRecommendations(mediaId, type) {
                 recommendationImg.src = recommendation.poster_path 
                     ? `https://image.tmdb.org/t/p/w500/${recommendation.poster_path}` 
                     : 'placeholder-image.jpg';
-                recommendationImg.alt = recommendation.name || recommendation.title;
+                recommendationImg.alt = recommendation.title || recommendation.name;
 
                 const recommendationTitle = document.createElement('h3');
-                recommendationTitle.textContent = recommendation.name || recommendation.title;
+                recommendationTitle.textContent = recommendation.title || recommendation.name;
                 recommendationTitle.classList.add('slider-title');
 
                 recommendationItem.appendChild(recommendationImg);
@@ -259,11 +216,57 @@ function loadRecommendations(mediaId, type) {
                 recommendationList.appendChild(recommendationItem);
 
                 recommendationItem.addEventListener('click', function () {
-                    window.location.href = `${type}.html?id=${recommendation.id}`;
+                    window.location.href = `movie.html?id=${recommendation.id}`;
                 });
             });
         })
         .catch(error => console.error('Error fetching recommendations:', error));
+}
+
+// Function to load series details from TMDB
+function loadSeriesDetails(seriesId) {
+    const apiKey = 'e3afd4c89e3351edad9e875ff7a01f0c';
+    const url = `https://api.themoviedb.org/3/tv/${seriesId}?api_key=${apiKey}&append_to_response=credits,reviews`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('movie-poster').src = `https://image.tmdb.org/t/p/w500/${data.poster_path}`;
+            document.querySelector('.movie-detail-bg').style.backgroundImage = `url(https://image.tmdb.org/t/p/w1280/${data.backdrop_path})`;
+            document.getElementById('movie-title').textContent = `${data.name} (${new Date(data.first_air_date).getFullYear()})`;
+            document.getElementById('certificate').textContent = data.certification || 'N/A';
+            document.getElementById('original-title').textContent = `Original Title: ${data.original_name}`;
+            document.getElementById('genre').textContent = data.genres.map(genre => genre.name).join(', ');
+            document.getElementById('movie-synopsis').textContent = data.overview;
+            document.getElementById('status').textContent = data.status;
+            document.getElementById('original-language').textContent = data.original_language;
+
+            const recommendationsUrl = `https://api.themoviedb.org/3/tv/${seriesId}/recommendations?api_key=${apiKey}`;
+            fetch(recommendationsUrl)
+                .then(response => response.json())
+                .then(recommendationsData => {
+                    const recommendationList = document.getElementById('recommendation-list');
+                    recommendationList.innerHTML = ''; // Clear previous content
+                    recommendationsData.results.forEach(recommendation => {
+                        const recommendationItem = document.createElement('div');
+                        recommendationItem.classList.add('slider-item');
+
+                        const recommendationImg = document.createElement('img');
+                        recommendationImg.src = `https://image.tmdb.org/t/p/w500/${recommendation.poster_path}`;
+                        recommendationImg.alt = recommendation.name || recommendation.title;
+
+                        const recommendationTitle = document.createElement('h3');
+                        recommendationTitle.textContent = recommendation.name || recommendation.title;
+                        recommendationTitle.classList.add('slider-title');
+
+                        recommendationItem.appendChild(recommendationImg);
+                        recommendationItem.appendChild(recommendationTitle);
+                        recommendationList.appendChild(recommendationItem);
+                    });
+                })
+                .catch(error => console.error('Error fetching recommendations:', error));
+        })
+        .catch(error => console.error('Error fetching series details:', error));
 }
 
 // Check if we are on a movie or series detail page and load the appropriate details
