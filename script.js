@@ -150,7 +150,7 @@ function loadMovieDetails(movieId) {
             document.querySelector('.movie-detail-bg').style.backgroundImage = `url(https://image.tmdb.org/t/p/w1280/${data.backdrop_path})`;
             document.getElementById('movie-title').textContent = `${data.title} (${new Date(data.release_date).getFullYear()})`;
             document.getElementById('certificate').textContent = data.certification || 'N/A';
-            document.getElementById('original-title').textContent = data.original_title;
+            document.getElementById('original-title').textContent = `Original Title: ${data.original_title}`;
             document.getElementById('genre').textContent = data.genres.map(genre => genre.name).join(', ');
             document.getElementById('movie-synopsis').textContent = data.overview;
             document.getElementById('status').textContent = data.status;
@@ -196,7 +196,7 @@ function loadSeriesDetails(seriesId) {
             document.querySelector('.movie-detail-bg').style.backgroundImage = `url(https://image.tmdb.org/t/p/w1280/${data.backdrop_path})`;
             document.getElementById('movie-title').textContent = `${data.name} (${new Date(data.first_air_date).getFullYear()})`;
             document.getElementById('certificate').textContent = data.certification || 'N/A';
-            document.getElementById('original-title').textContent = data.original_name;
+            document.getElementById('original-title').textContent = `Original Title: ${data.original_name}`;
             document.getElementById('genre').textContent = data.genres.map(genre => genre.name).join(', ');
             document.getElementById('movie-synopsis').textContent = data.overview;
             document.getElementById('status').textContent = data.status;
