@@ -54,7 +54,7 @@ function loadTrending(time_window) {
                 title.classList.add('slider-title');
 
                 const releaseDate = document.createElement('p');
-                releaseDate.textContent = new Date(item.release_date || item.first_air_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                releaseDate.textContent = new Date(item.release_date || item.first_air_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
                 releaseDate.classList.add('slider-release-date');
 
                 const rating = document.createElement('div');
@@ -108,7 +108,7 @@ function loadWhatsNew() {
                 title.classList.add('slider-title');
 
                 const releaseDate = document.createElement('p');
-                releaseDate.textContent = new Date(item.release_date || item.first_air_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                releaseDate.textContent = new Date(item.release_date || item.first_air_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
                 releaseDate.classList.add('slider-release-date');
 
                 const rating = document.createElement('div');
