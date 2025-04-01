@@ -58,7 +58,7 @@ body::after {
 }
 
 header {
-    width: 100%;
+    width: 100vw;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -80,7 +80,7 @@ header img {
     align-items: center;
     padding: 10px 0;
     position: relative; /* Use relative positioning */
-    top: 60px; /* Adjust based on header height */
+    top: 10px; /* Adjust based on header height */
     z-index: 3;
 }
 
@@ -264,7 +264,7 @@ header img {
     display: flex;
     flex-direction: column;
     align-items: center;
-    top: 60px; /* Added top positioning */
+    top: 0px; /* Added top positioning */
 }
 
 .slider-header {
@@ -416,6 +416,7 @@ header img {
     z-index: 1;
     padding: 40px 20px;
     backdrop-filter: blur(10px) no-repeat center center fixed;
+    width: 90vw;
 }
 
 .movie-detail-container {
