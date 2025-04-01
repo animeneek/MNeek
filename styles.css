@@ -419,6 +419,68 @@ header img {
     width: 90vw;
 }
 
+.embed-video {
+    position: relative;
+    width: 100%;
+    max-width: 90vw; /* Adjust to fit within movie-detail-bg */
+    height: 400px;
+    margin: 20px 0;
+    border-radius: 10px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.embed-video img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.overlay-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.overlay-text p {
+    font-family: 'Tektur', sans-serif;
+    color: white;
+    font-size: 1.5em;
+    text-align: center;
+}
+
+.source-buttons {
+    margin: 10px 0; /* Adds gap between source-buttons and containers above/below */
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 15px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+}
+
+#source1-button, #source2-button {
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-right: 10px;
+}
+
+#source1-button:hover, #source2-button:hover {
+    background-color: #e03e3e;
+}
+
 .movie-detail-container {
     display: flex;
     flex-direction: row;
@@ -430,6 +492,7 @@ header img {
     border-radius: 15px;
     max-width: 90vw;
     width: 100%;
+    margin-top: 10px; /* Adds gap between movie-detail-container and source-buttons */
 }
 
 .movie-poster img {
@@ -465,55 +528,10 @@ header img {
     margin-top: 20px;
 }
 
-.source-buttons {
-    margin-top: 20px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.7);
-    border-radius: 15px;
-    padding: 20px;
-    backdrop-filter: blur(10px);
-}
-
-#source1-button, #source2-button {
-    background-color: #ff4444;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 25px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-right: 10px;
-}
-
-#source1-button:hover, #source2-button:hover {
-    background-color: #e03e3e;
-}
-
 .recommendations {
-    margin-top: 40px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.7);
-    border-radius: 15px;
-    padding: 20px;
-    backdrop-filter: blur(10px);
-}
-
-.recommendations h2 {
-    font-family: 'Tektur', sans-serif;
-    margin-bottom: 20px;
+    display: none; /* Hide the recommendations section */
 }
 
 #recommendation-list {
-    display: flex;
-    overflow-x: auto;
-}
-
-#recommendation-list .slider-item {
-    min-width: 150px;
-    margin-right: 10px;
+    display: none; /* Hide the recommendation list */
 }
