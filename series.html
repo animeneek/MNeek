@@ -41,6 +41,11 @@
         </div>
     </div>
     <script>
+        // Load header and menu
+        document.getElementById('header-container').innerHTML = fetch('header.html').then(response => response.text()).then(data => document.getElementById('header-container').innerHTML = data);
+        document.getElementById('menu-container').innerHTML = fetch('menu.html').then(response => response.text()).then(data => document.getElementById('menu-container').innerHTML = data);
+
+        // Fetch series details
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const seriesId = urlParams.get('id');
