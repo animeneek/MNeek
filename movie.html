@@ -3,79 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Details - Movie Neek</title>
+    <title>Movie Details</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
 </head>
 <body>
-    <div id="header-container"></div>
-    <div id="menu-container"></div>
+
+    <!-- Header and Menu (Added) -->
+    <header>
+        <img src="assets/logo.png" alt="MNeek Logo">
+    </header>
+
+    <nav class="menu">
+        <ul class="menu-items">
+            <li><a href="index.html"><i class="fas fa-home menu-icon"></i> <span class="menu-text">Home</span></a></li>
+            <li><a href="movies.html"><i class="fas fa-film menu-icon"></i> <span class="menu-text">Movies</span></a></li>
+            <li><a href="series.html"><i class="fas fa-tv menu-icon"></i> <span class="menu-text">TV Series</span></a></li>
+            <li><a href="livetv.html"><i class="fas fa-satellite-dish menu-icon"></i> <span class="menu-text">Live TV</span></a></li>
+        </ul>
+    </nav>
+    
     <div class="movie-detail-bg">
-        <div class="embed-video">
-            <img id="movie-trailer-image" width="100%" height="600" src="" alt="Movie Trailer" style="position: relative;">
-            <div class="overlay-text">
-                <p>The choice is yours… Select the Source below!</p>
-            </div>
-        </div>
-        <div class="source-buttons">
-            <button id="source1-button">Source 1</button>
-            <button id="source2-button">Source 2</button>
-        </div>
         <div class="movie-detail-container">
             <div class="movie-poster">
-                <img id="movie-poster" src="" alt="Movie Poster" height="400">
+                <img id="movie-poster" src="" alt="Movie Poster">
             </div>
             <div class="movie-info">
-                <h1 id="movie-title">Movie Title</h1>
+                <h1 id="movie-title">Loading...</h1>
                 <div class="movie-details">
-                    <span id="certificate" class="certificate">PG-13</span>
-                    <span id="original-title">Original Title: Original Title</span>
+                    <span id="movie-rating" class="certificate">PG-13</span>
+                    <span id="movie-year">2024</span> • 
+                    <span id="movie-duration">120 min</span>
                 </div>
-                <div id="genre">Genre</div>
-                <p id="movie-synopsis">Movie synopsis goes here...</p>
-                <div class="movie-meta">
-                    <p><strong>Status:</strong> <span id="status">Released</span></p>
-                    <p><strong>Release Date:</strong> <span id="release-date">2025-01-01</span></p>
-                    <p><strong>Original Language:</strong> <span id="original-language">English</span></p>
+                <p id="movie-description">Movie description will appear here...</p>
+                <div class="source-buttons">
+                    <button id="source1-button">Source 1</button>
+                    <button id="source2-button">Source 2</button>
                 </div>
             </div>
         </div>
     </div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener("DOMContentLoaded", function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const movieId = urlParams.get('id');
-            const apiKey = 'e3afd4c89e3351edad9e875ff7a01f0c';
-            const url = `https://api.themoviedb.org/3/movie/${movieId}?api_key=${apiKey}&append_to_response=videos`;
+            const movieId = urlParams.get("id");
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('movie-poster').src = `https://image.tmdb.org/t/p/w500/${data.poster_path}`;
-                    document.getElementById('movie-title').textContent = `${data.title} (${new Date(data.release_date).getFullYear()})`;
-                    document.getElementById('certificate').textContent = data.certification || 'N/A';
-                    document.getElementById('original-title').textContent = `Original Title: ${data.original_title}`;
-                    document.getElementById('genre').textContent = data.genres.map(genre => genre.name).join(', ');
-                    document.getElementById('movie-synopsis').textContent = data.overview;
-                    document.getElementById('status').textContent = data.status;
-                    document.getElementById('release-date').textContent = new Date(data.release_date).toLocaleDateString();
-                    document.getElementById('original-language').textContent = getFullLanguageName(data.original_language);
-
-                    // Set the trailer image
-                    if (data.backdrop_path) {
-                        document.getElementById('movie-trailer-image').src = `https://image.tmdb.org/t/p/original/${data.backdrop_path}`;
-                    }
-                })
-                .catch(error => console.error('Error fetching movie details:', error));
+            if (movieId) {
+                document.getElementById("movie-title").innerText = "Movie " + movieId;
+                document.getElementById("movie-description").innerText = "This is the description for movie " + movieId;
+                document.getElementById("movie-poster").src = "assets/movie_" + movieId + ".jpg";
+            }
         });
-
-        function getFullLanguageName(code) {
-            const languageMap = {
-                "en": "English",
-                "ja": "Japanese",
-                // Add other language codes and their full names as needed
-            };
-            return languageMap[code] || code;
-        }
     </script>
+
 </body>
 </html>
