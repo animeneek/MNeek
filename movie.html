@@ -5,58 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Details</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="script.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <script defer src="script.js"></script>
 </head>
 <body>
+    <div id="header-container"></div> <!-- Placeholder for header -->
+    <div id="menu-container"></div> <!-- Placeholder for menu -->
 
-    <!-- Header and Menu (Added) -->
-    <header>
-        <img src="assets/logo.png" alt="MNeek Logo">
-    </header>
-
-    <nav class="menu">
-        <ul class="menu-items">
-            <li><a href="index.html"><i class="fas fa-home menu-icon"></i> <span class="menu-text">Home</span></a></li>
-            <li><a href="movies.html"><i class="fas fa-film menu-icon"></i> <span class="menu-text">Movies</span></a></li>
-            <li><a href="series.html"><i class="fas fa-tv menu-icon"></i> <span class="menu-text">TV Series</span></a></li>
-            <li><a href="livetv.html"><i class="fas fa-satellite-dish menu-icon"></i> <span class="menu-text">Live TV</span></a></li>
-        </ul>
-    </nav>
-    
-    <div class="movie-detail-bg">
-        <div class="movie-detail-container">
-            <div class="movie-poster">
-                <img id="movie-poster" src="" alt="Movie Poster">
+    <div class="movie-detail-container">
+        <div class="movie-poster">
+            <img id="movie-poster" src="" alt="Movie Poster">
+        </div>
+        <div class="movie-info">
+            <h1 id="movie-title"></h1>
+            <div class="movie-details">
+                <span id="movie-certificate" class="certificate"></span>
+                <span id="movie-year"></span>
+                <span>•</span>
+                <span id="movie-duration"></span>
             </div>
-            <div class="movie-info">
-                <h1 id="movie-title">Loading...</h1>
-                <div class="movie-details">
-                    <span id="movie-rating" class="certificate">PG-13</span>
-                    <span id="movie-year">2024</span> • 
-                    <span id="movie-duration">120 min</span>
-                </div>
-                <p id="movie-description">Movie description will appear here...</p>
-                <div class="source-buttons">
-                    <button id="source1-button">Source 1</button>
-                    <button id="source2-button">Source 2</button>
-                </div>
-            </div>
+            <p id="movie-description"></p>
         </div>
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        // Load header and menu
+        function loadComponent(id, file) {
+            fetch(file)
+                .then(response => response.text())
+                .then(data => document.getElementById(id).innerHTML = data);
+        }
+        
+        loadComponent("header-container", "header.html");
+        loadComponent("menu-container", "menu.html");
+
+        // Fetch movie details dynamically
+        function getMovieDetails() {
             const urlParams = new URLSearchParams(window.location.search);
-            const movieId = urlParams.get("id");
-
+            const movieId = urlParams.get('id');
+            
             if (movieId) {
-                document.getElementById("movie-title").innerText = "Movie " + movieId;
-                document.getElementById("movie-description").innerText = "This is the description for movie " + movieId;
-                document.getElementById("movie-poster").src = "assets/movie_" + movieId + ".jpg";
+                fetch(`https://api.example.com/movies/${movieId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById("movie-title").innerText = data.title;
+                        document.getElementById("movie-poster").src = data.poster;
+                        document.getElementById("movie-certificate").innerText = data.certificate;
+                        document.getElementById("movie-year").innerText = data.year;
+                        document.getElementById("movie-duration").innerText = data.duration;
+                        document.getElementById("movie-description").innerText = data.description;
+                    })
+                    .catch(error => console.error("Error fetching movie data:", error));
             }
-        });
-    </script>
+        }
 
+        getMovieDetails();
+    </script>
 </body>
 </html>
