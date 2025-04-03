@@ -133,19 +133,16 @@ header img {
 }
 
 .container {
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
     position: relative;
-    z-index: 1;
-    padding: 40px 20px;
-    backdrop-filter: blur(10px) no-repeat center center fixed;
-    width: 90vw;
-    min-height: 100vh; /* Ensure background is visible even when sliding down */
+    z-index: 2;
     text-align: center;
+    padding: 40px 20px; /* Changed to margin: 40px 20px; */
     display: flex;
     flex-direction: column;
+    align-items: center;
     justify-content: center;
+    height: calc(100vh - 20px); /* Adjusted based on header and menu height */
+    width: 100%;
 }
 
 #search-bar {
