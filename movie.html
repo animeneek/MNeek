@@ -5,57 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Details</title>
     <link rel="stylesheet" href="styles.css">
-    <script defer src="script.js"></script>
+    <script src="script.js" defer></script>
 </head>
 <body>
-    <div id="header-container"></div> <!-- Placeholder for header -->
-    <div id="menu-container"></div> <!-- Placeholder for menu -->
-
-    <div class="movie-detail-container">
-        <div class="movie-poster">
-            <img id="movie-poster" src="" alt="Movie Poster">
-        </div>
-        <div class="movie-info">
-            <h1 id="movie-title"></h1>
-            <div class="movie-details">
-                <span id="movie-certificate" class="certificate"></span>
-                <span id="movie-year"></span>
-                <span>•</span>
-                <span id="movie-duration"></span>
+    <div id="header-container"></div>
+    <div id="menu-container"></div>
+    
+    <div class="movie-detail-bg">
+        <div class="movie-detail-container">
+            <div class="movie-poster">
+                <img id="movie-poster" src="" alt="Movie Poster">
             </div>
-            <p id="movie-description"></p>
+            <div class="movie-info">
+                <h1 id="movie-title">Loading...</h1>
+                <div class="movie-details">
+                    <span class="certificate" id="movie-rating">PG-13</span>
+                    <span id="movie-year">2024</span> • <span id="movie-duration">120 min</span>
+                </div>
+                <p id="movie-description">Loading description...</p>
+            </div>
+        </div>
+        
+        <div class="embed-video">
+            <iframe id="movie-iframe" width="100%" height="600px" src="" frameborder="0" allowfullscreen></iframe>
         </div>
     </div>
 
     <script>
-        // Load header and menu
-        function loadComponent(id, file) {
-            fetch(file)
+        // Load Header and Menu
+        document.addEventListener("DOMContentLoaded", function() {
+            fetch('header.html')
                 .then(response => response.text())
-                .then(data => document.getElementById(id).innerHTML = data);
-        }
-        
-        loadComponent("header-container", "header.html");
-        loadComponent("menu-container", "menu.html");
+                .then(data => document.getElementById('header-container').innerHTML = data);
+            
+            fetch('menu.html')
+                .then(response => response.text())
+                .then(data => document.getElementById('menu-container').innerHTML = data);
+        });
 
-        // Fetch movie details dynamically
+        // Fetch Movie Details
         function getMovieDetails() {
             const urlParams = new URLSearchParams(window.location.search);
             const movieId = urlParams.get('id');
+            if (!movieId) return;
             
-            if (movieId) {
-                fetch(`https://api.example.com/movies/${movieId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById("movie-title").innerText = data.title;
-                        document.getElementById("movie-poster").src = data.poster;
-                        document.getElementById("movie-certificate").innerText = data.certificate;
-                        document.getElementById("movie-year").innerText = data.year;
-                        document.getElementById("movie-duration").innerText = data.duration;
-                        document.getElementById("movie-description").innerText = data.description;
-                    })
-                    .catch(error => console.error("Error fetching movie data:", error));
-            }
+            fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=YOUR_API_KEY&language=en-US`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("movie-title").textContent = data.title;
+                    document.getElementById("movie-description").textContent = data.overview;
+                    document.getElementById("movie-year").textContent = data.release_date.split("-")[0];
+                    document.getElementById("movie-duration").textContent = data.runtime + " min";
+                    document.getElementById("movie-poster").src = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+                    document.getElementById("movie-iframe").src = `https://vidsrc.to/embed/movie/${movieId}`;
+                })
+                .catch(error => console.error("Error fetching movie details:", error));
         }
 
         getMovieDetails();
