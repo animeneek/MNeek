@@ -136,7 +136,7 @@ header img {
     position: relative;
     z-index: 2;
     text-align: center;
-    margin-top: 20px; /* Reduced gap between sliders */
+    margin-top: 100px; /* Changed from 20px to 100px */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -210,7 +210,7 @@ header img {
     }
 
     .container {
-        margin-top: 85px; /* Adjusted based on mobile header and menu height */
+        margin-top: 100px; /* Adjusted based on mobile header and menu height */
         height: calc(100vh - 85px); /* Adjusted based on mobile header and menu height */
     }
 
@@ -372,6 +372,7 @@ header img {
     overflow-x: auto;
     scroll-behavior: smooth;
     width: 100%;
+    margin-top: 10px; /* Added margin-top */
 }
 
 .slider::-webkit-scrollbar {
@@ -450,6 +451,7 @@ header img {
     padding: 40px 20px;
     backdrop-filter: blur(10px) no-repeat center center fixed;
     width: 90vw;
+    min-height: 100vh; /* Ensure background is visible even when sliding down */
 }
 
 .embed-video {
@@ -560,12 +562,4 @@ header img {
 
 .movie-meta {
     margin-top: 20px;
-}
-
-.recommendations {
-    display: none; /* Hide the recommendations section */
-}
-
-#recommendation-list {
-    display: none; /* Hide the recommendation list */
 }
