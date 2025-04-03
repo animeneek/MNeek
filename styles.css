@@ -23,6 +23,7 @@ body {
     overflow-x: hidden; /* Disable horizontal scrolling */
     font-size: 14px; /* Reduced text size */
     max-width: 100vw; /* Prevent horizontal scrolling */
+    padding-top: 60px; /* Adjust based on header height */
 }
 
 /* Custom vertical scrollbar */
@@ -59,7 +60,7 @@ body::after {
 
 header {
     width: 100vw;
-    display: fixed;
+    display: flex;
     justify-content: center;
     align-items: center;
     padding: 10px;
