@@ -210,7 +210,7 @@ header img {
     }
 
     .container {
-        margin: 40px 20px; /* Adjusted based on mobile header and menu height */
+        padding: 40px 20px; /* Adjusted based on mobile header and menu height */
         height: calc(100vh - 85px); /* Adjusted based on mobile header and menu height */
     }
 
