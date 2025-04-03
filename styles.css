@@ -132,6 +132,19 @@ header img {
     display: inline; /* Show text by default */
 }
 
+.index-container {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 60px 20px; /* Changed to margin: 40px 20px; */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: calc(100vh - 20px); /* Adjusted based on header and menu height */
+    width: 100%;
+    display: flex;
+}
+    
 .container {
     position: relative;
     z-index: 2;
@@ -142,6 +155,7 @@ header img {
     justify-content: center;
     height: calc(100vh - 20px); /* Adjusted based on header and menu height */
     width: 100%;
+    display: block;
 }
 
 #search-bar {
