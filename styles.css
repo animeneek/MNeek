@@ -7,7 +7,6 @@ html, body {
     padding: 0;
     height: 100%; /* Ensure the body and html elements take up full height */
     overflow-x: hidden; /* Disable horizontal scrolling */
-position: relative;
 }
 
 body {
