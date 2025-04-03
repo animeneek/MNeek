@@ -223,6 +223,39 @@ header img {
         padding: 15px 30px;
         white-space: normal; /* Allow text to wrap in narrow screens */
     }
+
+    .movie-detail-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 20px;
+        color: white;
+        z-index: 2;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 15px;
+        max-width: 90vw;
+        width: auto; /* Adjust width */
+        margin-top: 10px; /* Adds gap between movie-detail-container and source-buttons */
+    }
+
+    .movie-poster img {
+        max-width: 100%;
+        height: auto; /* Adjust height to be auto */
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        margin-bottom: 20px; /* Add margin to separate from details */
+    }
+
+    .movie-info {
+        margin-left: 0;
+        max-width: 90vw;
+    }
+
+    body {
+        background: url('assets/BG_001.jpg') no-repeat center center fixed;
+        background-size: cover;
+    }
 }
 
 /* Icons */
@@ -457,7 +490,7 @@ header img {
 
 .source-buttons {
     margin: 10px 0; /* Adds gap between source-buttons and containers above/below */
-    width: 100%;
+    width: auto; /* Changed to auto */
     max-width: 90vw; /* Ensure it does not exceed the screen width */
     display: flex;
     justify-content: center;
