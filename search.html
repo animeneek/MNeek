@@ -10,16 +10,21 @@
     <div id="header-container"></div>
     <div id="menu-container"></div>
     <div class="container">
-        <input type="text" id="search-bar" placeholder="Search for movies or series...">
-        <button id="search-button">Search</button>
         <div id="search-results" class="search-results"></div>
         <div id="pagination" class="pagination"></div>
     </div>
     <script src="search.js"></script>
     <script>
         // Load header and menu
-        document.getElementById('header-container').innerHTML = fetch('header.html').then(response => response.text()).then(data => document.getElementById('header-container').innerHTML = data);
-        document.getElementById('menu-container').innerHTML = fetch('menu.html').then(response => response.text()).then(data => document.getElementById('menu-container').innerHTML = data);
+        fetch('header.html').then(response => response.text()).then(data => document.getElementById('header-container').innerHTML = data);
+        fetch('menu.html').then(response => response.text()).then(data => document.getElementById('menu-container').innerHTML = data);
+
+        // Get search query from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const query = urlParams.get('query');
+        if (query) {
+            searchTMDB(query, 1);
+        }
     </script>
 </body>
 </html>
