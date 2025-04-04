@@ -1,10 +1,3 @@
-document.getElementById('search-button').addEventListener('click', function() {
-    const query = document.getElementById('search-bar').value;
-    if (query) {
-        searchTMDB(query, 1);
-    }
-});
-
 function searchTMDB(query, page) {
     const apiKey = 'YOUR_TMDB_API_KEY';
     const url = `https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${query}&page=${page}`;
