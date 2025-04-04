@@ -477,6 +477,19 @@ header img {
     border-radius: 10px;
     overflow: hidden;
     backdrop-filter: blur(10px);
+    background-color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.embed-video::after {
+    content: "Loading...";
+    font-family: 'Tektur', sans-serif;
+    color: white;
+    font-size: 2em;
+    position: absolute;
+    text-align: center;
 }
 
 .embed-video img {
@@ -538,6 +551,10 @@ header img {
     outline: none;
 }
 
+.season-select option:hover, .episode-select option:hover {
+    background-color: #ff4444;
+}
+
 /* Play Button Styles */
 .play-button {
     padding: 10px 20px;
@@ -557,6 +574,21 @@ header img {
 }
 
 .play-button:hover:not(:disabled) {
+    background-color: #e03e3e;
+}
+
+#source1-button, #source2-button {
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-right: 10px;
+}
+
+#source1-button:hover, #source2-button:hover {
     background-color: #e03e3e;
 }
 
