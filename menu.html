@@ -15,17 +15,19 @@
         </ul>
         <div class="search-container">
             <input type="text" id="menu-search-bar" placeholder="Search for movies or series...">
-            <button id="menu-search-button">Search</button>
+            <i class="fa fa-search" id="menu-search-icon"></i>
         </div>
     </div>
     <script>
-        document.getElementById('menu-search-button').addEventListener('click', function() {
+        // Trigger search on clicking the magnifying glass icon
+        document.getElementById('menu-search-icon').addEventListener('click', function() {
             const query = document.getElementById('menu-search-bar').value;
             if (query) {
                 window.location.href = `search.html?query=${encodeURIComponent(query)}`;
             }
         });
 
+        // Trigger search on pressing Enter in the search box
         document.getElementById('menu-search-bar').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 const query = document.getElementById('menu-search-bar').value;
