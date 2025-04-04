@@ -1,11 +1,39 @@
-<nav class="menu">
-    <ul class="menu-items">
-        <li><a href="home.html"><span class="menu-icon" id="icon-home"></span><span class="menu-text">Home</span></a></li>
-        <li><a href="movies.html"><span class="menu-icon" id="icon-movies"></span><span class="menu-text">Movies</span></a></li>
-        <li><a href="tvseries.html"><span class="menu-icon" id="icon-tvseries"></span><span class="menu-text">TV Series</span></a></li>
-        <li><a href="livetv.html"><span class="menu-icon" id="icon-livetv"></span><span class="menu-text">Live TV</span></a></li>
-    </ul>
-    <div class="search-container">
-        <input type="text" id="menu-search-bar" placeholder="Search...">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="menu">
+        <ul class="menu-items">
+            <li><a href="index.html" id="icon-home">Home</a></li>
+            <li><a href="movies.html" id="icon-movies">Movies</a></li>
+            <li><a href="series.html" id="icon-tvseries">TV Series</a></li>
+            <li><a href="live.html" id="icon-livetv">Live TV</a></li>
+        </ul>
+        <div class="search-container">
+            <input type="text" id="menu-search-bar" placeholder="Search for movies or series...">
+            <button id="menu-search-button">Search</button>
+        </div>
     </div>
-</nav>
+    <script>
+        document.getElementById('menu-search-button').addEventListener('click', function() {
+            const query = document.getElementById('menu-search-bar').value;
+            if (query) {
+                window.location.href = `search.html?query=${encodeURIComponent(query)}`;
+            }
+        });
+
+        document.getElementById('menu-search-bar').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const query = document.getElementById('menu-search-bar').value;
+                if (query) {
+                    window.location.href = `search.html?query=${encodeURIComponent(query)}`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
