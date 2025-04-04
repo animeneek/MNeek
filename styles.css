@@ -465,7 +465,7 @@ header img {
     padding: 40px 20px;
     backdrop-filter: blur(10px) no-repeat center center fixed;
     width: 90vw;
-    min-height: 100vh; /* Ensure background is visible even when sliding down */
+    min-height: 120vh; /* Increase min-height */
 }
 
 .embed-video {
@@ -534,7 +534,6 @@ header img {
 
 /* Source Container Styles */
 .source-container {
-    margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -582,7 +581,7 @@ header img {
     color: white;
     border: none;
     padding: 10px 20px;
-    border-radius: 25px;
+    border-radius: 15px; /* Reduced the border radius */
     cursor: pointer;
     transition: background-color 0.3s ease;
     margin-right: 10px;
@@ -637,4 +636,36 @@ header img {
 
 .movie-meta {
     margin-top: 20px;
+}
+
+/* Additional styles for horizontal source buttons in movies */
+.source-buttons-movie {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0;
+}
+
+/* Additional styles for horizontal source buttons in series */
+.source-buttons-series {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.source-buttons-series .source-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.source-buttons-series .additional-sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
 }
