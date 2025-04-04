@@ -490,7 +490,7 @@ header img {
     font-size: 2em;
     position: absolute;
     text-align: center;
-    z-index: -1;
+    z-index: -5;
 }
 
 .embed-video img {
