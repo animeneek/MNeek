@@ -670,3 +670,63 @@ header img {
     gap: 10px;
     justify-content: center;
 }
+
+/* Search Results Styles */
+.search-results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.result-item {
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 15px;
+    padding: 20px;
+    max-width: 300px;
+    text-align: center;
+}
+
+.result-item img {
+    width: 100%;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.result-item h2 {
+    font-family: 'Tektur', sans-serif;
+    font-size: 1.5em;
+    margin: 10px 0;
+}
+
+.result-item p {
+    font-size: 1em;
+    color: #ccc;
+}
+
+/* Pagination Styles */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.page-button {
+    padding: 10px 20px;
+    background: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.page-button.active {
+    background: #e03e3e;
+}
+
+.page-button:hover:not(.active) {
+    background: #ff7777;
+}
