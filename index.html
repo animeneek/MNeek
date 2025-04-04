@@ -3,17 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Neek v22.51</title>
+    <title>Movie Neek v22.59</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="header-container"></div>
+    <div id="menu-container"></div>
     <div class="index-container">
-        <input type="text" id="search-bar" placeholder="Search for movies...">
-        <button id="home-button">
-            Let’s Break the Rules, Start Watching!
-        </button>
+        <input type="text" id="index-search-bar" placeholder="Search for movies or series...">
+        <i class="fa fa-search" id="index-search-icon"></i>
     </div>
-    <script src="script.js"></script>
+    <script>
+        // Load header and menu
+        fetch('header.html').then(response => response.text()).then(data => document.getElementById('header-container').innerHTML = data);
+        fetch('menu.html').then(response => response.text()).then(data => document.getElementById('menu-container').innerHTML = data);
+
+        // Trigger search on clicking the magnifying glass icon
+        document.getElementById('index-search-icon').addEventListener('click', function() {
+            const query = document.getElementById('index-search-bar').value;
+            if (query) {
+                window.location.href = `search.html?query=${encodeURIComponent(query)}`;
+            }
+        });
+
+        // Trigger search on pressing Enter in the search box
+        document.getElementById('index-search-bar').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const query = document.getElementById('index-search-bar').value;
+                if (query) {
+                    window.location.href = `search.html?query=${encodeURIComponent(query)}`;
+                }
+            }
+        });
+    </script>
 </body>
 </html>
