@@ -12,13 +12,24 @@
     <div class="movie-detail-bg">
         <div class="embed-video">
             <img id="series-trailer-image" width="100%" height="600" src="" alt="Series Trailer" style="position: relative;">
-            <div class="overlay-text">
+            <div class="overlay-text" id="overlay-text">
                 <p>The choice is yours… Select the Source below!</p>
             </div>
+            <iframe id="series-embed" width="100%" height="600" style="display: none;" frameborder="0" allowfullscreen></iframe>
         </div>
         <div class="source-buttons">
-            <button id="source1-button">Source 1</button>
-            <button id="source2-button">Source 2</button>
+            <div class="source-container">
+                <span>Source 1:</span>
+                <select id="season-select-1" disabled></select>
+                <select id="episode-select-1" disabled></select>
+                <button id="play-button-1" disabled>Play</button>
+            </div>
+            <div class="source-container">
+                <span>Source 2:</span>
+                <select id="season-select-2" disabled></select>
+                <select id="episode-select-2" disabled></select>
+                <button id="play-button-2" disabled>Play</button>
+            </div>
         </div>
         <div class="movie-detail-container">
             <div class="movie-poster">
@@ -69,8 +80,20 @@
                     if (data.backdrop_path) {
                         document.getElementById('series-trailer-image').src = `https://image.tmdb.org/t/p/original/${data.backdrop_path}`;
                     }
+
+                    // Populate season dropdowns
+                    populateSeasons(data.seasons, 1);
+                    populateSeasons(data.seasons, 2);
                 })
                 .catch(error => console.error('Error fetching series details:', error));
+
+            // Add event listeners for season dropdowns
+            document.getElementById('season-select-1').addEventListener('change', () => populateEpisodes(seriesId, 1));
+            document.getElementById('season-select-2').addEventListener('change', () => populateEpisodes(seriesId, 2));
+
+            // Add event listeners for play buttons
+            document.getElementById('play-button-1').addEventListener('click', () => playEpisode(seriesId, 1));
+            document.getElementById('play-button-2').addEventListener('click', () => playEpisode(seriesId, 2));
         });
 
         function getFullLanguageName(code) {
@@ -80,6 +103,63 @@
                 // Add other language codes and their full names as needed
             };
             return languageMap[code] || code;
+        }
+
+        function populateSeasons(seasons, source) {
+            const seasonSelect = document.getElementById(`season-select-${source}`);
+            seasonSelect.innerHTML = '<option value="">Select Season</option>';
+            seasons.forEach(season => {
+                if (season.season_number > 0) {
+                    seasonSelect.innerHTML += `<option value="${season.season_number}">Season ${season.season_number}</option>`;
+                }
+            });
+            seasonSelect.disabled = false;
+        }
+
+        function populateEpisodes(seriesId, source) {
+            const seasonSelect = document.getElementById(`season-select-${source}`);
+            const episodeSelect = document.getElementById(`episode-select-${source}`);
+            const seasonNumber = seasonSelect.value;
+            if (seasonNumber) {
+                const apiKey = 'e3afd4c89e3351edad9e875ff7a01f0c';
+                const url = `https://api.themoviedb.org/3/tv/${seriesId}/season/${seasonNumber}?api_key=${apiKey}`;
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        episodeSelect.innerHTML = '<option value="">Select Episode</option>';
+                        data.episodes.forEach(episode => {
+                            episodeSelect.innerHTML += `<option value="${episode.episode_number}">Episode ${episode.episode_number}</option>`;
+                        });
+                        episodeSelect.disabled = false;
+                        // Enable play button if both season and episode are selected
+                        episodeSelect.addEventListener('change', () => {
+                            const playButton = document.getElementById(`play-button-${source}`);
+                            playButton.disabled = !episodeSelect.value;
+                        });
+                    })
+                    .catch(error => console.error('Error fetching episodes:', error));
+            } else {
+                episodeSelect.innerHTML = '<option value="">Select Episode</option>';
+                episodeSelect.disabled = true;
+                document.getElementById(`play-button-${source}`).disabled = true;
+            }
+        }
+
+        function playEpisode(seriesId, source) {
+            const seasonSelect = document.getElementById(`season-select-${source}`);
+            const episodeSelect = document.getElementById(`episode-select-${source}`);
+            const seasonNumber = seasonSelect.value;
+            const episodeNumber = episodeSelect.value;
+            if (seasonNumber && episodeNumber) {
+                const embedUrl = source === 1 
+                    ? `https://vidsrc.to/embed/tv/${seriesId}/${seasonNumber}/${episodeNumber}` 
+                    : `https://embed.su/embed/tv/${seriesId}/${seasonNumber}/${episodeNumber}`;
+                document.getElementById('series-embed').src = embedUrl;
+                document.getElementById('series-embed').style.display = 'block';
+                document.getElementById('series-trailer-image').style.display = 'none';
+                document.getElementById('overlay-text').style.display = 'none';
+            }
         }
     </script>
 </body>
