@@ -1,134 +1,140 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MovieNeek - Stream Movies & TV Shows</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/styles.css">
-    <link rel="icon" href="https://github.com/animeneek/MN/blob/main/assets/Movieneek_Raider%20Crusader_001.png?raw=true">
-</head>
-<body class="bg-dark text-white">
-    <!-- Desktop Navigation -->
-    <nav class="navbar hidden md:flex items-center justify-between">
-        <div class="flex items-center space-x-8">
-            <a href="index.html" class="flex items-center">
-                <img src="https://github.com/animeneek/MN/blob/main/assets/Movieneek_Raider%20Crusader_001.png?raw=true" 
-                     alt="MovieNeek" 
-                     class="h-10">
+<!-- Include header -->
+<!--#include virtual="header.html" -->
+
+    <!-- Hero Section with Slideshow -->
+    <section class="hero-section">
+        <!-- Slides will be added dynamically by JavaScript -->
+        <div class="absolute inset-0 bg-black opacity-70 z-1"></div>
+        <div class="container mx-auto px-4 h-full flex items-center hero-content">
+            <div>
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Welcome to MovieNeek</h1>
+                <p class="text-xl mb-6 max-w-2xl">Stream thousands of movies and TV shows for free.</p>
+                <button class="bg-primary hover:bg-red-600 px-8 py-3 rounded-lg text-lg font-semibold transition duration-300">
+                    Browse Now
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trending Section -->
+    <section class="container mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+            <div class="flex items-center mb-4 md:mb-0">
+                <h2 class="text-2xl font-bold mr-4">Trending Today</h2>
+                <div class="toggle-container">
+                    <input type="radio" id="trendingMoviesToggle" name="trendingToggle" checked>
+                    <label for="trendingMoviesToggle" class="toggle-option">Movies</label>
+                    <input type="radio" id="trendingTVToggle" name="trendingToggle">
+                    <label for="trendingTVToggle" class="toggle-option">TV Shows</label>
+                    <span class="toggle-slider"></span>
+                </div>
+            </div>
+            <a href="#" class="inline-flex items-center text-primary font-medium group">
+                View All
+                <i class="fas fa-chevron-right ml-2 group-hover:translate-x-1 transition-transform"></i>
             </a>
-            <div class="flex space-x-6">
-                <a href="index.html" class="hover:text-accent">Home</a>
-                <a href="movies.html" class="hover:text-accent">Movies</a>
-                <a href="tvshows.html" class="hover:text-accent">TV Shows</a>
+        </div>
+        <div class="slider-container">
+            <div id="trendingMovies" class="slider-content flex space-x-4">
+                <!-- Trending movies will be loaded here -->
             </div>
         </div>
-        <div class="relative w-64">
-            <input type="text" 
-                   id="searchInput"
-                   placeholder="Search movies or TV shows..." 
-                   class="bg-darkest text-sm px-4 py-2 rounded-full w-full focus:outline-none focus:ring-2 focus:ring-accent">
-            <div id="searchResults" class="hidden absolute top-12 left-0 right-0 bg-darkest rounded-lg shadow-lg z-50 p-4 max-h-96 overflow-y-auto"></div>
+        <div class="slider-container hidden">
+            <div id="trendingTV" class="slider-content flex space-x-4">
+                <!-- Trending TV shows will be loaded here -->
+            </div>
         </div>
-    </nav>
+    </section>
 
-    <!-- Hero Slider -->
-    <div id="heroSlider" class="relative"></div>
-
-    <main class="container mx-auto px-4 py-8">
-        <!-- Trending Movies -->
-        <section class="mb-12">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">Trending Movies</h2>
-                <a href="movies.html" class="text-accent hover:underline">View All</a>
+    <!-- Popular Section -->
+    <section class="container mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+            <div class="flex items-center mb-4 md:mb-0">
+                <h2 class="text-2xl font-bold mr-4">What's Popular</h2>
+                <div class="toggle-container">
+                    <input type="radio" id="popularMoviesToggle" name="popularToggle" checked>
+                    <label for="popularMoviesToggle" class="toggle-option">Movies</label>
+                    <input type="radio" id="popularTVToggle" name="popularToggle">
+                    <label for="popularTVToggle" class="toggle-option">TV Shows</label>
+                    <span class="toggle-slider"></span>
+                </div>
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6" id="trendingMovies">
-                <!-- JS will populate this -->
+            <a href="#" class="inline-flex items-center text-primary font-medium group">
+                View All
+                <i class="fas fa-chevron-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+            </a>
+        </div>
+        <div class="slider-container">
+            <div id="popularMovies" class="slider-content flex space-x-4">
+                <!-- Popular movies will be loaded here -->
             </div>
-        </section>
-
-        <!-- Popular TV Shows -->
-        <section class="mb-12">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">Popular TV Shows</h2>
-                <a href="tvshows.html" class="text-accent hover:underline">View All</a>
+        </div>
+        <div class="slider-container hidden">
+            <div id="popularTV" class="slider-content flex space-x-4">
+                <!-- Popular TV shows will be loaded here -->
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6" id="popularShows">
-                <!-- JS will populate this -->
+        </div>
+    </section>
+
+    <!-- Now Playing Section -->
+    <section class="container mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+            <div class="flex items-center mb-4 md:mb-0">
+                <h2 class="text-2xl font-bold mr-4">Now Playing</h2>
+                <div class="toggle-container">
+                    <input type="radio" id="nowPlayingMoviesToggle" name="nowPlayingToggle" checked>
+                    <label for="nowPlayingMoviesToggle" class="toggle-option">Movies</label>
+                    <input type="radio" id="nowPlayingTVToggle" name="nowPlayingToggle">
+                    <label for="nowPlayingTVToggle" class="toggle-option">TV Shows</label>
+                    <span class="toggle-slider"></span>
+                </div>
             </div>
-        </section>
-    </main>
+            <a href="#" class="inline-flex items-center text-primary font-medium group">
+                View All
+                <i class="fas fa-chevron-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+            </a>
+        </div>
+        <div class="slider-container">
+            <div id="nowPlayingMovies" class="slider-content flex space-x-4">
+                <!-- Now playing movies will be loaded here -->
+            </div>
+        </div>
+        <div class="slider-container hidden">
+            <div id="nowPlayingTV" class="slider-content flex space-x-4">
+                <!-- Now playing TV shows will be loaded here -->
+            </div>
+        </div>
+    </section>
 
-    <!-- Mobile Navigation -->
-    <nav class="mobile-nav md:hidden flex justify-around">
-        <a href="index.html" class="flex flex-col items-center p-2 text-accent">
-            <i class="fas fa-home text-xl"></i>
-            <span class="text-xs mt-1">Home</span>
-        </a>
-        <a href="movies.html" class="flex flex-col items-center p-2">
-            <i class="fas fa-film text-xl"></i>
-            <span class="text-xs mt-1">Movies</span>
-        </a>
-        <a href="tvshows.html" class="flex flex-col items-center p-2">
-            <i class="fas fa-tv text-xl"></i>
-            <span class="text-xs mt-1">TV Shows</span>
-        </a>
-    </nav>
+    <!-- Upcoming Section -->
+    <section class="container mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+            <div class="flex items-center mb-4 md:mb-0">
+                <h2 class="text-2xl font-bold mr-4">Upcoming</h2>
+                <div class="toggle-container">
+                    <input type="radio" id="upcomingMoviesToggle" name="upcomingToggle" checked>
+                    <label for="upcomingMoviesToggle" class="toggle-option">Movies</label>
+                    <input type="radio" id="upcomingTVToggle" name="upcomingToggle">
+                    <label for="upcomingTVToggle" class="toggle-option">TV Shows</label>
+                    <span class="toggle-slider"></span>
+                </div>
+            </div>
+            <a href="#" class="inline-flex items-center text-primary font-medium group">
+                View All
+                <i class="fas fa-chevron-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+            </a>
+        </div>
+        <div class="slider-container">
+            <div id="upcomingMovies" class="slider-content flex space-x-4">
+                <!-- Upcoming movies will be loaded here -->
+            </div>
+        </div>
+        <div class="slider-container hidden">
+            <div id="upcomingTV" class="slider-content flex space-x-4">
+                <!-- Upcoming TV shows will be loaded here -->
+            </div>
+        </div>
+    </section>
 
-    <script src="assets/js/main.js"></script>
-    <script>
-        // Fetch and display trending movies
-        async function fetchTrendingMovies() {
-            const { results } = await fetchTMDB('trending/movie/week');
-            if (!results) return;
-            
-            const container = document.getElementById('trendingMovies');
-            container.innerHTML = results.slice(0, 10).map(movie => `
-                <a href="details.html?id=${movie.id}&type=movie" class="movie-card block">
-                    <div class="relative rounded-lg overflow-hidden aspect-[2/3] mb-2">
-                        <img src="${movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://via.placeholder.com/500x750'}" 
-                             alt="${movie.title}" 
-                             class="movie-poster w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition duration-300 flex items-end p-3">
-                            <div>
-                                <h3 class="font-semibold">${movie.title}</h3>
-                                <p class="text-xs text-gray-300">${movie.release_date ? movie.release_date.substring(0, 4) : ''}</p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            `).join('');
-        }
-        
-        // Fetch and display popular TV shows
-        async function fetchPopularShows() {
-            const { results } = await fetchTMDB('tv/popular');
-            if (!results) return;
-            
-            const container = document.getElementById('popularShows');
-            container.innerHTML = results.slice(0, 10).map(show => `
-                <a href="details.html?id=${show.id}&type=tv" class="movie-card block">
-                    <div class="relative rounded-lg overflow-hidden aspect-[2/3] mb-2">
-                        <img src="${show.poster_path ? `https://image.tmdb.org/t/p/w500${show.poster_path}` : 'https://via.placeholder.com/500x750'}" 
-                             alt="${show.name}" 
-                             class="movie-poster w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition duration-300 flex items-end p-3">
-                            <div>
-                                <h3 class="font-semibold">${show.name}</h3>
-                                <p class="text-xs text-gray-300">${show.first_air_date ? show.first_air_date.substring(0, 4) : ''}</p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            `).join('');
-        }
-        
-        // Initialize page-specific content
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchTrendingMovies();
-            fetchPopularShows();
-        });
-    </script>
-</body>
-</html>
+<!-- Include footer -->
+<!--#include virtual="footer.html" -->
