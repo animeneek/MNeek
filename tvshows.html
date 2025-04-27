@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Same head as index.html -->
+</head>
+<body class="gradient-bg text-white min-h-screen">
+    <!-- Same navigation as index.html -->
+    
+    <main class="pb-20 md:pb-10 px-4 pt-6">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">Popular TV Shows</h1>
+            <div class="flex space-x-2">
+                <select class="bg-slate-800 px-3 py-2 rounded-lg focus:outline-none">
+                    <option>Filter</option>
+                    <option>Popular</option>
+                    <option>Airing Today</option>
+                    <option>Top Rated</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="tvShowsGrid">
+            <!-- JS will populate this -->
+        </div>
+        
+        <div class="flex justify-center mt-10">
+            <button class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-full" id="loadMoreShows">
+                Load More
+            </button>
+        </div>
+    </main>
+
+    <script>
+        const TMDB_API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
+        let currentPage = 1;
+        
+        // Fetch popular TV shows
+        async function fetchTVShows(page = 1) {
+            try {
+                const response = await fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${TMDB_API_KEY}&page=${page}`);
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching TV shows:', error);
+                return { results: [] };
+            }
+        }
+        
+        // Display TV shows
+        async function displayTVShows() {
+            const data = await fetchTVShows(currentPage);
+            const container = document.getElementById('tvShowsGrid');
+            
+            container.innerHTML += data.results.map(show => `
+                <a href="details.html?id=${show.id}&type=tv" class="group">
+                    <div class="relative rounded-lg overflow-hidden aspect-[2/3]">
+                        <img src="${show.poster_path ? `https://image.tmdb.org/t/p/w500${show.poster_path}` : 'https://via.placeholder.com/500x750'}" 
+                             alt="${show.name}" 
+                             class="w-full h-full object-cover group-hover:opacity-75 transition duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end p-3">
+                            <div>
+                                <h3 class="font-semibold">${show.name}</h3>
+                                <p class="text-xs text-gray-300">${show.first_air_date ? show.first_air_date.substring(0, 4) : ''}</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            `).join('');
+        }
+        
+        // Load more shows
+        document.getElementById('loadMoreShows').addEventListener('click', async () => {
+            currentPage++;
+            await displayTVShows();
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', displayTVShows);
+    </script>
+</body>
+</html>
