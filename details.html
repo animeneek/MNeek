@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Same head as index.html -->
+    <style>
+        .backdrop-blur {
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="gradient-bg text-white min-h-screen">
+    <!-- Same navigation as index.html -->
+    
+    <main class="pb-20 md:pb-10">
+        <!-- Backdrop Image -->
+        <div class="relative h-64 md:h-96 w-full">
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent z-10"></div>
+            <img id="backdropImage" src="" alt="" class="w-full h-full object-cover">
+        </div>
+        
+        <!-- Details Section -->
+        <div class="px-4 md:px-10 -mt-20 relative z-20">
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- Poster -->
+                <div class="w-40 h-56 md:w-56 md:h-80 flex-shrink-0 rounded-lg overflow-hidden shadow-xl">
+                    <img id="posterImage" src="" alt="" class="w-full h-full object-cover">
+                </div>
+                
+                <!-- Content -->
+                <div class="flex-1">
+                    <h1 id="title" class="text-2xl md:text-4xl font-bold mb-2"></h1>
+                    <div class="flex flex-wrap items-center gap-2 mb-4">
+                        <span id="year" class="text-gray-300"></span>
+                        <span class="text-gray-300">•</span>
+                        <span id="runtime" class="text-gray-300"></span>
+                        <span class="text-gray-300">•</span>
+                        <span id="rating" class="text-yellow-400"></span>
+                    </div>
+                    
+                    <div class="flex space-x-3 mb-6">
+                        <a id="watchLink" href="#" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-full flex items-center">
+                            <i class="fas fa-play mr-2"></i> Watch Now
+                        </a>
+                        <button class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-full">
+                            <i class="fas fa-bookmark"></i>
+                        </button>
+                    </div>
+                    
+                    <h2 class="text-xl font-bold mb-2">Overview</h2>
+                    <p id="overview" class="text-gray-300 mb-6"></p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <h3 class="text-gray-400">Genre</h3>
+                            <p id="genres" class="font-medium"></p>
+                        </div>
+                        <div>
+                            <h3 class="text-gray-400">Status</h3>
+                            <p id="status" class="font-medium"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recommendations -->
+        <section class="px-4 md:px-10 mt-10">
+            <h2 class="text-xl font-bold mb-4">You May Also Like</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="recommendations">
+                <!-- JS will populate this -->
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const TMDB_API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
+        
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+        const type = urlParams.get('type');
+        
+        // Fetch item details
+        async function fetchDetails() {
+            try {
+                const url = type === 'movie' 
+                    ? `https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_API_KEY}`
+                    : `https://api.themoviedb.org/3/tv/${id}?api_key=${TMDB_API_KEY}`;
+                
+                const response = await fetch(url);
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching details:', error);
+                return null;
+            }
+        }
+        
+        // Fetch recommendations
+        async function fetchRecommendations() {
+            try {
+                const url = type === 'movie' 
+                    ? `https://api.themoviedb.org/3/movie/${id}/recommendations?api_key=${TMDB_API_KEY}`
+                    : `https://api.themoviedb.org/3/tv/${id}/recommendations?api_key=${TMDB_API_KEY}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                return data.results.slice(0, 5);
+            } catch (error) {
+                console.error('Error fetching recommendations:', error);
+                return [];
+            }
+        }
+        
+        // Display details
+        async function displayDetails() {
+            const item = await fetchDetails();
+            if (!item) return;
+            
+            // Set background and poster
+            document.getElementById('backdropImage').src = item.backdrop_path 
+                ? `https://image.tmdb.org/t/p/original${item.backdrop_path}`
+                : 'https://via.placeholder.com/1280x720';
+                
+            document.getElementById('posterImage').src = item.poster_path 
+                ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+                : 'https://via.placeholder.com/500x750';
+            
+            // Set title
+            document.getElementById('title').textContent = type === 'movie' ? item.title : item.name;
+            
+            // Set year and runtime
+            const releaseDate = type === 'movie' ? item.release_date : item.first_air_date;
+            document.getElementById('year').textContent = releaseDate ? releaseDate.substring(0, 4) : 'N/A';
+            
+            const runtime = type === 'movie' 
+                ? `${Math.floor(item.runtime / 60)}h ${item.runtime % 60}m`
+                : `${item.number_of_seasons} seasons`;
+            document.getElementById('runtime').textContent = runtime;
+            
+            // Set rating
+            document.getElementById('rating').textContent = `${item.vote_average.toFixed(1)}/10`;
+            
+            // Set overview
+            document.getElementById('overview').textContent = item.overview || 'No overview available.';
+            
+            // Set genres
+            document.getElementById('genres').textContent = item.genres.map(g => g.name).join(', ');
+            
+            // Set status
+            document.getElementById('status').textContent = item.status;
+            
+            // Set watch link
+            const watchLink = document.getElementById('watchLink');
+            if (type === 'movie') {
+                watchLink.href = `watch.html?id=${item.id}&type=movie`;
+            } else {
+                watchLink.href = `watch.html?id=${item.id}&type=tv&s=1&e=1`;
+            }
+            
+            // Load recommendations
+            const recommendations = await fetchRecommendations();
+            const container = document.getElementById('recommendations');
+            
+            container.innerHTML = recommendations.map(rec => `
+                <a href="details.html?id=${rec.id}&type=${type}" class="group">
+                    <div class="relative rounded-lg overflow-hidden aspect-[2/3]">
+                        <img src="${rec.poster_path ? `https://image.tmdb.org/t/p/w500${rec.poster_path}` : 'https://via.placeholder.com/500x750'}" 
+                             alt="${type === 'movie' ? rec.title : rec.name}" 
+                             class="w-full h-full object-cover group-hover:opacity-75 transition duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end p-3">
+                            <div>
+                                <h3 class="font-semibold">${type === 'movie' ? rec.title : rec.name}</h3>
+                                <p class="text-xs text-gray-300">${(type === 'movie' ? rec.release_date : rec.first_air_date) ? (type === 'movie' ? rec.release_date.substring(0, 4) : rec.first_air_date.substring(0, 4)) : ''}</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            `).join('');
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', displayDetails);
+    </script>
+</body>
+</html>
