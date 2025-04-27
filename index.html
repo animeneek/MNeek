@@ -1,140 +1,55 @@
-<!-- Include header -->
-<!--#include virtual="header.html" -->
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieNeek - Stream Movies Online</title>
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#ff4444',
+                        dark: '#222222',
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
 
-    <!-- Hero Section with Slideshow -->
-    <section class="hero-section">
-        <!-- Slides will be added dynamically by JavaScript -->
-        <div class="absolute inset-0 bg-black opacity-70 z-1"></div>
-        <div class="container mx-auto px-4 h-full flex items-center hero-content">
-            <div>
-                <h1 class="text-4xl md:text-5xl font-bold mb-4">Welcome to MovieNeek</h1>
-                <p class="text-xl mb-6 max-w-2xl">Stream thousands of movies and TV shows for free.</p>
-                <button class="bg-primary hover:bg-red-600 px-8 py-3 rounded-lg text-lg font-semibold transition duration-300">
-                    Browse Now
-                </button>
-            </div>
-        </div>
-    </section>
+    <!-- Google Fonts - Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="https://github.com/animeneek/MN/blob/main/assets/Movieneek_Raider%20Crusader_001.png?raw=true">
+    
+    <!-- Internal CSS -->
+    <style>
+        /* [your entire <style> block exactly as you have it] */
+        /* ... Rating Circle, Slider Scroll, Toggle Switch, Hero Section, Glass Header, Mobile Nav, Media Queries... */
+    </style>
+</head>
 
-    <!-- Trending Section -->
-    <section class="container mx-auto px-4 py-8">
-        <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
-            <div class="flex items-center mb-4 md:mb-0">
-                <h2 class="text-2xl font-bold mr-4">Trending Today</h2>
-                <div class="toggle-container">
-                    <input type="radio" id="trendingMoviesToggle" name="trendingToggle" checked>
-                    <label for="trendingMoviesToggle" class="toggle-option">Movies</label>
-                    <input type="radio" id="trendingTVToggle" name="trendingToggle">
-                    <label for="trendingTVToggle" class="toggle-option">TV Shows</label>
-                    <span class="toggle-slider"></span>
-                </div>
-            </div>
-            <a href="#" class="inline-flex items-center text-primary font-medium group">
-                View All
-                <i class="fas fa-chevron-right ml-2 group-hover:translate-x-1 transition-transform"></i>
-            </a>
-        </div>
-        <div class="slider-container">
-            <div id="trendingMovies" class="slider-content flex space-x-4">
-                <!-- Trending movies will be loaded here -->
-            </div>
-        </div>
-        <div class="slider-container hidden">
-            <div id="trendingTV" class="slider-content flex space-x-4">
-                <!-- Trending TV shows will be loaded here -->
-            </div>
-        </div>
-    </section>
+<body class="bg-black text-white font-sans">
 
-    <!-- Popular Section -->
-    <section class="container mx-auto px-4 py-8">
-        <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
-            <div class="flex items-center mb-4 md:mb-0">
-                <h2 class="text-2xl font-bold mr-4">What's Popular</h2>
-                <div class="toggle-container">
-                    <input type="radio" id="popularMoviesToggle" name="popularToggle" checked>
-                    <label for="popularMoviesToggle" class="toggle-option">Movies</label>
-                    <input type="radio" id="popularTVToggle" name="popularToggle">
-                    <label for="popularTVToggle" class="toggle-option">TV Shows</label>
-                    <span class="toggle-slider"></span>
-                </div>
-            </div>
-            <a href="#" class="inline-flex items-center text-primary font-medium group">
-                View All
-                <i class="fas fa-chevron-right ml-2 group-hover:translate-x-1 transition-transform"></i>
-            </a>
-        </div>
-        <div class="slider-container">
-            <div id="popularMovies" class="slider-content flex space-x-4">
-                <!-- Popular movies will be loaded here -->
-            </div>
-        </div>
-        <div class="slider-container hidden">
-            <div id="popularTV" class="slider-content flex space-x-4">
-                <!-- Popular TV shows will be loaded here -->
-            </div>
-        </div>
-    </section>
+    <!-- Include Header -->
+    <!--#include virtual="header.html" -->
 
-    <!-- Now Playing Section -->
-    <section class="container mx-auto px-4 py-8">
-        <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
-            <div class="flex items-center mb-4 md:mb-0">
-                <h2 class="text-2xl font-bold mr-4">Now Playing</h2>
-                <div class="toggle-container">
-                    <input type="radio" id="nowPlayingMoviesToggle" name="nowPlayingToggle" checked>
-                    <label for="nowPlayingMoviesToggle" class="toggle-option">Movies</label>
-                    <input type="radio" id="nowPlayingTVToggle" name="nowPlayingToggle">
-                    <label for="nowPlayingTVToggle" class="toggle-option">TV Shows</label>
-                    <span class="toggle-slider"></span>
-                </div>
-            </div>
-            <a href="#" class="inline-flex items-center text-primary font-medium group">
-                View All
-                <i class="fas fa-chevron-right ml-2 group-hover:translate-x-1 transition-transform"></i>
-            </a>
-        </div>
-        <div class="slider-container">
-            <div id="nowPlayingMovies" class="slider-content flex space-x-4">
-                <!-- Now playing movies will be loaded here -->
-            </div>
-        </div>
-        <div class="slider-container hidden">
-            <div id="nowPlayingTV" class="slider-content flex space-x-4">
-                <!-- Now playing TV shows will be loaded here -->
-            </div>
-        </div>
-    </section>
+    <!-- Main Content -->
+    <!-- (add your content here in future, like hero sections, sliders, etc.) -->
 
-    <!-- Upcoming Section -->
-    <section class="container mx-auto px-4 py-8">
-        <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
-            <div class="flex items-center mb-4 md:mb-0">
-                <h2 class="text-2xl font-bold mr-4">Upcoming</h2>
-                <div class="toggle-container">
-                    <input type="radio" id="upcomingMoviesToggle" name="upcomingToggle" checked>
-                    <label for="upcomingMoviesToggle" class="toggle-option">Movies</label>
-                    <input type="radio" id="upcomingTVToggle" name="upcomingToggle">
-                    <label for="upcomingTVToggle" class="toggle-option">TV Shows</label>
-                    <span class="toggle-slider"></span>
-                </div>
-            </div>
-            <a href="#" class="inline-flex items-center text-primary font-medium group">
-                View All
-                <i class="fas fa-chevron-right ml-2 group-hover:translate-x-1 transition-transform"></i>
-            </a>
-        </div>
-        <div class="slider-container">
-            <div id="upcomingMovies" class="slider-content flex space-x-4">
-                <!-- Upcoming movies will be loaded here -->
-            </div>
-        </div>
-        <div class="slider-container hidden">
-            <div id="upcomingTV" class="slider-content flex space-x-4">
-                <!-- Upcoming TV shows will be loaded here -->
-            </div>
-        </div>
-    </section>
+    <!-- Include Footer -->
+    <!--#include virtual="footer.html" -->
 
-<!-- Include footer -->
-<!--#include virtual="footer.html" -->
+</body>
+</html>
