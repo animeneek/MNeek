@@ -1,0 +1,209 @@
+    <!-- Footer -->
+    <footer class="bg-dark py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2023 MovieNeek. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // TMDB API key
+        const API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
+        
+        // Base URLs
+        const API_URL = 'https://api.themoviedb.org/3';
+        const IMG_URL = 'https://image.tmdb.org/t/p/w500';
+        
+        // Function to fetch data from TMDB API
+        async function fetchData(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                return null;
+            }
+        }
+        
+        // Function to create rating circle with proper percentage
+        function createRatingCircle(vote) {
+            const percentage = Math.round(vote * 10);
+            const color = percentage > 70 ? '#21d07a' : percentage > 50 ? '#d2d531' : '#db2360';
+            
+            const circle = document.createElement('div');
+            circle.className = 'rating-circle';
+            circle.style.setProperty('--percentage', `${percentage}%`);
+            circle.style.setProperty('--rating-color', color);
+            
+            const innerDiv = document.createElement('div');
+            innerDiv.className = 'rating-circle-inner';
+            innerDiv.innerHTML = `${percentage}<span style="font-size: 6px">%</span>`;
+            
+            circle.appendChild(innerDiv);
+            return circle;
+        }
+        
+        // Function to display items in slider
+        function displaySliderItems(data, containerId, isMovie = true) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            data.results.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'flex-none w-48 rounded overflow-hidden shadow-lg hover:scale-105 transition duration-300 cursor-pointer group';
+                itemElement.innerHTML = `
+                    <div class="relative">
+                        <img src="${item.poster_path ? IMG_URL + item.poster_path : 'https://via.placeholder.com/300x450?text=No+Poster'}" 
+                             alt="${item.title || item.name}" class="w-full h-72 object-cover">
+                        <div class="absolute bottom-2 left-2">
+                            ${createRatingCircle(item.vote_average).outerHTML}
+                        </div>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                            <button class="bg-primary text-white px-4 py-2 rounded-full">
+                                <i class="fas fa-play"></i> Play
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-dark">
+                        <h3 class="font-semibold truncate">${item.title || item.name}</h3>
+                        <p class="text-gray-400 text-sm mt-1">
+                            ${item.release_date ? item.release_date.substring(0, 4) : item.first_air_date ? item.first_air_date.substring(0, 4) : 'N/A'}
+                        </p>
+                    </div>
+                `;
+                container.appendChild(itemElement);
+            });
+        }
+        
+        // Initialize toggles
+        function initToggles() {
+            document.querySelectorAll('input[type="radio"]').forEach(toggle => {
+                toggle.addEventListener('change', function() {
+                    const section = this.id.replace('MoviesToggle', '').replace('TVToggle', '');
+                    const movieContainer = document.querySelector(`#${section}Movies`).parentElement;
+                    const tvContainer = document.querySelector(`#${section}TV`).parentElement;
+                    
+                    if (this.id.includes('TVToggle')) {
+                        movieContainer.classList.add('hidden');
+                        tvContainer.classList.remove('hidden');
+                    } else {
+                        movieContainer.classList.remove('hidden');
+                        tvContainer.classList.add('hidden');
+                    }
+                });
+            });
+        }
+        
+        // Hero section slideshow
+        function initHeroSlideshow() {
+            const heroSection = document.querySelector('.hero-section');
+            
+            // Fetch trending movies for hero section
+            fetchData(`${API_URL}/trending/movie/day?api_key=${API_KEY}`)
+                .then(data => {
+                    if (data && data.results.length > 0) {
+                        // Create slides for the first 5 trending movies
+                        const slides = data.results.slice(0, 5).map(movie => {
+                            const slide = document.createElement('div');
+                            slide.className = 'hero-slide';
+                            if (movie.backdrop_path) {
+                                slide.style.backgroundImage = `url(${IMG_URL}${movie.backdrop_path})`;
+                            }
+                            return slide;
+                        });
+                        
+                        // Add slides to hero section
+                        slides.forEach((slide, index) => {
+                            if (index === 0) slide.classList.add('active');
+                            heroSection.insertBefore(slide, heroSection.firstChild);
+                        });
+                        
+                        // Rotate slides every 5 seconds
+                        let currentSlide = 0;
+                        setInterval(() => {
+                            const allSlides = document.querySelectorAll('.hero-slide');
+                            allSlides[currentSlide].classList.remove('active');
+                            currentSlide = (currentSlide + 1) % allSlides.length;
+                            allSlides[currentSlide].classList.add('active');
+                        }, 5000);
+                    }
+                });
+        }
+        
+        // Update slider fade effects based on scroll position
+        function updateSliderFadeEffects() {
+            document.querySelectorAll('.slider-content').forEach(slider => {
+                const container = slider.parentElement;
+                const atStart = slider.scrollLeft === 0;
+                const atEnd = slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 1;
+                
+                container.style.setProperty('--fade-left', atStart ? 0 : 1);
+                container.style.setProperty('--fade-right', atEnd ? 0 : 1);
+            });
+        }
+        
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            initToggles();
+            initHeroSlideshow();
+            
+            // Fetch and display all sections
+            const endpoints = [
+                { id: 'trending', movieUrl: `${API_URL}/trending/movie/day?api_key=${API_KEY}`, tvUrl: `${API_URL}/trending/tv/day?api_key=${API_KEY}` },
+                { id: 'popular', movieUrl: `${API_URL}/movie/popular?api_key=${API_KEY}`, tvUrl: `${API_URL}/tv/popular?api_key=${API_KEY}` },
+                { id: 'nowPlaying', movieUrl: `${API_URL}/movie/now_playing?api_key=${API_KEY}`, tvUrl: `${API_URL}/tv/on_the_air?api_key=${API_KEY}` },
+                { id: 'upcoming', movieUrl: `${API_URL}/movie/upcoming?api_key=${API_KEY}`, tvUrl: `${API_URL}/tv/airing_today?api_key=${API_KEY}` }
+            ];
+            
+            for (const endpoint of endpoints) {
+                const movieData = await fetchData(endpoint.movieUrl);
+                if (movieData) {
+                    displaySliderItems(movieData, `${endpoint.id}Movies`, true);
+                }
+                
+                const tvData = await fetchData(endpoint.tvUrl);
+                if (tvData) {
+                    displaySliderItems(tvData, `${endpoint.id}TV`, false);
+                }
+            }
+            
+            // Initialize slider fade effects
+            updateSliderFadeEffects();
+            
+            // Set up scroll event listeners for sliders
+            document.querySelectorAll('.slider-content').forEach(slider => {
+                slider.addEventListener('scroll', updateSliderFadeEffects);
+                
+                let isDown = false;
+                let startX;
+                let scrollLeft;
+
+                slider.addEventListener('mousedown', (e) => {
+                    isDown = true;
+                    startX = e.pageX - slider.offsetLeft;
+                    scrollLeft = slider.scrollLeft;
+                });
+
+                slider.addEventListener('mouseleave', () => {
+                    isDown = false;
+                });
+
+                slider.addEventListener('mouseup', () => {
+                    isDown = false;
+                });
+
+                slider.addEventListener('mousemove', (e) => {
+                    if(!isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - slider.offsetLeft;
+                    const walk = (x - startX) * 2;
+                    slider.scrollLeft = scrollLeft - walk;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
