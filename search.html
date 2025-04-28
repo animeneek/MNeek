@@ -135,6 +135,34 @@
     .filter-btn:hover {
       background: rgba(50, 50, 50, 0.9);
     }
+    /* Custom scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(255,68,68,0.5);
+      border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,68,68,0.8);
+    }
+    /* Year dropdown specific */
+    .year-option {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+    .year-option:hover {
+      background: rgba(255,68,68,0.1);
+    }
+    .year-option.selected {
+      background: rgba(255,68,68,0.2);
+      color: #ff4444;
+    }
     @media (max-width: 640px) {
       .filter-controls {
         justify-content: center;
@@ -146,6 +174,13 @@
       }
       .filter-btn i {
         margin-right: 0.2rem;
+      }
+      .filter-dropdown {
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90vw;
+        max-width: 300px;
       }
     }
   </style>
@@ -179,7 +214,7 @@
             <span class="hidden sm:inline">Genre</span>
             <i class="fas fa-chevron-down text-xs ml-1"></i>
           </button>
-          <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-64 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
+          <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-64 bg-dark rounded-lg shadow-lg z-40 border border-gray-800 custom-scrollbar">
             <div class="p-3 max-h-60 overflow-y-auto" id="genre-filter-options"></div>
           </div>
         </div>
@@ -193,11 +228,8 @@
           </button>
           <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-48 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
             <div class="p-3">
-              <div class="flex gap-2 mb-2">
-                <input type="number" id="year-from" placeholder="From" class="w-full bg-gray-900 text-white px-2 py-1 rounded text-sm">
-                <input type="number" id="year-to" placeholder="To" class="w-full bg-gray-900 text-white px-2 py-1 rounded text-sm">
-              </div>
-              <button id="apply-year" class="w-full bg-primary hover:bg-red-600 text-white py-1 rounded text-sm">Apply</button>
+              <input type="text" id="year-search" placeholder="Search years..." class="w-full bg-gray-900 text-white px-2 py-1 rounded text-sm mb-2">
+              <div class="max-h-52 overflow-y-auto custom-scrollbar" id="year-options"></div>
             </div>
           </div>
         </div>
@@ -212,7 +244,7 @@
           <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-48 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
             <div class="p-3 max-h-60 overflow-y-auto">
               <input type="text" id="language-search" placeholder="Search..." class="w-full bg-gray-900 text-white px-2 py-1 rounded text-sm mb-2">
-              <div id="language-filter-options"></div>
+              <div id="language-filter-options" class="custom-scrollbar"></div>
             </div>
           </div>
         </div>
@@ -226,7 +258,7 @@
           </button>
           <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-48 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
             <div class="p-3">
-              <select id="sort-by" class="w-full bg-gray-900 text-white px-2 py-1 rounded text-sm mb-2">
+              <select id="sort-by" class="w-full bg-gray-900 text-white px-2 py-1 rounded text-sm">
                 <option value="popularity.desc">Popularity Desc</option>
                 <option value="popularity.asc">Popularity Asc</option>
                 <option value="vote_average.desc">Rating Desc</option>
@@ -234,7 +266,6 @@
                 <option value="primary_release_date.desc">Newest First</option>
                 <option value="primary_release_date.asc">Oldest First</option>
               </select>
-              <button id="apply-sort" class="w-full bg-primary hover:bg-red-600 text-white py-1 rounded text-sm">Apply</button>
             </div>
           </div>
         </div>
@@ -279,10 +310,10 @@
       currentSearchType: 'multi',
       currentPage: 1,
       totalPages: 1,
+      currentQuery: '',
       filters: {
         genres: [],
-        yearFrom: null,
-        yearTo: null,
+        years: [],
         language: null,
         sortBy: 'popularity.desc'
       },
@@ -290,14 +321,20 @@
         movie: [],
         tv: []
       },
-      languages: []
+      languages: [],
+      allYears: Array.from({length: 30}, (_, i) => new Date().getFullYear() - i) // Last 30 years
     };
 
     // Initialize the page
     document.addEventListener('DOMContentLoaded', async () => {
+      // Get query from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      state.currentQuery = urlParams.get('query') || '';
+      
       // Load genres and languages
       await loadGenres();
       await loadLanguages();
+      renderYearOptions();
       
       // Setup event listeners
       setupSearchTabs();
@@ -305,7 +342,9 @@
       setupDropdowns();
       
       // Perform initial search with default filters
-      performSearch();
+      if (state.currentQuery) {
+        performSearch();
+      }
     });
 
     // Load movie and TV genres
@@ -330,8 +369,28 @@
     async function loadLanguages() {
       try {
         const languages = await fetchTMDB('/configuration/languages');
-        state.languages = languages.slice(0, 100); // Limit to top 100 languages
-        renderLanguageOptions();
+        
+        // Sort languages with priority order
+        const priorityLanguages = ['en', 'hi', 'te', 'ta', 'kn', 'ml'];
+        const indianLanguages = ['bn', 'pa', 'gu', 'mr', 'or', 'as'];
+        
+        state.languages = [
+          // Priority languages first
+          ...priorityLanguages.map(code => 
+            languages.find(lang => lang.iso_639_1 === code)
+          ).filter(Boolean),
+          
+          // Other Indian languages
+          ...indianLanguages.map(code => 
+            languages.find(lang => lang.iso_639_1 === code)
+          ).filter(Boolean),
+          
+          // All other languages
+          ...languages.filter(lang => 
+            !priorityLanguages.includes(lang.iso_639_1) && 
+            !indianLanguages.includes(lang.iso_639_1)
+          )
+        ].filter(Boolean).slice(0, 100); // Limit to top 100
       } catch (error) {
         console.error('Error loading languages:', error);
       }
@@ -368,6 +427,47 @@
       });
     }
 
+    // Render year options
+    function renderYearOptions() {
+      const container = document.getElementById('year-options');
+      const searchInput = document.getElementById('year-search');
+      
+      const updateYears = () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        const filtered = searchTerm 
+          ? state.allYears.filter(year => year.toString().includes(searchTerm))
+          : state.allYears;
+        
+        container.innerHTML = filtered.map(year => `
+          <div class="year-option ${state.filters.years.includes(year) ? 'selected' : ''}" 
+               data-year="${year}">
+            ${year}
+          </div>
+        `).join('');
+        
+        // Add click handlers
+        container.querySelectorAll('.year-option').forEach(option => {
+          option.addEventListener('click', function() {
+            const year = parseInt(this.getAttribute('data-year'));
+            if (state.filters.years.includes(year)) {
+              state.filters.years = state.filters.years.filter(y => y !== year);
+            } else {
+              state.filters.years.push(year);
+            }
+            updateActiveFilters();
+            performSearch(true); // Reset to page 1
+            renderYearOptions();
+          });
+        });
+      };
+      
+      // Initial render
+      updateYears();
+      
+      // Add search functionality
+      searchInput.addEventListener('input', updateYears);
+    }
+
     // Render language filter options
     function renderLanguageOptions() {
       const container = document.getElementById('language-filter-options');
@@ -379,7 +479,7 @@
           ? state.languages.filter(lang => 
               lang.english_name.toLowerCase().includes(searchTerm) ||
               lang.iso_639_1.toLowerCase().includes(searchTerm))
-          : state.languages.slice(0, 20); // Show first 20 by default
+          : state.languages;
         
         container.innerHTML = filtered.map(lang => `
           <div class="py-1 px-2 hover:bg-gray-800 rounded cursor-pointer ${state.filters.language === lang.iso_639_1 ? 'bg-primary/20' : ''}"
@@ -433,44 +533,23 @@
 
     // Setup filter controls
     function setupFilterControls() {
-      // Year filter
-      document.getElementById('apply-year').addEventListener('click', () => {
-        const from = document.getElementById('year-from').value;
-        const to = document.getElementById('year-to').value;
-        
-        state.filters.yearFrom = from ? parseInt(from) : null;
-        state.filters.yearTo = to ? parseInt(to) : null;
-        
-        updateActiveFilters();
-        performSearch(true); // Reset to page 1
-        
-        // Close dropdown
-        document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('open'));
-      });
-      
       // Sort filter
-      document.getElementById('apply-sort').addEventListener('click', () => {
+      document.getElementById('sort-by').addEventListener('change', () => {
         state.filters.sortBy = document.getElementById('sort-by').value;
         updateActiveFilters();
         performSearch(true); // Reset to page 1
-        
-        // Close dropdown
-        document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('open'));
       });
       
       // Clear filters
       document.getElementById('clear-filters').addEventListener('click', () => {
         state.filters = {
           genres: [],
-          yearFrom: null,
-          yearTo: null,
+          years: [],
           language: null,
           sortBy: 'popularity.desc'
         };
         
         // Reset UI elements
-        document.getElementById('year-from').value = '';
-        document.getElementById('year-to').value = '';
         document.getElementById('sort-by').value = 'popularity.desc';
         
         updateActiveFilters();
@@ -479,9 +558,7 @@
         // Re-render options to uncheck checkboxes
         renderGenreOptions();
         renderLanguageOptions();
-        
-        // Close dropdowns
-        document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('open'));
+        renderYearOptions();
       });
       
       // Load more button
@@ -548,24 +625,15 @@
         }
       });
       
-      // Year filter
-      if (state.filters.yearFrom || state.filters.yearTo) {
-        let yearText = '';
-        if (state.filters.yearFrom && state.filters.yearTo) {
-          yearText = `${state.filters.yearFrom}-${state.filters.yearTo}`;
-        } else if (state.filters.yearFrom) {
-          yearText = `After ${state.filters.yearFrom}`;
-        } else {
-          yearText = `Before ${state.filters.yearTo}`;
-        }
-        
+      // Year filters
+      state.filters.years.forEach(year => {
         filters.push({
           type: 'year',
-          id: 'year',
-          name: yearText,
+          id: year,
+          name: year,
           icon: 'fas fa-calendar'
         });
-      }
+      });
       
       // Language filter
       if (state.filters.language) {
@@ -622,10 +690,8 @@
               renderGenreOptions();
               break;
             case 'year':
-              state.filters.yearFrom = null;
-              state.filters.yearTo = null;
-              document.getElementById('year-from').value = '';
-              document.getElementById('year-to').value = '';
+              state.filters.years = state.filters.years.filter(y => y !== parseInt(id));
+              renderYearOptions();
               break;
             case 'language':
               state.filters.language = null;
@@ -664,6 +730,10 @@
         // Base endpoint
         if (state.currentSearchType === 'multi') {
           endpoint = '/search/multi';
+          params.push(`query=${encodeURIComponent(state.currentQuery)}`);
+        } else if (state.currentSearchType === 'person') {
+          endpoint = '/search/person';
+          params.push(`query=${encodeURIComponent(state.currentQuery)}`);
         } else {
           endpoint = `/discover/${state.currentSearchType}`;
         }
@@ -672,7 +742,7 @@
         params.push(`page=${state.currentPage}`);
         
         // For discover endpoints (filtered search)
-        if (state.currentSearchType !== 'multi' && state.currentSearchType !== 'person') {
+        if (state.currentSearchType === 'movie' || state.currentSearchType === 'tv') {
           params.push(`sort_by=${state.filters.sortBy}`);
           
           // Genre filter
@@ -681,19 +751,11 @@
           }
           
           // Year filter
-          if (state.currentSearchType === 'movie') {
-            if (state.filters.yearFrom) {
-              params.push(`primary_release_date.gte=${state.filters.yearFrom}-01-01`);
-            }
-            if (state.filters.yearTo) {
-              params.push(`primary_release_date.lte=${state.filters.yearTo}-12-31`);
-            }
-          } else if (state.currentSearchType === 'tv') {
-            if (state.filters.yearFrom) {
-              params.push(`first_air_date.gte=${state.filters.yearFrom}-01-01`);
-            }
-            if (state.filters.yearTo) {
-              params.push(`first_air_date.lte=${state.filters.yearTo}-12-31`);
+          if (state.filters.years.length > 0) {
+            if (state.currentSearchType === 'movie') {
+              params.push(`primary_release_year=${state.filters.years.join(',')}`);
+            } else {
+              params.push(`first_air_date_year=${state.filters.years.join(',')}`);
             }
           }
           
@@ -703,9 +765,8 @@
           }
         }
         
-        // For multi search
-        if (state.currentSearchType === 'multi') {
-          // Can't apply most filters to multi search
+        // For multi/person search
+        if (state.currentSearchType === 'multi' || state.currentSearchType === 'person') {
           if (state.filters.language) {
             params.push(`language=${state.filters.language}`);
           }
@@ -866,6 +927,17 @@
       .then(response => response.text())
       .then(data => {
         document.getElementById('header').innerHTML = data;
+        
+        // Handle search form submission from header
+        document.querySelectorAll('form[action="search.html"]').forEach(form => {
+          form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const query = this.querySelector('input').value.trim();
+            if (query) {
+              window.location.href = `search.html?query=${encodeURIComponent(query)}`;
+            }
+          });
+        });
       })
       .catch(error => console.error('Error fetching header:', error));
   </script>
