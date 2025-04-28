@@ -128,6 +128,26 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+    .filter-btn {
+      background: rgba(30, 30, 30, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .filter-btn:hover {
+      background: rgba(50, 50, 50, 0.9);
+    }
+    @media (max-width: 640px) {
+      .filter-controls {
+        justify-content: center;
+        gap: 0.5rem;
+      }
+      .filter-btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
+      }
+      .filter-btn i {
+        margin-right: 0.2rem;
+      }
+    }
   </style>
 </head>
 <body class="bg-black text-white">
@@ -140,36 +160,38 @@
     <!-- Search Filters -->
     <div class="sticky top-20 md:top-16 z-30 bg-black/80 backdrop-blur-sm py-4">
       <!-- Filter Tabs -->
-      <div class="flex justify-center gap-4 md:gap-6 mb-4 text-sm font-medium overflow-x-auto scrollbar-hide px-2">
-        <button class="search-tab active whitespace-nowrap" data-type="multi">All</button>
-        <button class="search-tab whitespace-nowrap" data-type="movie">Movies</button>
-        <button class="search-tab whitespace-nowrap" data-type="tv">Series</button>
-        <button class="search-tab whitespace-nowrap" data-type="person">People</button>
+      <div class="flex justify-center gap-3 md:gap-4 mb-3 text-sm font-medium overflow-x-auto scrollbar-hide px-2">
+        <button class="search-tab active whitespace-nowrap px-3 py-1" data-type="multi">All</button>
+        <button class="search-tab whitespace-nowrap px-3 py-1" data-type="movie">Movies</button>
+        <button class="search-tab whitespace-nowrap px-3 py-1" data-type="tv">Series</button>
+        <button class="search-tab whitespace-nowrap px-3 py-1" data-type="person">People</button>
       </div>
       
       <!-- Active Filters -->
-      <div id="active-filters" class="flex flex-wrap gap-2 mb-3 px-2"></div>
+      <div id="active-filters" class="flex flex-wrap gap-2 mb-3 px-2 justify-center"></div>
       
-      <!-- Filter Controls -->
-      <div class="flex flex-wrap gap-3 px-2">
+      <!-- Filter Controls (Only show for movies/series) -->
+      <div id="filter-controls" class="filter-controls flex flex-wrap gap-2 px-2 justify-center hidden">
         <!-- Genre Filter -->
         <div class="relative group">
-          <button class="flex items-center gap-2 bg-dark hover:bg-gray-800 px-3 py-2 rounded-full text-sm">
-            <i class="fas fa-tags"></i> Genre
-            <i class="fas fa-chevron-down text-xs"></i>
+          <button class="filter-btn flex items-center px-3 py-1.5 rounded-full text-xs md:text-sm">
+            <i class="fas fa-tags text-primary mr-1"></i>
+            <span class="hidden sm:inline">Genre</span>
+            <i class="fas fa-chevron-down text-xs ml-1"></i>
           </button>
-          <div class="filter-dropdown absolute left-0 mt-1 w-64 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
+          <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-64 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
             <div class="p-3 max-h-60 overflow-y-auto" id="genre-filter-options"></div>
           </div>
         </div>
         
         <!-- Year Filter -->
         <div class="relative group">
-          <button class="flex items-center gap-2 bg-dark hover:bg-gray-800 px-3 py-2 rounded-full text-sm">
-            <i class="fas fa-calendar"></i> Year
-            <i class="fas fa-chevron-down text-xs"></i>
+          <button class="filter-btn flex items-center px-3 py-1.5 rounded-full text-xs md:text-sm">
+            <i class="fas fa-calendar text-primary mr-1"></i>
+            <span class="hidden sm:inline">Year</span>
+            <i class="fas fa-chevron-down text-xs ml-1"></i>
           </button>
-          <div class="filter-dropdown absolute left-0 mt-1 w-48 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
+          <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-48 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
             <div class="p-3">
               <div class="flex gap-2 mb-2">
                 <input type="number" id="year-from" placeholder="From" class="w-full bg-gray-900 text-white px-2 py-1 rounded text-sm">
@@ -182,13 +204,14 @@
         
         <!-- Language Filter -->
         <div class="relative group">
-          <button class="flex items-center gap-2 bg-dark hover:bg-gray-800 px-3 py-2 rounded-full text-sm">
-            <i class="fas fa-language"></i> Language
-            <i class="fas fa-chevron-down text-xs"></i>
+          <button class="filter-btn flex items-center px-3 py-1.5 rounded-full text-xs md:text-sm">
+            <i class="fas fa-language text-primary mr-1"></i>
+            <span class="hidden sm:inline">Language</span>
+            <i class="fas fa-chevron-down text-xs ml-1"></i>
           </button>
-          <div class="filter-dropdown absolute left-0 mt-1 w-48 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
+          <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-48 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
             <div class="p-3 max-h-60 overflow-y-auto">
-              <input type="text" id="language-search" placeholder="Search languages..." class="w-full bg-gray-900 text-white px-2 py-1 rounded text-sm mb-2">
+              <input type="text" id="language-search" placeholder="Search..." class="w-full bg-gray-900 text-white px-2 py-1 rounded text-sm mb-2">
               <div id="language-filter-options"></div>
             </div>
           </div>
@@ -196,11 +219,12 @@
         
         <!-- Sort Options -->
         <div class="relative group">
-          <button class="flex items-center gap-2 bg-dark hover:bg-gray-800 px-3 py-2 rounded-full text-sm">
-            <i class="fas fa-sort"></i> Sort
-            <i class="fas fa-chevron-down text-xs"></i>
+          <button class="filter-btn flex items-center px-3 py-1.5 rounded-full text-xs md:text-sm">
+            <i class="fas fa-sort text-primary mr-1"></i>
+            <span class="hidden sm:inline">Sort</span>
+            <i class="fas fa-chevron-down text-xs ml-1"></i>
           </button>
-          <div class="filter-dropdown absolute left-0 mt-1 w-48 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
+          <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-48 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
             <div class="p-3">
               <select id="sort-by" class="w-full bg-gray-900 text-white px-2 py-1 rounded text-sm mb-2">
                 <option value="popularity.desc">Popularity Desc</option>
@@ -216,8 +240,9 @@
         </div>
         
         <!-- Clear Filters -->
-        <button id="clear-filters" class="flex items-center gap-2 bg-dark hover:bg-gray-800 px-3 py-2 rounded-full text-sm text-gray-400 hover:text-white">
-          <i class="fas fa-times"></i> Clear
+        <button id="clear-filters" class="filter-btn flex items-center px-3 py-1.5 rounded-full text-xs md:text-sm text-gray-400 hover:text-white">
+          <i class="fas fa-times text-primary mr-1"></i>
+          <span class="hidden sm:inline">Clear</span>
         </button>
       </div>
     </div>
@@ -353,7 +378,7 @@
         const filtered = searchTerm 
           ? state.languages.filter(lang => 
               lang.english_name.toLowerCase().includes(searchTerm) ||
-              lang.iso_639_1.toLowerCase().includes(searchTerm)
+              lang.iso_639_1.toLowerCase().includes(searchTerm))
           : state.languages.slice(0, 20); // Show first 20 by default
         
         container.innerHTML = filtered.map(lang => `
@@ -385,12 +410,22 @@
     // Setup search tabs
     function setupSearchTabs() {
       const tabs = document.querySelectorAll('.search-tab');
+      const filterControls = document.getElementById('filter-controls');
+      
       tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
+        tab.addEventListener('click', function() {
           tabs.forEach(t => t.classList.remove('active'));
-          tab.classList.add('active');
-          state.currentSearchType = tab.dataset.type;
-          renderGenreOptions(); // Update genres based on media type
+          this.classList.add('active');
+          state.currentSearchType = this.dataset.type;
+          
+          // Show/hide filters based on tab
+          if (this.dataset.type === 'movie' || this.dataset.type === 'tv') {
+            filterControls.classList.remove('hidden');
+            renderGenreOptions(); // Update genres based on media type
+          } else {
+            filterControls.classList.add('hidden');
+          }
+          
           performSearch(true); // Reset to page 1
         });
       });
@@ -408,6 +443,9 @@
         
         updateActiveFilters();
         performSearch(true); // Reset to page 1
+        
+        // Close dropdown
+        document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('open'));
       });
       
       // Sort filter
@@ -415,6 +453,9 @@
         state.filters.sortBy = document.getElementById('sort-by').value;
         updateActiveFilters();
         performSearch(true); // Reset to page 1
+        
+        // Close dropdown
+        document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('open'));
       });
       
       // Clear filters
@@ -438,6 +479,9 @@
         // Re-render options to uncheck checkboxes
         renderGenreOptions();
         renderLanguageOptions();
+        
+        // Close dropdowns
+        document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('open'));
       });
       
       // Load more button
@@ -483,6 +527,12 @@
     function updateActiveFilters() {
       const container = document.getElementById('active-filters');
       const filters = [];
+      
+      // Only show filters for movies/series
+      if (state.currentSearchType !== 'movie' && state.currentSearchType !== 'tv') {
+        container.innerHTML = '';
+        return;
+      }
       
       // Genre filters
       state.filters.genres.forEach(genreId => {
@@ -620,10 +670,11 @@
         
         // Common params
         params.push(`page=${state.currentPage}`);
-        params.push(`sort_by=${state.filters.sortBy}`);
         
         // For discover endpoints (filtered search)
         if (state.currentSearchType !== 'multi' && state.currentSearchType !== 'person') {
+          params.push(`sort_by=${state.filters.sortBy}`);
+          
           // Genre filter
           if (state.filters.genres.length > 0) {
             params.push(`with_genres=${state.filters.genres.join(',')}`);
