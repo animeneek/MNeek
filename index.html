@@ -3,187 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MovieNeek | Premium Streaming</title>
-  <!-- Header Fragment (contains all dependencies) -->
+  <title>MovieNeek | Home</title>
+  <!-- Load header which includes all dependencies -->
   <script type="text/html" src="header.html"></script>
-  <!-- Custom Styles -->
-  <style>
-    .slider-container {
-      scrollbar-width: none; /* Firefox */
-    }
-    .slider-container::-webkit-scrollbar {
-      display: none; /* Chrome/Safari */
-    }
-    .hero-slide {
-      transition: transform 0.5s ease;
-    }
-    .hero-slide:hover {
-      transform: scale(1.03);
-    }
-  </style>
 </head>
-<body class="bg-black text-white">
-  <!-- Header Injection -->
-  <div id="header"></div>
+<body>
+  <!-- Header will be injected here -->
+  <div id="header-container"></div>
 
-  <!-- Hero Slider -->
-  <section class="relative h-[70vh] min-h-[500px] overflow-hidden">
-    <div class="absolute inset-0 flex overflow-x-auto slider-container snap-x snap-mandatory">
-      <!-- Hero Slides (Dynamic content will go here) -->
-      <div class="hero-slide flex-shrink-0 w-full h-full bg-cover bg-center snap-start relative">
-        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent"></div>
-        <div class="absolute bottom-0 left-0 right-0 p-8 md:p-12 lg:p-16 max-w-4xl">
-          <div class="flex gap-2 mb-3">
-            <span class="bg-primary text-xs px-2 py-1 rounded">Action</span>
-            <span class="bg-dark text-xs px-2 py-1 rounded">2023</span>
-            <span class="bg-dark text-xs px-2 py-1 rounded">2h 18m</span>
-          </div>
-          <h2 class="text-3xl md:text-5xl font-bold mb-3">Movie Title</h2>
-          <p class="text-gray-300 mb-5 line-clamp-2">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula.</p>
-          <div class="flex gap-3">
-            <button class="bg-primary hover:bg-red-600 px-6 py-2 rounded-full font-medium flex items-center">
-              <i class="fas fa-play mr-2"></i> Watch Now
-            </button>
-            <button class="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full font-medium flex items-center">
-              <i class="fas fa-info-circle mr-2"></i> More Info
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-      <button class="w-2 h-2 rounded-full bg-white/30 hover:bg-white/80 transition"></button>
-      <button class="w-2 h-2 rounded-full bg-white/30 hover:bg-white/80 transition"></button>
-      <button class="w-2 h-2 rounded-full bg-white/30 hover:bg-white/80 transition"></button>
-    </div>
-  </section>
-
-  <!-- Content Sliders -->
-  <main class="container mx-auto px-4 py-8 space-y-12">
-    <!-- Popular Slider with Toggle -->
-    <section>
-      <div class="flex justify-between items-center mb-6">
-        <div class="flex items-center gap-4">
-          <h2 class="text-2xl font-bold">Popular</h2>
-          <div class="flex bg-dark rounded-full p-1">
-            <button class="px-4 py-1 rounded-full bg-primary text-sm">Movies</button>
-            <button class="px-4 py-1 rounded-full text-sm hover:text-primary">Series</button>
-          </div>
-        </div>
-        <a href="popular.html" class="text-sm text-gray-400 hover:text-primary flex items-center">
-          View All <i class="fas fa-chevron-right ml-1"></i>
-        </a>
-      </div>
-      <div class="relative">
-        <div class="overflow-x-auto slider-container pb-4">
-          <div class="flex gap-4">
-            <!-- Movie Cards -->
-            <div class="flex-shrink-0 w-40 sm:w-48 md:w-56">
-              <a href="#" class="block group">
-                <div class="aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2 relative">
-                  <div class="w-full h-full bg-gray-800/50 group-hover:opacity-80 transition"></div>
-                  <div class="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black to-transparent">
-                    <div class="flex items-center text-sm">
-                      <i class="fas fa-star text-yellow-400 mr-1"></i>
-                      <span>8.4</span>
-                    </div>
-                  </div>
-                </div>
-                <h3 class="font-medium truncate">Movie Title</h3>
-                <p class="text-xs text-gray-400">2023</p>
-              </a>
-            </div>
-            <!-- Repeat 10x -->
-          </div>
-        </div>
-        <button class="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 bg-dark/80 hover:bg-dark rounded-full w-8 h-8 flex items-center justify-center">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-        <button class="absolute right-0 top-1/2 -translate-y-1/2 -mr-2 bg-dark/80 hover:bg-dark rounded-full w-8 h-8 flex items-center justify-center">
-          <i class="fas fa-chevron-right"></i>
-        </button>
-      </div>
-    </section>
-
-    <!-- Now Playing Slider -->
-    <section>
-      <div class="flex justify-between items-center mb-6">
-        <div class="flex items-center gap-4">
-          <h2 class="text-2xl font-bold">Now Playing</h2>
-          <div class="flex bg-dark rounded-full p-1">
-            <button class="px-4 py-1 rounded-full bg-primary text-sm">Movies</button>
-            <button class="px-4 py-1 rounded-full text-sm hover:text-primary">Series</button>
-          </div>
-        </div>
-        <a href="nowplaying.html" class="text-sm text-gray-400 hover:text-primary flex items-center">
-          View All <i class="fas fa-chevron-right ml-1"></i>
-        </a>
-      </div>
-      <div class="overflow-x-auto slider-container pb-4">
-        <div class="flex gap-4">
-          <!-- Same card structure as above -->
-        </div>
-      </div>
-    </section>
-
-    <!-- Upcoming Slider -->
-    <section>
-      <div class="flex justify-between items-center mb-6">
-        <div class="flex items-center gap-4">
-          <h2 class="text-2xl font-bold">Upcoming</h2>
-          <div class="flex bg-dark rounded-full p-1">
-            <button class="px-4 py-1 rounded-full bg-primary text-sm">Movies</button>
-            <button class="px-4 py-1 rounded-full text-sm hover:text-primary">Series</button>
-          </div>
-        </div>
-        <a href="upcoming.html" class="text-sm text-gray-400 hover:text-primary flex items-center">
-          View All <i class="fas fa-chevron-right ml-1"></i>
-        </a>
-      </div>
-      <div class="overflow-x-auto slider-container pb-4">
-        <div class="flex gap-4">
-          <!-- Same card structure as above -->
-        </div>
-      </div>
-    </section>
-
-    <!-- Top Rated Slider -->
-    <section>
-      <div class="flex justify-between items-center mb-6">
-        <div class="flex items-center gap-4">
-          <h2 class="text-2xl font-bold">Top Rated</h2>
-          <div class="flex bg-dark rounded-full p-1">
-            <button class="px-4 py-1 rounded-full bg-primary text-sm">Movies</button>
-            <button class="px-4 py-1 rounded-full text-sm hover:text-primary">Series</button>
-          </div>
-        </div>
-        <a href="toprated.html" class="text-sm text-gray-400 hover:text-primary flex items-center">
-          View All <i class="fas fa-chevron-right ml-1"></i>
-        </a>
-      </div>
-      <div class="overflow-x-auto slider-container pb-4">
-        <div class="flex gap-4">
-          <!-- Same card structure as above -->
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Footer Injection -->
-  <div id="footer"></div>
-
-  <!-- Script to Load Components -->
+  <!-- Simple script to load header -->
   <script>
-    // Load header and footer
-    ['header', 'footer'].forEach(id => {
-      fetch(`${id}.html`)
-        .then(r => r.text())
-        .then(html => document.getElementById(id).innerHTML = html)
-        .catch(e => console.error(`Error loading ${id}:`, e));
-    });
-
-    // Slider navigation logic would go here
-    // TMDB API integration would go here
+    // Load header content
+    fetch('header.html')
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById('header-container').innerHTML = html;
+      })
+      .catch(error => {
+        console.error('Error loading header:', error);
+      });
   </script>
 </body>
 </html>
