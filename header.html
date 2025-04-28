@@ -1,39 +1,143 @@
-<!-- header.html -->
-<!-- Desktop Navigation -->
-<nav class="glass-header p-4 sticky top-0 z-50 desktop-nav">
-    <div class="container mx-auto flex items-center justify-between">
-        <div class="flex items-center space-x-10">
-            <img src="https://github.com/animeneek/MN/blob/main/assets/Movieneek_Raider%20Crusader_001.png?raw=true" 
-                 alt="MovieNeek Logo" class="h-8">
-            <div class="hidden md:flex space-x-6">
-                <a href="#" class="hover:text-primary font-medium">Home</a>
-                <a href="#" class="hover:text-primary font-medium">Movies</a>
-                <a href="#" class="hover:text-primary font-medium">TV Shows</a>
-            </div>
-        </div>
-        <div class="relative search-container">
-            <input type="text" placeholder="Search here..." 
-                   class="w-full bg-[#333] rounded-full py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary">
-            <button class="absolute right-3 top-2 text-gray-400 hover:text-white">
-                <i class="fas fa-search"></i>
-            </button>
-        </div>
-    </div>
-</nav>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MovieNeek</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Glass Effect & Custom Styles -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            dark: '#222',
+            primary: '#ff4444',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    .glass-nav {
+      background: rgba(10, 10, 10, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(20, 20, 20, 0.95);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <!-- Desktop Header -->
+  <header class="glass-nav fixed top-0 left-0 right-0 z-50 hidden md:block">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+      <!-- Logo (Links to index.html) -->
+      <a href="index.html" class="flex items-center">
+        <img 
+          src="https://github.com/animeneek/MN/blob/main/assets/Movieneek_Raider%20Crusader_001.png?raw=true" 
+          alt="MovieNeek Logo" 
+          class="h-9 w-auto"
+        >
+      </a>
 
-<!-- Mobile Top Navigation -->
-<div class="mobile-top-nav md:hidden">
-    <img src="https://github.com/animeneek/MN/blob/main/assets/Movieneek_Raider%20Crusader_001.png?raw=true" 
-         alt="MovieNeek Logo">
-</div>
+      <!-- Search Bar (Centered) -->
+      <div class="flex-1 max-w-xl mx-4">
+        <form action="search.html" method="GET" class="relative">
+          <input
+            type="text"
+            name="query"
+            placeholder="Search movies, series, people..."
+            class="w-full bg-dark text-white px-4 py-2 rounded-full focus:outline-none focus:ring-1 focus:ring-primary text-sm placeholder-gray-400"
+          >
+          <button type="submit" class="absolute right-3 top-2 text-gray-400 hover:text-primary">
+            <i class="fas fa-search fa-sm"></i>
+          </button>
+        </form>
+      </div>
 
-<!-- Mobile Search -->
-<div class="mobile-search md:hidden">
-    <div class="relative">
-        <input type="text" placeholder="Search here..." 
-               class="w-full bg-[#333] rounded-full py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary">
-        <button class="absolute right-3 top-2 text-gray-400 hover:text-white">
-            <i class="fas fa-search"></i>
-        </button>
+      <!-- Desktop Menu -->
+      <nav class="flex space-x-6">
+        <a href="movies.html" class="text-gray-300 hover:text-primary text-sm font-medium">Movies</a>
+        <a href="series.html" class="text-gray-300 hover:text-primary text-sm font-medium">Series</a>
+        <a href="livetv.html" class="text-gray-300 hover:text-primary text-sm font-medium">Live TV</a>
+        <a href="https://animeneek.github.io/AnimeNeek" class="text-gray-300 hover:text-primary text-sm font-medium">Anime</a>
+        <a href="people.html" class="text-gray-300 hover:text-primary text-sm font-medium">People</a>
+      </nav>
     </div>
-</div>
+  </header>
+
+  <!-- Mobile Header (Logo + Search) -->
+  <div class="md:hidden glass-nav fixed top-0 left-0 right-0 z-40 pt-3 pb-3 px-4">
+    <!-- Logo (Smaller) -->
+    <a href="index.html" class="flex justify-center mb-3">
+      <img 
+        src="https://github.com/animeneek/MN/blob/main/assets/Movieneek_Raider%20Crusader_001.png?raw=true" 
+        alt="MovieNeek Logo" 
+        class="h-7 w-auto opacity-90"
+      >
+    </a>
+    <!-- Search Bar -->
+    <form action="search.html" method="GET" class="relative">
+      <input
+        type="text"
+        name="query"
+        placeholder="Search..."
+        class="w-full bg-dark text-white px-4 py-2 rounded-full focus:outline-none focus:ring-1 focus:ring-primary text-xs placeholder-gray-400"
+      >
+      <button type="submit" class="absolute right-3 top-2 text-gray-400 hover:text-primary">
+        <i class="fas fa-search fa-xs"></i>
+      </button>
+    </form>
+  </div>
+
+  <!-- Mobile Bottom Navigation (Minimalist Icons) -->
+  <nav class="md:hidden bottom-nav flex justify-around items-center py-3">
+    <a href="movies.html" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
+      <i class="fas fa-film fa-sm mb-1"></i>
+      <span>Movies</span>
+    </a>
+    <a href="series.html" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
+      <i class="fas fa-tv fa-sm mb-1"></i>
+      <span>Series</span>
+    </a>
+    <a href="livetv.html" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
+      <i class="fas fa-broadcast-tower fa-sm mb-1"></i>
+      <span>Live TV</span>
+    </a>
+    <a href="https://animeneek.github.io/AnimeNeek" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
+      <i class="fas fa-ghost fa-sm mb-1"></i>
+      <span>Anime</span>
+    </a>
+    <a href="people.html" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
+      <i class="fas fa-users fa-sm mb-1"></i>
+      <span>People</span>
+    </a>
+  </nav>
+
+  <!-- Spacer (Prevents content from hiding under header) -->
+  <div class="h-24 md:h-20"></div>
+
+  <!-- Search Form Handling -->
+  <script>
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const query = this.querySelector('input').value.trim();
+        window.location.href = `search.html?query=${encodeURIComponent(query)}`;
+      });
+    });
+  </script>
+</body>
+</html>
