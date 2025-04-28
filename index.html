@@ -1,55 +1,179 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MovieNeek - Stream Movies Online</title>
-    
-    <!-- Tailwind CSS via CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#ff4444',
-                        dark: '#222222',
-                    },
-                    fontFamily: {
-                        sans: ['Poppins', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
-
-    <!-- Google Fonts - Poppins -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Favicon -->
-    <link rel="icon" href="https://github.com/animeneek/MN/blob/main/assets/Movieneek_Raider%20Crusader_001.png?raw=true">
-    
-    <!-- Internal CSS -->
-    <style>
-        /* [your entire <style> block exactly as you have it] */
-        /* ... Rating Circle, Slider Scroll, Toggle Switch, Hero Section, Glass Header, Mobile Nav, Media Queries... */
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MovieNeek - Modern Movie Streaming</title>
+  <!-- Header Fragment (contains all dependencies) -->
+  <script type="text/html" src="header.html"></script>
+  <!-- Custom Styles -->
+  <style>
+    .movie-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .movie-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(255, 68, 68, 0.1);
+    }
+    .gradient-overlay {
+      background: linear-gradient(to top, #111 10%, transparent 90%);
+    }
+  </style>
 </head>
+<body class="bg-black text-white">
+  <!-- Dynamic Header Injection -->
+  <div id="header"></div>
 
-<body class="bg-black text-white font-sans">
+  <!-- Hero Section -->
+  <section class="relative h-screen max-h-[80vh] overflow-hidden">
+    <!-- Dynamic Hero Background (will be set by JS) -->
+    <div id="hero-background" class="absolute inset-0 bg-cover bg-center gradient-overlay">
+      <div class="absolute bottom-0 left-0 right-0 p-8 md:p-12 lg:p-16">
+        <h1 id="hero-title" class="text-4xl md:text-6xl font-bold mb-2"></h1>
+        <p id="hero-overview" class="text-gray-300 max-w-2xl mb-4"></p>
+        <div class="flex space-x-3">
+          <button id="hero-play" class="bg-primary hover:bg-red-600 px-6 py-2 rounded-full font-medium">
+            <i class="fas fa-play mr-2"></i> Watch Now
+          </button>
+          <button id="hero-info" class="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full font-medium">
+            <i class="fas fa-info-circle mr-2"></i> More Info
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <!-- Include Header -->
-    <!--#include virtual="header.html" -->
+  <!-- Movie Sections -->
+  <main class="container mx-auto px-4 py-8">
+    <!-- Trending Now -->
+    <section class="mb-12">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">
+          <i class="fas fa-fire text-primary mr-2"></i> Trending Now
+        </h2>
+        <a href="popular.html" class="text-gray-400 hover:text-primary text-sm">
+          View All <i class="fas fa-chevron-right ml-1"></i>
+        </a>
+      </div>
+      <div id="trending" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+    </section>
 
-    <!-- Main Content -->
-    <!-- (add your content here in future, like hero sections, sliders, etc.) -->
+    <!-- Popular Movies -->
+    <section class="mb-12">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">
+          <i class="fas fa-star text-primary mr-2"></i> Popular Movies
+        </h2>
+        <a href="movies.html" class="text-gray-400 hover:text-primary text-sm">
+          View All <i class="fas fa-chevron-right ml-1"></i>
+        </a>
+      </div>
+      <div id="popular-movies" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+    </section>
 
-    <!-- Include Footer -->
-    <!--#include virtual="footer.html" -->
+    <!-- Top Rated -->
+    <section class="mb-12">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">
+          <i class="fas fa-trophy text-primary mr-2"></i> Top Rated
+        </h2>
+        <a href="toprated.html" class="text-gray-400 hover:text-primary text-sm">
+          View All <i class="fas fa-chevron-right ml-1"></i>
+        </a>
+      </div>
+      <div id="top-rated" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+    </section>
+  </main>
 
+  <!-- Footer Fragment -->
+  <div id="footer"></div>
+
+  <!-- TMDB API Integration -->
+  <script>
+    // API Config
+    const TMDB_API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
+    const BASE_URL = 'https://api.themoviedb.org/3';
+    const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
+
+    // Load header and footer
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('header.html').then(r => r.text()).then(html => {
+        document.getElementById('header').innerHTML = html;
+      });
+      fetch('footer.html').then(r => r.text()).then(html => {
+        document.getElementById('footer').innerHTML = html;
+      });
+
+      // Load hero banner (random trending movie)
+      fetchTrendingHero();
+      
+      // Load content sections
+      fetchSection('trending', '/trending/movie/day');
+      fetchSection('popular-movies', '/movie/popular');
+      fetchSection('top-rated', '/movie/top_rated');
+    });
+
+    // Fetch random trending movie for hero
+    async function fetchTrendingHero() {
+      try {
+        const res = await fetch(`${BASE_URL}/trending/movie/day?api_key=${TMDB_API_KEY}`);
+        const data = await res.json();
+        const randomMovie = data.results[Math.floor(Math.random() * data.results.length)];
+        
+        // Set hero content
+        document.getElementById('hero-background').style.backgroundImage = `url('${IMAGE_URL}${randomMovie.backdrop_path}')`;
+        document.getElementById('hero-title').textContent = randomMovie.title;
+        document.getElementById('hero-overview').textContent = 
+          randomMovie.overview.length > 150 
+            ? randomMovie.overview.substring(0, 150) + '...' 
+            : randomMovie.overview;
+        
+        // Set button actions
+        document.getElementById('hero-play').onclick = () => {
+          window.location.href = `watch.html?id=${randomMovie.id}`;
+        };
+        document.getElementById('hero-info').onclick = () => {
+          window.location.href = `info.html?id=${randomMovie.id}`;
+        };
+      } catch (err) {
+        console.error('Error fetching hero movie:', err);
+      }
+    }
+
+    // Fetch content for a section
+    async function fetchSection(sectionId, endpoint) {
+      try {
+        const res = await fetch(`${BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}`);
+        const data = await res.json();
+        const container = document.getElementById(sectionId);
+        
+        data.results.slice(0, 10).forEach(movie => {
+          container.innerHTML += `
+            <a href="info.html?id=${movie.id}" class="movie-card group">
+              <div class="relative rounded-lg overflow-hidden aspect-[2/3]">
+                <img 
+                  src="${IMAGE_URL}${movie.poster_path}" 
+                  alt="${movie.title}"
+                  class="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
+                  onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'"
+                >
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                  <div>
+                    <h3 class="font-semibold line-clamp-1">${movie.title}</h3>
+                    <div class="flex items-center text-sm text-gray-300">
+                      <i class="fas fa-star text-yellow-400 mr-1"></i>
+                      ${movie.vote_average.toFixed(1)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a>
+          `;
+        });
+      } catch (err) {
+        console.error(`Error fetching ${sectionId}:`, err);
+      }
+    }
+  </script>
 </body>
 </html>
