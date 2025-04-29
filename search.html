@@ -171,6 +171,38 @@
       }
     }
   </style>
+  <style>
+  /* Add this at the end of your existing styles */
+  @media (max-width: 640px) {
+    .filter-btn span:not(.sr-only) {
+      display: none;
+    }
+    .filter-btn i.fa-chevron-down {
+      display: none;
+    }
+    .filter-btn {
+      padding: 0.5rem;
+      min-width: 36px;
+      justify-content: center;
+    }
+    .filter-btn i:first-child {
+      margin-right: 0;
+    }
+  }
+  
+  /* Accessibility - hide visually but keep for screen readers */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+</style>
 </head>
 <body class="bg-black text-white">
 
