@@ -785,49 +785,51 @@
         let totalPages = 1;
         
         if (state.filters.contentType === 'multi') {
-          // Search both movies and TV shows
-          const [movieResults, tvResults] = await Promise.all([
-            searchContentType('movie'),
-            searchContentType('tv')
+          // Search both movies and TV shows with proper sorting
+          const [movieResponse, tvResponse] = await Promise.all([
+            fetch(`${BASE_URL}/search/movie?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}&sort_by=${state.filters.sortBy}`).then(res => res.json()),
+            fetch(`${BASE_URL}/search/tv?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}&sort_by=${state.filters.sortBy}`).then(res => res.json())
           ]);
           
-          results = [...movieResults.results, ...tvResults.results];
-          totalPages = Math.max(movieResults.total_pages, tvResults.total_pages);
+          // Combine results
+          results = [...(movieResponse.results || []), ...(tvResponse.results || [])];
           
-          // Sort combined results
-          if (state.filters.sortBy) {
-            results.sort((a, b) => {
-              if (state.filters.sortBy.includes('popularity')) {
-                return state.filters.sortBy.includes('desc') ? b.popularity - a.popularity : a.popularity - b.popularity;
-              } else if (state.filters.sortBy.includes('vote_average')) {
-                return state.filters.sortBy.includes('desc') ? b.vote_average - a.vote_average : a.vote_average - b.vote_average;
-              } else if (state.filters.sortBy.includes('release_date')) {
-                const dateA = a.release_date || a.first_air_date || '';
-                const dateB = b.release_date || b.first_air_date || '';
-                return state.filters.sortBy.includes('desc') ? dateB.localeCompare(dateA) : dateA.localeCompare(dateB);
-              }
-              return 0;
-            });
-          }
+          // Apply client-side sorting for combined results
+          results.sort((a, b) => {
+            if (state.filters.sortBy.includes('popularity')) {
+              return state.filters.sortBy.includes('desc') ? b.popularity - a.popularity : a.popularity - b.popularity;
+            } else if (state.filters.sortBy.includes('vote_average')) {
+              return state.filters.sortBy.includes('desc') ? b.vote_average - a.vote_average : a.vote_average - b.vote_average;
+            } else if (state.filters.sortBy.includes('release_date')) {
+              const dateA = a.release_date || a.first_air_date || '';
+              const dateB = b.release_date || b.first_air_date || '';
+              return state.filters.sortBy.includes('desc') ? dateB.localeCompare(dateA) : dateA.localeCompare(dateB);
+            }
+            return 0;
+          });
+          
+          totalPages = Math.max(movieResponse.total_pages || 1, tvResponse.total_pages || 1);
         } else {
           // Search specific content type
-          const response = await searchContentType(state.filters.contentType);
+          const response = await fetch(
+            `${BASE_URL}/search/${state.filters.contentType}?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}&sort_by=${state.filters.sortBy}`
+          ).then(res => res.json());
+          
           results = response.results || [];
           totalPages = response.total_pages || 1;
         }
         
         state.totalPages = totalPages;
         
-        // Filter by genre on client side if needed
+        // Apply additional filters
         if (state.filters.genres.length > 0) {
-          results = results.filter(item => {
-            return item.genre_ids && state.filters.genres.every(genreId => 
+          results = results.filter(item => 
+            item.genre_ids && state.filters.genres.every(genreId => 
               item.genre_ids.includes(genreId)
-            );
-          });
+            )
+          );
         }
         
-        // Filter by year on client side if needed
         if (state.filters.years.length > 0) {
           results = results.filter(item => {
             const releaseYear = item.release_date 
@@ -839,11 +841,10 @@
           });
         }
         
-        // Filter by language on client side if needed
         if (state.filters.language) {
-          results = results.filter(item => {
-            return item.original_language === state.filters.language;
-          });
+          results = results.filter(item => 
+            item.original_language === state.filters.language
+          );
         }
         
         if (results.length === 0 && reset) {
@@ -882,28 +883,6 @@
       } finally {
         loading.classList.add('hidden');
       }
-    }
-
-    // Helper function to search for a specific content type
-    async function searchContentType(contentType) {
-      let endpoint = '';
-      let params = [];
-      
-      if (contentType === 'movie' || contentType === 'tv') {
-        endpoint = `/search/${contentType}`;
-        params.push(`query=${encodeURIComponent(state.currentQuery || '')}`);
-        params.push(`page=${state.currentPage}`);
-        params.push(`sort_by=${state.filters.sortBy}`);
-      } else if (!state.currentQuery) {
-        // If no query, show popular items
-        endpoint = contentType === 'movie' ? '/movie/popular' : '/tv/popular';
-        params.push(`page=${state.currentPage}`);
-        params.push(`sort_by=${state.filters.sortBy}`);
-      }
-      
-      const url = `${BASE_URL}${endpoint}?${params.join('&')}&api_key=${TMDB_API_KEY}`;
-      const response = await fetch(url);
-      return await response.json();
     }
 
     // Create result card based on item type
@@ -986,9 +965,7 @@
         return {};
       }
     }
-  </script>
 
-  <script>
     // Fetch the header.html content and insert it into the #header div
     fetch('header.html')
       .then(response => response.text())
@@ -1000,7 +977,9 @@
           form.addEventListener('submit', function(e) {
             e.preventDefault();
             const query = this.querySelector('input').value.trim();
-            window.location.href = `search.html?query=${encodeURIComponent(query)}`;
+            if (query) {
+              window.location.href = `search.html?query=${encodeURIComponent(query)}`;
+            }
           });
         });
       })
