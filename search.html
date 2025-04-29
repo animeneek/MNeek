@@ -330,6 +330,7 @@
     const TMDB_API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
     const BASE_URL = 'https://api.themoviedb.org/3';
     const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
+    const DEFAULT_POSTER = 'https://github.com/animeneek/MN/raw/main/assets/Black%20and%20White%20Modern%20Coming%20soon%20Poster.png';
     
     // State management
     const state = {
@@ -794,7 +795,12 @@
         } else if (state.filters.contentType === 'person') {
           endpoint = '/search/person';
           params.push(`query=${encodeURIComponent(state.currentQuery)}`);
+        } else if (state.currentQuery) {
+          // For movie/tv with search query - use search endpoint
+          endpoint = `/search/${state.filters.contentType}`;
+          params.push(`query=${encodeURIComponent(state.currentQuery)}`);
         } else {
+          // For discover without search query
           endpoint = `/discover/${state.filters.contentType}`;
         }
         
@@ -802,7 +808,7 @@
         params.push(`page=${state.currentPage}`);
         params.push(`sort_by=${state.filters.sortBy}`);
         
-        // For discover endpoints (filtered search)
+        // For discover/search endpoints (filtered search)
         if (state.filters.contentType === 'movie' || state.filters.contentType === 'tv') {
           // Genre filter
           if (state.filters.genres.length > 0) {
@@ -889,7 +895,7 @@
             <a href="info.html?id=${item.id}&type=movie" class="block relative">
               <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
                 <img 
-                  src="${item.poster_path ? IMAGE_URL + item.poster_path : 'https://via.placeholder.com/500x750?text=No+Poster'}" 
+                  src="${item.poster_path ? IMAGE_URL + item.poster_path : DEFAULT_POSTER}" 
                   alt="${item.title}"
                   class="w-full h-full object-cover"
                   loading="lazy"
@@ -912,7 +918,7 @@
             <a href="info.html?id=${item.id}&type=tv" class="block relative">
               <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
                 <img 
-                  src="${item.poster_path ? IMAGE_URL + item.poster_path : 'https://via.placeholder.com/500x750?text=No+Poster'}" 
+                  src="${item.poster_path ? IMAGE_URL + item.poster_path : DEFAULT_POSTER}" 
                   alt="${item.name}"
                   class="w-full h-full object-cover"
                   loading="lazy"
@@ -937,7 +943,7 @@
             <a href="person.html?id=${item.id}" class="block relative">
               <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
                 <img 
-                  src="${item.profile_path ? IMAGE_URL + item.profile_path : 'https://via.placeholder.com/500x750?text=No+Photo'}" 
+                  src="${item.profile_path ? IMAGE_URL + item.profile_path : DEFAULT_POSTER}" 
                   alt="${item.name}"
                   class="w-full h-full object-cover"
                   loading="lazy"
