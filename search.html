@@ -325,7 +325,7 @@
     </div>
   </main>
 
-  <script>
+<script>
     const TMDB_API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
     const BASE_URL = 'https://api.themoviedb.org/3';
     const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -368,9 +368,7 @@
       setupDropdowns();
       
       // Perform initial search with default filters
-      if (state.currentQuery) {
-        performSearch();
-      }
+      performSearch();
     });
 
     // Load movie and TV genres
@@ -784,6 +782,7 @@
       
       try {
         let results = [];
+        let totalPages = 1;
         
         if (state.filters.contentType === 'multi') {
           // Search both movies and TV shows
@@ -792,7 +791,8 @@
             searchContentType('tv')
           ]);
           
-          results = [...movieResults, ...tvResults];
+          results = [...movieResults.results, ...tvResults.results];
+          totalPages = Math.max(movieResults.total_pages, tvResults.total_pages);
           
           // Sort combined results
           if (state.filters.sortBy) {
@@ -811,8 +811,12 @@
           }
         } else {
           // Search specific content type
-          results = await searchContentType(state.filters.contentType);
+          const response = await searchContentType(state.filters.contentType);
+          results = response.results || [];
+          totalPages = response.total_pages || 1;
         }
+        
+        state.totalPages = totalPages;
         
         // Filter by genre on client side if needed
         if (state.filters.genres.length > 0) {
@@ -842,8 +846,6 @@
           });
         }
         
-        state.totalPages = 1; // Since we're doing client-side pagination
-        
         if (results.length === 0 && reset) {
           showNoResults();
           return;
@@ -862,8 +864,8 @@
           }
         });
         
-        // Show load more button if there are more results (client-side pagination)
-        if (results.length > state.currentPage * 20) {
+        // Show load more button if there are more results
+        if (state.currentPage < state.totalPages) {
           loadMoreBtn.classList.remove('hidden');
         }
         
@@ -884,21 +886,24 @@
 
     // Helper function to search for a specific content type
     async function searchContentType(contentType) {
-      let endpoint, params = [];
+      let endpoint = '';
+      let params = [];
       
       if (contentType === 'movie' || contentType === 'tv') {
         endpoint = `/search/${contentType}`;
-        params.push(`query=${encodeURIComponent(state.currentQuery)}`);
+        params.push(`query=${encodeURIComponent(state.currentQuery || '')}`);
         params.push(`page=${state.currentPage}`);
-        
-        // For search, we can't filter by multiple years or genres via API
-        // So we'll get all results and filter client-side
+        params.push(`sort_by=${state.filters.sortBy}`);
+      } else if (!state.currentQuery) {
+        // If no query, show popular items
+        endpoint = contentType === 'movie' ? '/movie/popular' : '/tv/popular';
+        params.push(`page=${state.currentPage}`);
+        params.push(`sort_by=${state.filters.sortBy}`);
       }
       
       const url = `${BASE_URL}${endpoint}?${params.join('&')}&api_key=${TMDB_API_KEY}`;
-      const data = await fetch(url).then(res => res.json());
-      
-      return data.results || [];
+      const response = await fetch(url);
+      return await response.json();
     }
 
     // Create result card based on item type
@@ -995,9 +1000,7 @@
           form.addEventListener('submit', function(e) {
             e.preventDefault();
             const query = this.querySelector('input').value.trim();
-            if (query) {
-              window.location.href = `search.html?query=${encodeURIComponent(query)}`;
-            }
+            window.location.href = `search.html?query=${encodeURIComponent(query)}`;
           });
         });
       })
