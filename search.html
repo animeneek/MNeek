@@ -331,7 +331,6 @@
     const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
     const DEFAULT_POSTER = 'https://github.com/animeneek/MN/raw/main/assets/Black%20and%20White%20Modern%20Coming%20soon%20Poster.png';
     
-    // State management
     const state = {
       currentPage: 1,
       totalPages: 1,
@@ -348,108 +347,80 @@
         tv: []
       },
       languages: [],
-      allYears: Array.from({length: 30}, (_, i) => new Date().getFullYear() - i) // Last 30 years
+      allYears: Array.from({length: 30}, (_, i) => new Date().getFullYear() - i)
     };
 
-    // Initialize the page
     document.addEventListener('DOMContentLoaded', async () => {
-      // Get query from URL
       const urlParams = new URLSearchParams(window.location.search);
       state.currentQuery = urlParams.get('query') || '';
       
-      // Load genres and languages
       await loadGenres();
       await loadLanguages();
       renderYearOptions();
       renderLanguageOptions();
       
-      // Setup event listeners
       setupFilterControls();
       setupDropdowns();
       
-      // Perform initial search with default filters
       performSearch();
     });
 
-    // Load movie and TV genres
     async function loadGenres() {
       try {
         const [movieGenres, tvGenres] = await Promise.all([
-          fetchTMDB('/genre/movie/list'),
-          fetchTMDB('/genre/tv/list')
+          fetch(`${BASE_URL}/genre/movie/list?api_key=${TMDB_API_KEY}`).then(res => res.json()),
+          fetch(`${BASE_URL}/genre/tv/list?api_key=${TMDB_API_KEY}`).then(res => res.json())
         ]);
         
         state.genres.movie = movieGenres.genres || [];
         state.genres.tv = tvGenres.genres || [];
-        
-        // Render genre options
         renderGenreOptions();
       } catch (error) {
         console.error('Error loading genres:', error);
       }
     }
 
-    // Load available languages
     async function loadLanguages() {
       try {
-        const languages = await fetchTMDB('/configuration/languages');
+        const languages = await fetch(`${BASE_URL}/configuration/languages?api_key=${TMDB_API_KEY}`).then(res => res.json());
         
-        // Sort languages with priority order
         const priorityLanguages = ['en', 'hi', 'te', 'ta', 'kn', 'ml'];
         const indianLanguages = ['bn', 'pa', 'gu', 'mr', 'or', 'as'];
         
         state.languages = [
-          // Priority languages first
-          ...priorityLanguages.map(code => 
-            languages.find(lang => lang.iso_639_1 === code)
-          ).filter(Boolean),
-          
-          // Other Indian languages
-          ...indianLanguages.map(code => 
-            languages.find(lang => lang.iso_639_1 === code)
-          ).filter(Boolean),
-          
-          // All other languages
-          ...languages.filter(lang => 
-            !priorityLanguages.includes(lang.iso_639_1) && 
-            !indianLanguages.includes(lang.iso_639_1)
-          )
-        ].filter(Boolean).slice(0, 100); // Limit to top 100
+          ...priorityLanguages.map(code => languages.find(lang => lang.iso_639_1 === code)).filter(Boolean),
+          ...indianLanguages.map(code => languages.find(lang => lang.iso_639_1 === code)).filter(Boolean),
+          ...languages.filter(lang => !priorityLanguages.includes(lang.iso_639_1) && !indianLanguages.includes(lang.iso_639_1))
+        ].filter(Boolean).slice(0, 100);
       } catch (error) {
         console.error('Error loading languages:', error);
       }
     }
 
-    // Render genre filter options
     function renderGenreOptions() {
       const container = document.getElementById('genre-filter-options');
       const currentMediaType = state.filters.contentType === 'tv' ? 'tv' : 'movie';
       const genres = state.genres[currentMediaType] || [];
       
       container.innerHTML = genres.map(genre => `
-        <div class="dropdown-option ${state.filters.genres.includes(genre.id) ? 'selected' : ''}" 
-             data-id="${genre.id}">
+        <div class="dropdown-option ${state.filters.genres.includes(genre.id) ? 'selected' : ''}" data-id="${genre.id}">
           ${genre.name}
         </div>
       `).join('');
       
-      // Add click handlers
       container.querySelectorAll('.dropdown-option').forEach(option => {
         option.addEventListener('click', function() {
           const genreId = parseInt(this.getAttribute('data-id'));
-          if (state.filters.genres.includes(genreId)) {
-            state.filters.genres = state.filters.genres.filter(id => id !== genreId);
-          } else {
-            state.filters.genres.push(genreId);
-          }
+          state.filters.genres = state.filters.genres.includes(genreId) 
+            ? state.filters.genres.filter(id => id !== genreId) 
+            : [...state.filters.genres, genreId];
           updateActiveFilters();
-          performSearch(true); // Reset to page 1
+          performSearch(true);
           renderGenreOptions();
         });
       });
     }
 
-    // Render year options
     function renderYearOptions() {
       const container = document.getElementById('year-options');
       const searchInput = document.getElementById('year-search');
@@ -461,36 +432,28 @@
           : state.allYears;
         
         container.innerHTML = filtered.map(year => `
-          <div class="dropdown-option ${state.filters.years.includes(year) ? 'selected' : ''}" 
-               data-year="${year}">
+          <div class="dropdown-option ${state.filters.years.includes(year) ? 'selected' : ''}" data-year="${year}">
             ${year}
           </div>
         `).join('');
         
-        // Add click handlers
         container.querySelectorAll('.dropdown-option').forEach(option => {
           option.addEventListener('click', function() {
             const year = parseInt(this.getAttribute('data-year'));
-            if (state.filters.years.includes(year)) {
-              state.filters.years = state.filters.years.filter(y => y !== year);
-            } else {
-              state.filters.years.push(year);
-            }
+            state.filters.years = state.filters.years.includes(year)
+              ? state.filters.years.filter(y => y !== year)
+              : [...state.filters.years, year];
             updateActiveFilters();
-            performSearch(true); // Reset to page 1
+            performSearch(true);
             renderYearOptions();
           });
         });
       };
       
-      // Initial render
       updateYears();
-      
-      // Add search functionality
       searchInput.addEventListener('input', updateYears);
     }
 
-    // Render language filter options
     function renderLanguageOptions() {
       const container = document.getElementById('language-filter-options');
       const searchInput = document.getElementById('language-search');
@@ -504,72 +467,56 @@
           : state.languages;
         
         container.innerHTML = filtered.map(lang => `
-          <div class="dropdown-option ${state.filters.language === lang.iso_639_1 ? 'selected' : ''}"
-               data-code="${lang.iso_639_1}">
+          <div class="dropdown-option ${state.filters.language === lang.iso_639_1 ? 'selected' : ''}" data-code="${lang.iso_639_1}">
             ${lang.english_name} (${lang.iso_639_1})
           </div>
         `).join('');
         
-        // Add click handlers
         container.querySelectorAll('.dropdown-option').forEach(div => {
           div.addEventListener('click', function() {
             const langCode = this.getAttribute('data-code');
             state.filters.language = state.filters.language === langCode ? null : langCode;
             updateActiveFilters();
-            performSearch(true); // Reset to page 1
+            performSearch(true);
             renderLanguageOptions();
           });
         });
       };
       
-      // Initial render
       filterLanguages();
-      
-      // Add search functionality
       searchInput.addEventListener('input', filterLanguages);
     }
 
-    // Setup filter controls
     function setupFilterControls() {
-      // Content type filter
       document.querySelectorAll('[data-type]').forEach(option => {
         option.addEventListener('click', function() {
-          const contentType = this.getAttribute('data-type');
-          state.filters.contentType = contentType;
+          state.filters.contentType = this.getAttribute('data-type');
           document.getElementById('content-type-label').textContent = this.textContent;
           
-          // Update selected state
           document.querySelectorAll('[data-type]').forEach(opt => {
             opt.classList.toggle('selected', opt === this);
           });
           
           updateActiveFilters();
-          performSearch(true); // Reset to page 1
-          
-          // Close dropdown
+          performSearch(true);
           this.closest('.filter-dropdown').classList.remove('open');
         });
       });
       
-      // Sort filter
       document.querySelectorAll('[data-sort]').forEach(option => {
         option.addEventListener('click', function() {
           state.filters.sortBy = this.getAttribute('data-sort');
           
-          // Update selected state
           document.querySelectorAll('[data-sort]').forEach(opt => {
             opt.classList.toggle('selected', opt === this);
           });
           
           updateActiveFilters();
-          performSearch(true); // Reset to page 1
-          
-          // Close dropdown
+          performSearch(true);
           this.closest('.filter-dropdown').classList.remove('open');
         });
       });
       
-      // Clear filters
       document.getElementById('clear-filters').addEventListener('click', () => {
         state.filters = {
           contentType: 'multi',
@@ -579,7 +526,6 @@
           sortBy: 'popularity.desc'
         };
         
-        // Reset UI
         document.getElementById('content-type-label').textContent = 'All';
         document.querySelectorAll('[data-type]').forEach(opt => {
           opt.classList.toggle('selected', opt.textContent === 'All');
@@ -589,24 +535,20 @@
         });
         
         updateActiveFilters();
-        performSearch(true); // Reset to page 1
-        
-        // Re-render options
+        performSearch(true);
         renderGenreOptions();
         renderLanguageOptions();
         renderYearOptions();
       });
       
-      // Load more button
       document.getElementById('load-more').addEventListener('click', () => {
         if (state.currentPage < state.totalPages) {
           state.currentPage++;
-          performSearch(false); // Don't reset, append results
+          performSearch(false);
         }
       });
     }
 
-    // Setup dropdown toggles
     function setupDropdowns() {
       document.querySelectorAll('.group > button').forEach(button => {
         button.addEventListener('click', function(e) {
@@ -614,28 +556,20 @@
           const dropdown = this.nextElementSibling;
           const isOpen = dropdown.classList.contains('open');
           
-          // Close all other dropdowns first
           document.querySelectorAll('.filter-dropdown').forEach(d => {
             if (d !== dropdown) d.classList.remove('open');
           });
           
-          // Toggle this dropdown
-          if (isOpen) {
-            dropdown.classList.remove('open');
-          } else {
-            dropdown.classList.add('open');
-          }
+          dropdown.classList.toggle('open', !isOpen);
         });
       });
       
-      // Close dropdowns when clicking outside
       document.addEventListener('click', () => {
         document.querySelectorAll('.filter-dropdown').forEach(d => {
           d.classList.remove('open');
         });
       });
       
-      // Prevent closing when clicking inside dropdown
       document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
         dropdown.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -643,12 +577,10 @@
       });
     }
 
-    // Update active filters display
     function updateActiveFilters() {
       const container = document.getElementById('active-filters');
       const filters = [];
       
-      // Content type filter
       if (state.filters.contentType !== 'multi') {
         filters.push({
           type: 'contentType',
@@ -658,7 +590,6 @@
         });
       }
       
-      // Genre filters
       state.filters.genres.forEach(genreId => {
         const currentMediaType = state.filters.contentType === 'tv' ? 'tv' : 'movie';
         const genre = state.genres[currentMediaType].find(g => g.id === genreId);
@@ -672,7 +603,6 @@
         }
       });
       
-      // Year filters
       state.filters.years.forEach(year => {
         filters.push({
           type: 'year',
@@ -682,7 +612,6 @@
         });
       });
       
-      // Language filter
       if (state.filters.language) {
         const lang = state.languages.find(l => l.iso_639_1 === state.filters.language);
         if (lang) {
@@ -695,7 +624,6 @@
         }
       }
       
-      // Sort filter (only show if not default)
       if (state.filters.sortBy !== 'popularity.desc') {
         const sortText = {
           'popularity.asc': 'Popularity (Asc)',
@@ -713,7 +641,6 @@
         });
       }
       
-      // Render active filters
       container.innerHTML = filters.map(filter => `
         <div class="filter-pill flex items-center gap-2 bg-gray-800 hover:bg-gray-700 px-3 py-1 rounded-full text-xs">
           <i class="${filter.icon} text-primary"></i>
@@ -724,7 +651,6 @@
         </div>
       `).join('');
       
-      // Add remove filter handlers
       document.querySelectorAll('.remove-filter').forEach(button => {
         button.addEventListener('click', function(e) {
           e.stopPropagation();
@@ -760,12 +686,11 @@
           }
           
           updateActiveFilters();
-          performSearch(true); // Reset to page 1
+          performSearch(true);
         });
       });
     }
 
-    // Perform search with current filters
     async function performSearch(reset = true) {
       if (reset) {
         state.currentPage = 1;
@@ -776,177 +701,146 @@
       const loading = document.getElementById('loading');
       const loadMoreBtn = document.getElementById('load-more-container');
       
-      // Show loading
       loading.classList.remove('hidden');
       loadMoreBtn.classList.add('hidden');
       
       try {
         let results = [];
-        let totalPages = 1;
         
         if (state.filters.contentType === 'multi') {
-          // Search both movies and TV shows with proper sorting
-          const [movieResponse, tvResponse] = await Promise.all([
-            fetch(`${BASE_URL}/search/movie?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}&sort_by=${state.filters.sortBy}`).then(res => res.json()),
-            fetch(`${BASE_URL}/search/tv?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}&sort_by=${state.filters.sortBy}`).then(res => res.json())
+          const [movies, tvShows] = await Promise.all([
+            searchTMDB('movie', state.currentQuery),
+            searchTMDB('tv', state.currentQuery)
           ]);
           
-          // Combine results
-          results = [...(movieResponse.results || []), ...(tvResponse.results || [])];
-          
-          // Apply client-side sorting for combined results
-          results.sort((a, b) => {
-            if (state.filters.sortBy.includes('popularity')) {
-              return state.filters.sortBy.includes('desc') ? b.popularity - a.popularity : a.popularity - b.popularity;
-            } else if (state.filters.sortBy.includes('vote_average')) {
-              return state.filters.sortBy.includes('desc') ? b.vote_average - a.vote_average : a.vote_average - b.vote_average;
-            } else if (state.filters.sortBy.includes('release_date')) {
-              const dateA = a.release_date || a.first_air_date || '';
-              const dateB = b.release_date || b.first_air_date || '';
-              return state.filters.sortBy.includes('desc') ? dateB.localeCompare(dateA) : dateA.localeCompare(dateB);
-            }
-            return 0;
-          });
-          
-          totalPages = Math.max(movieResponse.total_pages || 1, tvResponse.total_pages || 1);
+          results = [...movies, ...tvShows];
+          results = sortResults(results, state.filters.sortBy);
         } else {
-          // Search specific content type
-          const response = await fetch(
-            `${BASE_URL}/search/${state.filters.contentType}?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}&sort_by=${state.filters.sortBy}`
-          ).then(res => res.json());
-          
-          results = response.results || [];
-          totalPages = response.total_pages || 1;
+          results = await searchTMDB(state.filters.contentType, state.currentQuery);
+          results = sortResults(results, state.filters.sortBy);
         }
         
-        state.totalPages = totalPages;
-        
-        // Apply additional filters
-        if (state.filters.genres.length > 0) {
-          results = results.filter(item => 
-            item.genre_ids && state.filters.genres.every(genreId => 
-              item.genre_ids.includes(genreId)
-            )
-          );
-        }
-        
-        if (state.filters.years.length > 0) {
-          results = results.filter(item => {
-            const releaseYear = item.release_date 
-              ? new Date(item.release_date).getFullYear()
-              : item.first_air_date 
-                ? new Date(item.first_air_date).getFullYear()
-                : null;
-            return releaseYear && state.filters.years.includes(releaseYear);
-          });
-        }
-        
-        if (state.filters.language) {
-          results = results.filter(item => 
-            item.original_language === state.filters.language
-          );
-        }
+        results = filterResults(results);
         
         if (results.length === 0 && reset) {
           showNoResults();
           return;
         }
         
-        // Append or replace results
-        if (reset) {
-          resultsContainer.innerHTML = '';
-        }
+        displayResults(results, reset);
         
-        // Create cards for each result
-        results.forEach(item => {
-          const card = createResultCard(item);
-          if (card) {
-            resultsContainer.appendChild(card);
-          }
-        });
-        
-        // Show load more button if there are more results
         if (state.currentPage < state.totalPages) {
           loadMoreBtn.classList.remove('hidden');
         }
         
       } catch (error) {
         console.error('Search error:', error);
-        if (reset) {
-          resultsContainer.innerHTML = `
-            <div class="col-span-full text-center py-20 text-gray-400">
-              <i class="fas fa-exclamation-circle fa-2x mb-4"></i>
-              <p>Error loading results. Please try again.</p>
-            </div>
-          `;
-        }
+        showError(reset);
       } finally {
         loading.classList.add('hidden');
       }
     }
 
-    // Create result card based on item type
+    async function searchTMDB(type, query) {
+      let endpoint;
+      if (query) {
+        endpoint = `/search/${type}?query=${encodeURIComponent(query)}`;
+      } else {
+        endpoint = type === 'movie' ? '/movie/popular' : '/tv/popular';
+      }
+      
+      const url = `${BASE_URL}${endpoint}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      state.totalPages = data.total_pages || 1;
+      return data.results || [];
+    }
+
+    function sortResults(results, sortBy) {
+      return [...results].sort((a, b) => {
+        if (sortBy.includes('popularity')) {
+          return sortBy.includes('desc') ? b.popularity - a.popularity : a.popularity - b.popularity;
+        }
+        if (sortBy.includes('vote_average')) {
+          return sortBy.includes('desc') ? b.vote_average - a.vote_average : a.vote_average - b.vote_average;
+        }
+        if (sortBy.includes('release_date')) {
+          const dateA = a.release_date || a.first_air_date || '';
+          const dateB = b.release_date || b.first_air_date || '';
+          return sortBy.includes('desc') ? dateB.localeCompare(dateA) : dateA.localeCompare(dateB);
+        }
+        return 0;
+      });
+    }
+
+    function filterResults(results) {
+      let filtered = [...results];
+      
+      if (state.filters.genres.length > 0) {
+        filtered = filtered.filter(item => 
+          item.genre_ids && state.filters.genres.every(g => item.genre_ids.includes(g))
+        );
+      }
+      
+      if (state.filters.years.length > 0) {
+        filtered = filtered.filter(item => {
+          const date = item.release_date || item.first_air_date;
+          return date && state.filters.years.includes(new Date(date).getFullYear());
+        });
+      }
+      
+      if (state.filters.language) {
+        filtered = filtered.filter(item => 
+          item.original_language === state.filters.language
+        );
+      }
+      
+      return filtered;
+    }
+
+    function displayResults(results, reset) {
+      const container = document.getElementById('search-results');
+      if (reset) container.innerHTML = '';
+      
+      results.forEach(item => {
+        const card = createResultCard(item);
+        if (card) container.appendChild(card);
+      });
+    }
+
     function createResultCard(item) {
       const div = document.createElement('div');
       div.className = 'movie-card-container fade-in';
       
-      if (item.media_type === 'movie' || (state.filters.contentType === 'movie' && !item.media_type)) {
-        const percentage = Math.round(item.vote_average * 10);
-        
-        div.innerHTML = `
-          <div class="movie-card w-40 sm:w-48 md:w-56">
-            <a href="info.html?id=${item.id}&type=movie" class="block relative">
-              <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
-                <img 
-                  src="${item.poster_path ? IMAGE_URL + item.poster_path : DEFAULT_POSTER}" 
-                  alt="${item.title}"
-                  class="w-full h-full object-cover"
-                  loading="lazy"
-                >
-                ${item.vote_average > 0 ? `
-                  <div class="rating-circle" data-rating="${percentage}%" style="--percentage: ${percentage}"></div>
-                ` : ''}
-              </div>
-              <h3 class="font-medium truncate">${item.title}</h3>
-              <p class="text-xs text-gray-400">${item.release_date?.substring(0,4) || 'N/A'}</p>
-            </a>
-          </div>
-        `;
-      } 
-      else if (item.media_type === 'tv' || (state.filters.contentType === 'tv' && !item.media_type)) {
-        const percentage = Math.round(item.vote_average * 10);
-        
-        div.innerHTML = `
-          <div class="movie-card w-40 sm:w-48 md:w-56">
-            <a href="info.html?id=${item.id}&type=tv" class="block relative">
-              <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
-                <img 
-                  src="${item.poster_path ? IMAGE_URL + item.poster_path : DEFAULT_POSTER}" 
-                  alt="${item.name}"
-                  class="w-full h-full object-cover"
-                  loading="lazy"
-                >
-                ${item.vote_average > 0 ? `
-                  <div class="rating-circle" data-rating="${percentage}%" style="--percentage: ${percentage}"></div>
-                ` : ''}
-              </div>
-              <h3 class="font-medium truncate">${item.name}</h3>
-              <p class="text-xs text-gray-400">${item.first_air_date?.substring(0,4) || 'N/A'}</p>
-            </a>
-          </div>
-        `;
-      }
-      else {
-        return null; // Unknown type
-      }
+      const isMovie = item.media_type === 'movie' || (state.filters.contentType === 'movie' && !item.media_type);
+      const percentage = Math.round(item.vote_average * 10);
+      
+      div.innerHTML = `
+        <div class="movie-card w-40 sm:w-48 md:w-56">
+          <a href="info.html?id=${item.id}&type=${isMovie ? 'movie' : 'tv'}" class="block relative">
+            <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
+              <img 
+                src="${item.poster_path ? IMAGE_URL + item.poster_path : DEFAULT_POSTER}" 
+                alt="${isMovie ? item.title : item.name}"
+                class="w-full h-full object-cover"
+                loading="lazy"
+              >
+              ${item.vote_average > 0 ? `
+                <div class="rating-circle" data-rating="${percentage}%" style="--percentage: ${percentage}"></div>
+              ` : ''}
+            </div>
+            <h3 class="font-medium truncate">${isMovie ? item.title : item.name}</h3>
+            <p class="text-xs text-gray-400">${(isMovie ? item.release_date : item.first_air_date)?.substring(0,4) || 'N/A'}</p>
+          </a>
+        </div>
+      `;
       
       return div;
     }
 
-    // Show no results state
     function showNoResults() {
-      const resultsContainer = document.getElementById('search-results');
-      resultsContainer.innerHTML = `
+      document.getElementById('search-results').innerHTML = `
         <div class="col-span-full no-results rounded-lg p-8 text-center">
           <i class="fas fa-film fa-3x mb-4 text-primary/50"></i>
           <h3 class="text-xl font-bold mb-2">No results found</h3>
@@ -955,31 +849,27 @@
       `;
     }
 
-    // TMDB API Helper
-    async function fetchTMDB(endpoint) {
-      try {
-        const res = await fetch(`${BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}`);
-        return await res.json();
-      } catch (err) {
-        console.error(`Error fetching ${endpoint}:`, err);
-        return {};
+    function showError(reset) {
+      if (reset) {
+        document.getElementById('search-results').innerHTML = `
+          <div class="col-span-full text-center py-20 text-gray-400">
+            <i class="fas fa-exclamation-circle fa-2x mb-4"></i>
+            <p>Error loading results. Please try again.</p>
+          </div>
+        `;
       }
     }
 
-    // Fetch the header.html content and insert it into the #header div
     fetch('header.html')
       .then(response => response.text())
       .then(data => {
         document.getElementById('header').innerHTML = data;
         
-        // Handle search form submission from header
         document.querySelectorAll('form[action="search.html"]').forEach(form => {
           form.addEventListener('submit', function(e) {
             e.preventDefault();
             const query = this.querySelector('input').value.trim();
-            if (query) {
-              window.location.href = `search.html?query=${encodeURIComponent(query)}`;
-            }
+            window.location.href = `search.html?query=${encodeURIComponent(query)}`;
           });
         });
       })
