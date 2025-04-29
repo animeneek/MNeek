@@ -348,8 +348,9 @@
       },
       languages: [],
       allYears: Array.from({length: 30}, (_, i) => new Date().getFullYear() - i),
-      filteredResults: [],
-      allResults: []
+      allResults: [],       // Stores all raw results from API
+      filteredResults: [],   // Stores filtered results
+      displayedResults: []   // Stores currently displayed results
     };
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -545,12 +546,25 @@
       
       document.getElementById('load-more').addEventListener('click', () => {
         state.currentPage++;
-        displayResults(getPaginatedResults(), false);
-        
-        if ((state.currentPage * 20) >= state.filteredResults.length) {
-          document.getElementById('load-more-container').classList.add('hidden');
-        }
+        loadMoreResults();
       });
+    }
+
+    function loadMoreResults() {
+      const itemsPerPage = 20;
+      const startIdx = state.displayedResults.length;
+      const endIdx = startIdx + itemsPerPage;
+      const moreResults = state.filteredResults.slice(startIdx, endIdx);
+      
+      if (moreResults.length > 0) {
+        displayResults(moreResults, false);
+        state.displayedResults = [...state.displayedResults, ...moreResults];
+      }
+      
+      // Hide load more button if we've shown all results
+      if (state.displayedResults.length >= state.filteredResults.length) {
+        document.getElementById('load-more-container').classList.add('hidden');
+      }
     }
 
     function setupDropdowns() {
@@ -698,9 +712,10 @@
     async function performSearch(reset = true) {
       if (reset) {
         state.currentPage = 1;
-        document.getElementById('search-results').innerHTML = '';
-        state.filteredResults = [];
         state.allResults = [];
+        state.filteredResults = [];
+        state.displayedResults = [];
+        document.getElementById('search-results').innerHTML = '';
       }
       
       const resultsContainer = document.getElementById('search-results');
@@ -711,22 +726,28 @@
       loadMoreBtn.classList.add('hidden');
       
       try {
-        let results = [];
+        let newResults = [];
         
         if (state.filters.contentType === 'multi') {
           const [movies, tvShows] = await Promise.all([
-            searchTMDB('movie', state.currentQuery),
-            searchTMDB('tv', state.currentQuery)
+            fetch(`${BASE_URL}/search/movie?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json()),
+            fetch(`${BASE_URL}/search/tv?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json())
           ]);
-          
-          results = [...movies, ...tvShows];
-          results = sortResults(results, state.filters.sortBy);
+          newResults = [...(movies.results || []), ...(tvShows.results || [])];
+          state.totalPages = Math.max(movies.total_pages || 1, tvShows.total_pages || 1);
         } else {
-          results = await searchTMDB(state.filters.contentType, state.currentQuery);
-          results = sortResults(results, state.filters.sortBy);
+          const response = await fetch(`${BASE_URL}/search/${state.filters.contentType}?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json());
+          newResults = response.results || [];
+          state.totalPages = response.total_pages || 1;
         }
         
-        state.allResults = [...state.allResults, ...results];
+        // Add new results to our complete collection
+        state.allResults = [...state.allResults, ...newResults];
+        
+        // Apply sorting to all results
+        state.allResults = sortResults(state.allResults, state.filters.sortBy);
+        
+        // Apply filters to all results
         state.filteredResults = filterResults(state.allResults);
         
         if (state.filteredResults.length === 0 && reset) {
@@ -734,9 +755,14 @@
           return;
         }
         
-        displayResults(getPaginatedResults(), reset);
+        // Display initial set of results
+        const itemsPerPage = 20;
+        const initialResults = state.filteredResults.slice(0, itemsPerPage);
+        displayResults(initialResults, reset);
+        state.displayedResults = initialResults;
         
-        if ((state.currentPage * 20) < state.filteredResults.length) {
+        // Show load more button if there are more results to show
+        if (state.filteredResults.length > itemsPerPage) {
           loadMoreBtn.classList.remove('hidden');
         }
         
@@ -746,28 +772,6 @@
       } finally {
         loading.classList.add('hidden');
       }
-    }
-
-    function getPaginatedResults() {
-      const startIdx = (state.currentPage - 1) * 20;
-      const endIdx = startIdx + 20;
-      return state.filteredResults.slice(startIdx, endIdx);
-    }
-
-    async function searchTMDB(type, query) {
-      let endpoint;
-      if (query) {
-        endpoint = `/search/${type}?query=${encodeURIComponent(query)}`;
-      } else {
-        endpoint = type === 'movie' ? '/movie/popular' : '/tv/popular';
-      }
-      
-      const url = `${BASE_URL}${endpoint}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      state.totalPages = data.total_pages || 1;
-      return data.results || [];
     }
 
     function sortResults(results, sortBy) {
@@ -826,12 +830,10 @@
       const div = document.createElement('div');
       div.className = 'movie-card-container fade-in';
       
-      // Determine media type with fallback checks
       const isMovie = item.media_type === 'movie' || 
                      (state.filters.contentType === 'movie' && !item.media_type) ||
                      (item.title && !item.name);
       
-      // Safely get title/name and date with fallbacks
       const title = isMovie ? 
         (item.title || 'Untitled Movie') : 
         (item.name || 'Untitled TV Show');
@@ -898,6 +900,7 @@
         });
       })
       .catch(error => console.error('Error fetching header:', error));
-</script>  
+</script>
+  
 </body>
 </html>
