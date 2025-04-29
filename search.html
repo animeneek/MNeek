@@ -91,19 +91,6 @@
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .search-tab {
-      transition: all 0.2s ease;
-    }
-    .search-tab.active {
-      border-bottom: 2px solid #ff4444;
-      color: white;
-    }
-    .search-tab:not(.active) {
-      color: #9ca3af;
-    }
-    .search-tab:not(.active):hover {
-      color: #d1d5db;
-    }
     .no-results {
       background: linear-gradient(to right, rgba(255,68,68,0.1), rgba(255,68,68,0.05));
     }
@@ -151,15 +138,15 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background: rgba(255,68,68,0.8);
     }
-    /* Year dropdown specific */
-    .year-option {
+    /* Dropdown options */
+    .dropdown-option {
       padding: 0.5rem 1rem;
       cursor: pointer;
     }
-    .year-option:hover {
+    .dropdown-option:hover {
       background: rgba(255,68,68,0.1);
     }
-    .year-option.selected {
+    .dropdown-option.selected {
       background: rgba(255,68,68,0.2);
       color: #ff4444;
     }
@@ -194,28 +181,37 @@
   <main class="container mx-auto px-4 pt-2 pb-24 min-h-screen">
     <!-- Search Filters -->
     <div class="sticky top-20 md:top-16 z-30 bg-black/80 backdrop-blur-sm py-4">
-      <!-- Filter Tabs -->
-      <div class="flex justify-center gap-3 md:gap-4 mb-3 text-sm font-medium overflow-x-auto scrollbar-hide px-2">
-        <button class="search-tab active whitespace-nowrap px-3 py-1" data-type="multi">All</button>
-        <button class="search-tab whitespace-nowrap px-3 py-1" data-type="movie">Movies</button>
-        <button class="search-tab whitespace-nowrap px-3 py-1" data-type="tv">Series</button>
-        <button class="search-tab whitespace-nowrap px-3 py-1" data-type="person">People</button>
-      </div>
-      
       <!-- Active Filters -->
       <div id="active-filters" class="flex flex-wrap gap-2 mb-3 px-2 justify-center"></div>
       
-      <!-- Filter Controls (Only show for movies/series) -->
-      <div id="filter-controls" class="filter-controls flex flex-wrap gap-2 px-2 justify-center hidden">
+      <!-- Filter Controls -->
+      <div class="filter-controls flex flex-wrap gap-2 px-2 justify-center">
+        <!-- Content Type Filter -->
+        <div class="relative group">
+          <button class="filter-btn flex items-center px-3 py-1.5 rounded-full text-xs md:text-sm">
+            <i class="fas fa-list text-primary mr-1"></i>
+            <span id="content-type-label">All</span>
+            <i class="fas fa-chevron-down text-xs ml-1"></i>
+          </button>
+          <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-48 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
+            <div class="p-3 max-h-60 overflow-y-auto custom-scrollbar">
+              <div class="dropdown-option selected" data-type="multi">All</div>
+              <div class="dropdown-option" data-type="movie">Movies</div>
+              <div class="dropdown-option" data-type="tv">Series</div>
+              <div class="dropdown-option" data-type="person">People</div>
+            </div>
+          </div>
+        </div>
+        
         <!-- Genre Filter -->
         <div class="relative group">
           <button class="filter-btn flex items-center px-3 py-1.5 rounded-full text-xs md:text-sm">
             <i class="fas fa-tags text-primary mr-1"></i>
-            <span class="hidden sm:inline">Genre</span>
+            <span>Genre</span>
             <i class="fas fa-chevron-down text-xs ml-1"></i>
           </button>
-          <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-64 bg-dark rounded-lg shadow-lg z-40 border border-gray-800 custom-scrollbar">
-            <div class="p-3 max-h-60 overflow-y-auto" id="genre-filter-options"></div>
+          <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-64 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
+            <div class="p-3 max-h-60 overflow-y-auto custom-scrollbar" id="genre-filter-options"></div>
           </div>
         </div>
         
@@ -223,7 +219,7 @@
         <div class="relative group">
           <button class="filter-btn flex items-center px-3 py-1.5 rounded-full text-xs md:text-sm">
             <i class="fas fa-calendar text-primary mr-1"></i>
-            <span class="hidden sm:inline">Year</span>
+            <span>Year</span>
             <i class="fas fa-chevron-down text-xs ml-1"></i>
           </button>
           <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-48 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
@@ -238,7 +234,7 @@
         <div class="relative group">
           <button class="filter-btn flex items-center px-3 py-1.5 rounded-full text-xs md:text-sm">
             <i class="fas fa-language text-primary mr-1"></i>
-            <span class="hidden sm:inline">Language</span>
+            <span>Language</span>
             <i class="fas fa-chevron-down text-xs ml-1"></i>
           </button>
           <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-48 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
@@ -253,19 +249,17 @@
         <div class="relative group">
           <button class="filter-btn flex items-center px-3 py-1.5 rounded-full text-xs md:text-sm">
             <i class="fas fa-sort text-primary mr-1"></i>
-            <span class="hidden sm:inline">Sort</span>
+            <span>Sort</span>
             <i class="fas fa-chevron-down text-xs ml-1"></i>
           </button>
           <div class="filter-dropdown absolute left-1/2 transform -translate-x-1/2 mt-1 w-48 bg-dark rounded-lg shadow-lg z-40 border border-gray-800">
-            <div class="p-3">
-              <select id="sort-by" class="w-full bg-gray-900 text-white px-2 py-1 rounded text-sm">
-                <option value="popularity.desc">Popularity Desc</option>
-                <option value="popularity.asc">Popularity Asc</option>
-                <option value="vote_average.desc">Rating Desc</option>
-                <option value="vote_average.asc">Rating Asc</option>
-                <option value="primary_release_date.desc">Newest First</option>
-                <option value="primary_release_date.asc">Oldest First</option>
-              </select>
+            <div class="p-3 max-h-60 overflow-y-auto custom-scrollbar">
+              <div class="dropdown-option selected" data-sort="popularity.desc">Popularity Desc</div>
+              <div class="dropdown-option" data-sort="popularity.asc">Popularity Asc</div>
+              <div class="dropdown-option" data-sort="vote_average.desc">Rating Desc</div>
+              <div class="dropdown-option" data-sort="vote_average.asc">Rating Asc</div>
+              <div class="dropdown-option" data-sort="primary_release_date.desc">Newest First</div>
+              <div class="dropdown-option" data-sort="primary_release_date.asc">Oldest First</div>
             </div>
           </div>
         </div>
@@ -273,7 +267,7 @@
         <!-- Clear Filters -->
         <button id="clear-filters" class="filter-btn flex items-center px-3 py-1.5 rounded-full text-xs md:text-sm text-gray-400 hover:text-white">
           <i class="fas fa-times text-primary mr-1"></i>
-          <span class="hidden sm:inline">Clear</span>
+          <span>Clear</span>
         </button>
       </div>
     </div>
@@ -307,11 +301,11 @@
     
     // State management
     const state = {
-      currentSearchType: 'multi',
       currentPage: 1,
       totalPages: 1,
       currentQuery: '',
       filters: {
+        contentType: 'multi',
         genres: [],
         years: [],
         language: null,
@@ -335,9 +329,9 @@
       await loadGenres();
       await loadLanguages();
       renderYearOptions();
+      renderLanguageOptions();
       
       // Setup event listeners
-      setupSearchTabs();
       setupFilterControls();
       setupDropdowns();
       
@@ -399,30 +393,28 @@
     // Render genre filter options
     function renderGenreOptions() {
       const container = document.getElementById('genre-filter-options');
-      const currentMediaType = state.currentSearchType === 'tv' ? 'tv' : 'movie';
+      const currentMediaType = state.filters.contentType === 'tv' ? 'tv' : 'movie';
       const genres = state.genres[currentMediaType] || [];
       
       container.innerHTML = genres.map(genre => `
-        <label class="flex items-center gap-2 py-1 px-2 hover:bg-gray-800 rounded cursor-pointer">
-          <input type="checkbox" value="${genre.id}" class="genre-checkbox" 
-                 ${state.filters.genres.includes(genre.id) ? 'checked' : ''}>
+        <div class="dropdown-option ${state.filters.genres.includes(genre.id) ? 'selected' : ''}" 
+             data-id="${genre.id}">
           ${genre.name}
-        </label>
+        </div>
       `).join('');
       
-      // Add event listeners to checkboxes
-      document.querySelectorAll('.genre-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-          const genreId = parseInt(this.value);
-          if (this.checked) {
-            if (!state.filters.genres.includes(genreId)) {
-              state.filters.genres.push(genreId);
-            }
-          } else {
+      // Add click handlers
+      container.querySelectorAll('.dropdown-option').forEach(option => {
+        option.addEventListener('click', function() {
+          const genreId = parseInt(this.getAttribute('data-id'));
+          if (state.filters.genres.includes(genreId)) {
             state.filters.genres = state.filters.genres.filter(id => id !== genreId);
+          } else {
+            state.filters.genres.push(genreId);
           }
           updateActiveFilters();
           performSearch(true); // Reset to page 1
+          renderGenreOptions();
         });
       });
     }
@@ -439,14 +431,14 @@
           : state.allYears;
         
         container.innerHTML = filtered.map(year => `
-          <div class="year-option ${state.filters.years.includes(year) ? 'selected' : ''}" 
+          <div class="dropdown-option ${state.filters.years.includes(year) ? 'selected' : ''}" 
                data-year="${year}">
             ${year}
           </div>
         `).join('');
         
         // Add click handlers
-        container.querySelectorAll('.year-option').forEach(option => {
+        container.querySelectorAll('.dropdown-option').forEach(option => {
           option.addEventListener('click', function() {
             const year = parseInt(this.getAttribute('data-year'));
             if (state.filters.years.includes(year)) {
@@ -482,14 +474,14 @@
           : state.languages;
         
         container.innerHTML = filtered.map(lang => `
-          <div class="py-1 px-2 hover:bg-gray-800 rounded cursor-pointer ${state.filters.language === lang.iso_639_1 ? 'bg-primary/20' : ''}"
-               data-code="${lang.iso_639_1}" data-name="${lang.english_name}">
+          <div class="dropdown-option ${state.filters.language === lang.iso_639_1 ? 'selected' : ''}"
+               data-code="${lang.iso_639_1}">
             ${lang.english_name} (${lang.iso_639_1})
           </div>
         `).join('');
         
         // Add click handlers
-        container.querySelectorAll('div[data-code]').forEach(div => {
+        container.querySelectorAll('.dropdown-option').forEach(div => {
           div.addEventListener('click', function() {
             const langCode = this.getAttribute('data-code');
             state.filters.language = state.filters.language === langCode ? null : langCode;
@@ -507,55 +499,69 @@
       searchInput.addEventListener('input', filterLanguages);
     }
 
-    // Setup search tabs
-    function setupSearchTabs() {
-      const tabs = document.querySelectorAll('.search-tab');
-      const filterControls = document.getElementById('filter-controls');
-      
-      tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-          tabs.forEach(t => t.classList.remove('active'));
-          this.classList.add('active');
-          state.currentSearchType = this.dataset.type;
-          
-          // Show/hide filters based on tab
-          if (this.dataset.type === 'movie' || this.dataset.type === 'tv') {
-            filterControls.classList.remove('hidden');
-            renderGenreOptions(); // Update genres based on media type
-          } else {
-            filterControls.classList.add('hidden');
-          }
-          
-          performSearch(true); // Reset to page 1
-        });
-      });
-    }
-
     // Setup filter controls
     function setupFilterControls() {
+      // Content type filter
+      document.querySelectorAll('[data-type]').forEach(option => {
+        option.addEventListener('click', function() {
+          const contentType = this.getAttribute('data-type');
+          state.filters.contentType = contentType;
+          document.getElementById('content-type-label').textContent = this.textContent;
+          
+          // Update selected state
+          document.querySelectorAll('[data-type]').forEach(opt => {
+            opt.classList.toggle('selected', opt === this);
+          });
+          
+          updateActiveFilters();
+          performSearch(true); // Reset to page 1
+          
+          // Close dropdown
+          this.closest('.filter-dropdown').classList.remove('open');
+        });
+      });
+      
       // Sort filter
-      document.getElementById('sort-by').addEventListener('change', () => {
-        state.filters.sortBy = document.getElementById('sort-by').value;
-        updateActiveFilters();
-        performSearch(true); // Reset to page 1
+      document.querySelectorAll('[data-sort]').forEach(option => {
+        option.addEventListener('click', function() {
+          state.filters.sortBy = this.getAttribute('data-sort');
+          
+          // Update selected state
+          document.querySelectorAll('[data-sort]').forEach(opt => {
+            opt.classList.toggle('selected', opt === this);
+          });
+          
+          updateActiveFilters();
+          performSearch(true); // Reset to page 1
+          
+          // Close dropdown
+          this.closest('.filter-dropdown').classList.remove('open');
+        });
       });
       
       // Clear filters
       document.getElementById('clear-filters').addEventListener('click', () => {
         state.filters = {
+          contentType: 'multi',
           genres: [],
           years: [],
           language: null,
           sortBy: 'popularity.desc'
         };
         
-        // Reset UI elements
-        document.getElementById('sort-by').value = 'popularity.desc';
+        // Reset UI
+        document.getElementById('content-type-label').textContent = 'All';
+        document.querySelectorAll('[data-type]').forEach(opt => {
+          opt.classList.toggle('selected', opt.textContent === 'All');
+        });
+        document.querySelectorAll('[data-sort]').forEach(opt => {
+          opt.classList.toggle('selected', opt.getAttribute('data-sort') === 'popularity.desc');
+        });
         
         updateActiveFilters();
         performSearch(true); // Reset to page 1
         
-        // Re-render options to uncheck checkboxes
+        // Re-render options
         renderGenreOptions();
         renderLanguageOptions();
         renderYearOptions();
@@ -598,6 +604,13 @@
           d.classList.remove('open');
         });
       });
+      
+      // Prevent closing when clicking inside dropdown
+      document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
+        dropdown.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+      });
     }
 
     // Update active filters display
@@ -605,15 +618,21 @@
       const container = document.getElementById('active-filters');
       const filters = [];
       
-      // Only show filters for movies/series
-      if (state.currentSearchType !== 'movie' && state.currentSearchType !== 'tv') {
-        container.innerHTML = '';
-        return;
+      // Content type filter
+      if (state.filters.contentType !== 'multi') {
+        filters.push({
+          type: 'contentType',
+          id: state.filters.contentType,
+          name: state.filters.contentType === 'movie' ? 'Movies' : 
+                state.filters.contentType === 'tv' ? 'Series' : 'People',
+          icon: state.filters.contentType === 'movie' ? 'fas fa-film' : 
+                state.filters.contentType === 'tv' ? 'fas fa-tv' : 'fas fa-user'
+        });
       }
       
       // Genre filters
       state.filters.genres.forEach(genreId => {
-        const currentMediaType = state.currentSearchType === 'tv' ? 'tv' : 'movie';
+        const currentMediaType = state.filters.contentType === 'tv' ? 'tv' : 'movie';
         const genre = state.genres[currentMediaType].find(g => g.id === genreId);
         if (genre) {
           filters.push({
@@ -685,6 +704,13 @@
           const id = this.getAttribute('data-id');
           
           switch (type) {
+            case 'contentType':
+              state.filters.contentType = 'multi';
+              document.getElementById('content-type-label').textContent = 'All';
+              document.querySelectorAll('[data-type]').forEach(opt => {
+                opt.classList.toggle('selected', opt.textContent === 'All');
+              });
+              break;
             case 'genre':
               state.filters.genres = state.filters.genres.filter(g => g !== parseInt(id));
               renderGenreOptions();
@@ -699,7 +725,9 @@
               break;
             case 'sort':
               state.filters.sortBy = 'popularity.desc';
-              document.getElementById('sort-by').value = 'popularity.desc';
+              document.querySelectorAll('[data-sort]').forEach(opt => {
+                opt.classList.toggle('selected', opt.getAttribute('data-sort') === 'popularity.desc');
+              });
               break;
           }
           
@@ -728,23 +756,22 @@
         let endpoint, params = [];
         
         // Base endpoint
-        if (state.currentSearchType === 'multi') {
+        if (state.filters.contentType === 'multi') {
           endpoint = '/search/multi';
           params.push(`query=${encodeURIComponent(state.currentQuery)}`);
-        } else if (state.currentSearchType === 'person') {
+        } else if (state.filters.contentType === 'person') {
           endpoint = '/search/person';
           params.push(`query=${encodeURIComponent(state.currentQuery)}`);
         } else {
-          endpoint = `/discover/${state.currentSearchType}`;
+          endpoint = `/discover/${state.filters.contentType}`;
         }
         
         // Common params
         params.push(`page=${state.currentPage}`);
+        params.push(`sort_by=${state.filters.sortBy}`);
         
         // For discover endpoints (filtered search)
-        if (state.currentSearchType === 'movie' || state.currentSearchType === 'tv') {
-          params.push(`sort_by=${state.filters.sortBy}`);
-          
+        if (state.filters.contentType === 'movie' || state.filters.contentType === 'tv') {
           // Genre filter
           if (state.filters.genres.length > 0) {
             params.push(`with_genres=${state.filters.genres.join(',')}`);
@@ -752,7 +779,7 @@
           
           // Year filter
           if (state.filters.years.length > 0) {
-            if (state.currentSearchType === 'movie') {
+            if (state.filters.contentType === 'movie') {
               params.push(`primary_release_year=${state.filters.years.join(',')}`);
             } else {
               params.push(`first_air_date_year=${state.filters.years.join(',')}`);
@@ -766,7 +793,7 @@
         }
         
         // For multi/person search
-        if (state.currentSearchType === 'multi' || state.currentSearchType === 'person') {
+        if (state.filters.contentType === 'multi' || state.filters.contentType === 'person') {
           if (state.filters.language) {
             params.push(`language=${state.filters.language}`);
           }
@@ -822,7 +849,7 @@
       const div = document.createElement('div');
       div.className = 'movie-card-container fade-in';
       
-      if (item.media_type === 'movie' || (state.currentSearchType === 'movie' && !item.media_type)) {
+      if (item.media_type === 'movie' || (state.filters.contentType === 'movie' && !item.media_type)) {
         const percentage = Math.round(item.vote_average * 10);
         
         div.innerHTML = `
@@ -845,7 +872,7 @@
           </div>
         `;
       } 
-      else if (item.media_type === 'tv' || (state.currentSearchType === 'tv' && !item.media_type)) {
+      else if (item.media_type === 'tv' || (state.filters.contentType === 'tv' && !item.media_type)) {
         const percentage = Math.round(item.vote_average * 10);
         
         div.innerHTML = `
@@ -868,7 +895,7 @@
           </div>
         `;
       }
-      else if (item.media_type === 'person' || state.currentSearchType === 'person') {
+      else if (item.media_type === 'person' || state.filters.contentType === 'person') {
         const knownFor = item.known_for?.map(known => 
           known.title || known.name
         ).filter(Boolean).join(', ') || '';
