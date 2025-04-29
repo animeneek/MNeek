@@ -788,7 +788,7 @@
       try {
         let endpoint, params = [];
         
-        // Base endpoint
+        // Base endpoint and query handling
         if (state.filters.contentType === 'multi') {
           endpoint = '/search/multi';
           params.push(`query=${encodeURIComponent(state.currentQuery)}`);
@@ -806,27 +806,50 @@
         
         // Common params
         params.push(`page=${state.currentPage}`);
-        params.push(`sort_by=${state.filters.sortBy}`);
         
-        // For discover/search endpoints (filtered search)
+        // Sorting - only for movie/tv discover
+        if ((state.filters.contentType === 'movie' || state.filters.contentType === 'tv') && !state.currentQuery) {
+          params.push(`sort_by=${state.filters.sortBy}`);
+        }
+        
+        // For movie/tv content types
         if (state.filters.contentType === 'movie' || state.filters.contentType === 'tv') {
-          // Genre filter
+          // Genre filter - properly handle multiple genres
           if (state.filters.genres.length > 0) {
-            params.push(`with_genres=${state.filters.genres.join(',')}`);
+            // For search endpoint, we can't filter by genre directly
+            if (!state.currentQuery) {
+              params.push(`with_genres=${state.filters.genres.join(',')}`);
+            }
           }
           
-          // Year filter
+          // Year filter - properly handle multiple years
           if (state.filters.years.length > 0) {
-            if (state.filters.contentType === 'movie') {
-              params.push(`primary_release_year=${state.filters.years.join(',')}`);
+            if (state.currentQuery) {
+              // For search, we can only filter by single year
+              params.push(`year=${state.filters.years[0]}`);
             } else {
-              params.push(`first_air_date_year=${state.filters.years.join(',')}`);
+              // For discover, we can use release date ranges
+              const years = state.filters.years.sort();
+              const startDate = `${years[0]}-01-01`;
+              const endDate = `${years[years.length-1]}-12-31`;
+              
+              if (state.filters.contentType === 'movie') {
+                params.push(`primary_release_date.gte=${startDate}`);
+                params.push(`primary_release_date.lte=${endDate}`);
+              } else {
+                params.push(`first_air_date.gte=${startDate}`);
+                params.push(`first_air_date.lte=${endDate}`);
+              }
             }
           }
           
           // Language filter
           if (state.filters.language) {
-            params.push(`with_original_language=${state.filters.language}`);
+            if (state.currentQuery) {
+              params.push(`language=${state.filters.language}`);
+            } else {
+              params.push(`with_original_language=${state.filters.language}`);
+            }
           }
         }
         
@@ -842,8 +865,18 @@
         
         state.totalPages = data.total_pages || 1;
         
-        // Process results
-        const results = data.results || [];
+        // Process results - filter by genre on client side if using search endpoint
+        let results = data.results || [];
+        
+        // Client-side filtering for genres when using search endpoint
+        if (state.currentQuery && (state.filters.contentType === 'movie' || state.filters.contentType === 'tv') && state.filters.genres.length > 0) {
+          results = results.filter(item => {
+            return item.genre_ids && state.filters.genres.every(genreId => 
+              item.genre_ids.includes(genreId)
+            );
+          });
+        }
+        
         if (results.length === 0 && reset) {
           showNoResults();
           return;
