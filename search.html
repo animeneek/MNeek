@@ -230,7 +230,6 @@
               <div class="dropdown-option selected" data-type="multi">All</div>
               <div class="dropdown-option" data-type="movie">Movies</div>
               <div class="dropdown-option" data-type="tv">Series</div>
-              <div class="dropdown-option" data-type="person">People</div>
             </div>
           </div>
         </div>
@@ -656,10 +655,8 @@
         filters.push({
           type: 'contentType',
           id: state.filters.contentType,
-          name: state.filters.contentType === 'movie' ? 'Movies' : 
-                state.filters.contentType === 'tv' ? 'Series' : 'People',
-          icon: state.filters.contentType === 'movie' ? 'fas fa-film' : 
-                state.filters.contentType === 'tv' ? 'fas fa-tv' : 'fas fa-user'
+          name: state.filters.contentType === 'movie' ? 'Movies' : 'Series',
+          icon: state.filters.contentType === 'movie' ? 'fas fa-film' : 'fas fa-tv'
         });
       }
       
@@ -786,96 +783,66 @@
       loadMoreBtn.classList.add('hidden');
       
       try {
-        let endpoint, params = [];
+        let results = [];
         
-        // Base endpoint and query handling
         if (state.filters.contentType === 'multi') {
-          endpoint = '/search/multi';
-          params.push(`query=${encodeURIComponent(state.currentQuery)}`);
-        } else if (state.filters.contentType === 'person') {
-          endpoint = '/search/person';
-          params.push(`query=${encodeURIComponent(state.currentQuery)}`);
-        } else if (state.currentQuery) {
-          // For movie/tv with search query - use search endpoint
-          endpoint = `/search/${state.filters.contentType}`;
-          params.push(`query=${encodeURIComponent(state.currentQuery)}`);
-        } else {
-          // For discover without search query
-          endpoint = `/discover/${state.filters.contentType}`;
-        }
-        
-        // Common params
-        params.push(`page=${state.currentPage}`);
-        
-        // Sorting - only for movie/tv discover
-        if ((state.filters.contentType === 'movie' || state.filters.contentType === 'tv') && !state.currentQuery) {
-          params.push(`sort_by=${state.filters.sortBy}`);
-        }
-        
-        // For movie/tv content types
-        if (state.filters.contentType === 'movie' || state.filters.contentType === 'tv') {
-          // Genre filter - properly handle multiple genres
-          if (state.filters.genres.length > 0) {
-            // For search endpoint, we can't filter by genre directly
-            if (!state.currentQuery) {
-              params.push(`with_genres=${state.filters.genres.join(',')}`);
-            }
-          }
+          // Search both movies and TV shows
+          const [movieResults, tvResults] = await Promise.all([
+            searchContentType('movie'),
+            searchContentType('tv')
+          ]);
           
-          // Year filter - properly handle multiple years
-          if (state.filters.years.length > 0) {
-            if (state.currentQuery) {
-              // For search, we can only filter by single year
-              params.push(`year=${state.filters.years[0]}`);
-            } else {
-              // For discover, we can use release date ranges
-              const years = state.filters.years.sort();
-              const startDate = `${years[0]}-01-01`;
-              const endDate = `${years[years.length-1]}-12-31`;
-              
-              if (state.filters.contentType === 'movie') {
-                params.push(`primary_release_date.gte=${startDate}`);
-                params.push(`primary_release_date.lte=${endDate}`);
-              } else {
-                params.push(`first_air_date.gte=${startDate}`);
-                params.push(`first_air_date.lte=${endDate}`);
+          results = [...movieResults, ...tvResults];
+          
+          // Sort combined results
+          if (state.filters.sortBy) {
+            results.sort((a, b) => {
+              if (state.filters.sortBy.includes('popularity')) {
+                return state.filters.sortBy.includes('desc') ? b.popularity - a.popularity : a.popularity - b.popularity;
+              } else if (state.filters.sortBy.includes('vote_average')) {
+                return state.filters.sortBy.includes('desc') ? b.vote_average - a.vote_average : a.vote_average - b.vote_average;
+              } else if (state.filters.sortBy.includes('release_date')) {
+                const dateA = a.release_date || a.first_air_date || '';
+                const dateB = b.release_date || b.first_air_date || '';
+                return state.filters.sortBy.includes('desc') ? dateB.localeCompare(dateA) : dateA.localeCompare(dateB);
               }
-            }
+              return 0;
+            });
           }
-          
-          // Language filter
-          if (state.filters.language) {
-            if (state.currentQuery) {
-              params.push(`language=${state.filters.language}`);
-            } else {
-              params.push(`with_original_language=${state.filters.language}`);
-            }
-          }
+        } else {
+          // Search specific content type
+          results = await searchContentType(state.filters.contentType);
         }
         
-        // For multi/person search
-        if (state.filters.contentType === 'multi' || state.filters.contentType === 'person') {
-          if (state.filters.language) {
-            params.push(`language=${state.filters.language}`);
-          }
-        }
-        
-        const url = `${BASE_URL}${endpoint}?${params.join('&')}&api_key=${TMDB_API_KEY}`;
-        const data = await fetch(url).then(res => res.json());
-        
-        state.totalPages = data.total_pages || 1;
-        
-        // Process results - filter by genre on client side if using search endpoint
-        let results = data.results || [];
-        
-        // Client-side filtering for genres when using search endpoint
-        if (state.currentQuery && (state.filters.contentType === 'movie' || state.filters.contentType === 'tv') && state.filters.genres.length > 0) {
+        // Filter by genre on client side if needed
+        if (state.filters.genres.length > 0) {
           results = results.filter(item => {
             return item.genre_ids && state.filters.genres.every(genreId => 
               item.genre_ids.includes(genreId)
             );
           });
         }
+        
+        // Filter by year on client side if needed
+        if (state.filters.years.length > 0) {
+          results = results.filter(item => {
+            const releaseYear = item.release_date 
+              ? new Date(item.release_date).getFullYear()
+              : item.first_air_date 
+                ? new Date(item.first_air_date).getFullYear()
+                : null;
+            return releaseYear && state.filters.years.includes(releaseYear);
+          });
+        }
+        
+        // Filter by language on client side if needed
+        if (state.filters.language) {
+          results = results.filter(item => {
+            return item.original_language === state.filters.language;
+          });
+        }
+        
+        state.totalPages = 1; // Since we're doing client-side pagination
         
         if (results.length === 0 && reset) {
           showNoResults();
@@ -895,8 +862,8 @@
           }
         });
         
-        // Show load more button if there are more pages
-        if (state.currentPage < state.totalPages) {
+        // Show load more button if there are more results (client-side pagination)
+        if (results.length > state.currentPage * 20) {
           loadMoreBtn.classList.remove('hidden');
         }
         
@@ -913,6 +880,25 @@
       } finally {
         loading.classList.add('hidden');
       }
+    }
+
+    // Helper function to search for a specific content type
+    async function searchContentType(contentType) {
+      let endpoint, params = [];
+      
+      if (contentType === 'movie' || contentType === 'tv') {
+        endpoint = `/search/${contentType}`;
+        params.push(`query=${encodeURIComponent(state.currentQuery)}`);
+        params.push(`page=${state.currentPage}`);
+        
+        // For search, we can't filter by multiple years or genres via API
+        // So we'll get all results and filter client-side
+      }
+      
+      const url = `${BASE_URL}${endpoint}?${params.join('&')}&api_key=${TMDB_API_KEY}`;
+      const data = await fetch(url).then(res => res.json());
+      
+      return data.results || [];
     }
 
     // Create result card based on item type
@@ -962,28 +948,6 @@
               </div>
               <h3 class="font-medium truncate">${item.name}</h3>
               <p class="text-xs text-gray-400">${item.first_air_date?.substring(0,4) || 'N/A'}</p>
-            </a>
-          </div>
-        `;
-      }
-      else if (item.media_type === 'person' || state.filters.contentType === 'person') {
-        const knownFor = item.known_for?.map(known => 
-          known.title || known.name
-        ).filter(Boolean).join(', ') || '';
-        
-        div.innerHTML = `
-          <div class="movie-card w-40 sm:w-48 md:w-56">
-            <a href="person.html?id=${item.id}" class="block relative">
-              <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
-                <img 
-                  src="${item.profile_path ? IMAGE_URL + item.profile_path : DEFAULT_POSTER}" 
-                  alt="${item.name}"
-                  class="w-full h-full object-cover"
-                  loading="lazy"
-                >
-              </div>
-              <h3 class="font-medium truncate">${item.name}</h3>
-              <p class="text-xs text-gray-400 truncate">${knownFor}</p>
             </a>
           </div>
         `;
