@@ -352,7 +352,8 @@
       filteredResults: [],   // Stores all filtered results
       displayedResults: [],  // Currently shown filtered results
       hasMorePotentialResults: true, // Tracks if more pages might have matches
-      lastFilteredPage: 0    // Tracks the last page we filtered
+      lastFilteredPage: 0,   // Tracks the last page we found matches on
+      consecutiveEmptyPages: 0 // Tracks pages with no matches
     };
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -702,6 +703,7 @@
         state.displayedResults = [];
         state.hasMorePotentialResults = true;
         state.lastFilteredPage = 0;
+        state.consecutiveEmptyPages = 0;
         document.getElementById('search-results').innerHTML = '';
       }
       
@@ -735,48 +737,50 @@
         // Apply sorting to all results
         state.allResults = sortResults(state.allResults, state.filters.sortBy);
         
-        // Filter all results (including new ones) to find matches
-        const allFilteredResults = filterResults(state.allResults);
-        
-        // Find only the newly matched results that we haven't displayed yet
-        const newFilteredResults = allFilteredResults.filter(result => 
-          !state.displayedResults.some(displayed => 
-            displayed.id === result.id && 
-            (displayed.media_type || displayed.title ? 'movie' : 'tv') === 
-            (result.media_type || result.title ? 'movie' : 'tv')
-          )
-        );
-        
-        // Update our displayed results
-        state.displayedResults = [...state.displayedResults, ...newFilteredResults];
-        state.filteredResults = allFilteredResults;
-        
-        // Mark that we've processed this page
-        state.lastFilteredPage = state.currentPage;
+        // Filter just the new results to find matches
+        const newFilteredResults = filterResults(newResults);
         
         if (newFilteredResults.length > 0) {
+          // Found matches on this page
+          state.displayedResults = [...state.displayedResults, ...newFilteredResults];
           displayResults(newFilteredResults, reset);
-        } else if (reset) {
-          // No results on first page with filters
+          state.lastFilteredPage = state.currentPage;
+          state.consecutiveEmptyPages = 0;
+        } else {
+          // No matches on this page
+          state.consecutiveEmptyPages++;
+        }
+        
+        // Update complete filtered results collection
+        state.filteredResults = filterResults(state.allResults);
+        
+        if (state.displayedResults.length === 0 && reset) {
           showNoResults();
           return;
         }
         
-        // Determine if we should show the "Load More" button
+        // Check if we have any active filters
         const hasActiveFilters = state.filters.genres.length > 0 || 
                                state.filters.years.length > 0 || 
                                state.filters.language !== null;
         
-        const shouldShowLoadMore = state.currentPage < state.totalPages && 
-                                 (hasActiveFilters ? 
-                                   (newFilteredResults.length > 0 || state.currentPage === state.lastFilteredPage) : 
-                                   true);
+        // Determine if we should show the "Load More" button
+        let shouldShowLoadMore = false;
+        
+        if (hasActiveFilters) {
+          // With filters:
+          // Show if we haven't checked all pages AND (we found matches recently OR haven't checked too many empty pages)
+          shouldShowLoadMore = state.currentPage < state.totalPages && 
+                             (state.currentPage - state.lastFilteredPage < 3 || 
+                              state.consecutiveEmptyPages < 3);
+        } else {
+          // Without filters: just show if there are more pages
+          shouldShowLoadMore = state.currentPage < state.totalPages;
+        }
         
         if (shouldShowLoadMore) {
           loadMoreBtn.classList.remove('hidden');
         } else {
-          // If we have no filters, we've reached the end
-          // If we have filters, we've either found matches or exhausted all pages
           loadMoreBtn.classList.add('hidden');
         }
         
