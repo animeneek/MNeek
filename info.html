@@ -103,6 +103,23 @@
       border-radius: 8px;
       overflow: hidden;
     }
+    .modal-overlay {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      max-width: 900px;
+      width: 95%;
+      max-height: 90vh;
+    }
+    .modal-header {
+      background: #222;
+      border-bottom: 1px solid #333;
+    }
+    .source-btn {
+      min-width: 100px;
+    }
     @media (max-width: 640px) {
       .info-grid {
         grid-template-columns: 1fr;
@@ -110,14 +127,9 @@
       .poster-container {
         margin-top: 20px;
       }
-    }
-    .modal-content {
-      max-width: 900px;
-      width: 95%;
-    }
-    .modal-header {
-      background: #222;
-      border-bottom: 1px solid #333;
+      .similar-poster {
+        width: 100px;
+      }
     }
   </style>
 </head>
@@ -132,13 +144,13 @@
       <div class="info-grid grid grid-cols-1 md:grid-cols-3 gap-6 relative">
         <!-- Poster Column -->
         <div class="poster-container md:col-span-1">
-          <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden shadow-lg w-48 mx-auto">
+          <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden shadow-lg w-56 mx-auto">
             <img id="poster-image" class="w-full h-full object-cover" src="" alt="">
             <div id="rating-circle" class="rating-circle"></div>
           </div>
           
           <!-- Action Buttons -->
-          <div class="flex gap-3 mt-4 w-48 mx-auto">
+          <div class="flex gap-3 mt-4 w-56 mx-auto">
             <button id="watch-trailer" class="flex-1 bg-primary hover:bg-red-600 py-2 rounded-lg font-medium flex items-center justify-center gap-2">
               <i class="fas fa-play"></i> Trailer
             </button>
@@ -248,7 +260,7 @@
   </div>
 
   <!-- Modal Structure -->
-  <div id="modal" class="fixed inset-0 bg-black/90 z-50 hidden items-center justify-center p-4">
+  <div id="modal" class="fixed inset-0 bg-black/90 z-50 hidden modal-overlay">
     <div class="modal-content bg-dark rounded-lg overflow-hidden">
       <div class="modal-header p-4 flex justify-between items-center">
         <h3 id="modal-title" class="text-lg font-bold"></h3>
@@ -258,7 +270,7 @@
       </div>
       <div class="p-4">
         <div class="aspect-w-16 aspect-h-9 w-full">
-          <iframe id="modal-iframe" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+          <iframe id="modal-iframe" class="w-full h-[50vh]" frameborder="0" allowfullscreen></iframe>
         </div>
       </div>
     </div>
@@ -353,8 +365,8 @@
     function setupMovieSources() {
       const sourcesContent = document.getElementById('sources-content');
       sourcesContent.innerHTML = `
-        <div class="bg-dark p-4 rounded-lg">
-          <button class="source-btn w-full bg-primary hover:bg-red-600 py-3 rounded-lg font-medium"
+        <div class="flex flex-wrap gap-4">
+          <button class="source-btn bg-primary hover:bg-red-600 px-4 py-2 rounded-lg font-medium"
                   data-source="https://player.embed-api.stream/?id=${mediaId}&type=movie">
             Source 1
           </button>
@@ -384,6 +396,7 @@
               </button>
             `).join('')}
           </div>
+          <div id="season-details-container"></div>
         `;
         
         seasonsContainer.innerHTML = seasonsHTML;
@@ -454,23 +467,21 @@
           `;
         });
         
-        document.getElementById('sources-content').innerHTML += `
-          <div id="season-details">
-            <div class="flex items-center gap-4 mb-4">
-              <img src="${seasonPoster}" 
-                   alt="${seasonInfo.name}" 
-                   class="w-20 h-auto rounded-lg">
-              <div>
-                <h3 class="text-xl font-bold">${seasonInfo.name}</h3>
-                <p class="text-gray-300">${seasonInfo.air_date ? seasonInfo.air_date.substring(0,4) : ''} • ${seasonInfo.episodes.length} Episodes</p>
-              </div>
+        document.getElementById('season-details-container').innerHTML = `
+          <div class="flex items-center gap-4 mb-4">
+            <img src="${seasonPoster}" 
+                 alt="${seasonInfo.name}" 
+                 class="w-20 h-auto rounded-lg">
+            <div>
+              <h3 class="text-xl font-bold">${seasonInfo.name}</h3>
+              <p class="text-gray-300">${seasonInfo.air_date ? seasonInfo.air_date.substring(0,4) : ''} • ${seasonInfo.episodes.length} Episodes</p>
             </div>
-            <p class="text-gray-300 mb-6">${seasonInfo.overview || 'No overview available.'}</p>
-            
-            <h4 class="font-semibold mb-3">Episodes</h4>
-            <div id="episodes-list" class="space-y-4">
-              ${episodesHTML}
-            </div>
+          </div>
+          <p class="text-gray-300 mb-6">${seasonInfo.overview || 'No overview available.'}</p>
+          
+          <h4 class="font-semibold mb-3">Episodes</h4>
+          <div id="episodes-list" class="space-y-4">
+            ${episodesHTML}
           </div>
         `;
         
@@ -579,7 +590,7 @@
       const similarContainer = document.querySelector('#similar-tab');
       similarContainer.innerHTML = similar.results.slice(0, 12).map(item => `
         <div class="movie-card-container fade-in">
-          <div class="movie-card">
+          <div class="movie-card similar-poster">
             <a href="info.html?id=${item.id}&type=${mediaType}" class="block relative">
               <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
                 <img 
@@ -638,14 +649,6 @@
       closeBtn.addEventListener('click', () => {
         modal.classList.add('hidden');
         iframe.src = '';
-      });
-      
-      // Close modal when clicking outside
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          modal.classList.add('hidden');
-          iframe.src = '';
-        }
       });
     }
 
