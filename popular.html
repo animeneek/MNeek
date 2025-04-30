@@ -129,20 +129,8 @@
 </head>
 <body class="bg-black text-white">
 
-  <!-- Header -->
-  <header class="glass-nav sticky top-0 z-50 py-4 px-6 flex justify-between items-center">
-    <a href="index.html" class="text-2xl font-bold">
-      <span class="text-primary">Movie</span>Neek
-    </a>
-    <div class="flex items-center gap-4">
-      <a href="search.html" class="hover:text-primary">
-        <i class="fas fa-search text-xl"></i>
-      </a>
-      <a href="#" class="hover:text-primary">
-        <i class="fas fa-heart text-xl"></i>
-      </a>
-    </div>
-  </header>
+  <!-- Header will be inserted here by JavaScript -->
+  <div id="header"></div>
 
   <!-- Main Content -->
   <main class="container mx-auto px-4 pt-2 pb-24 min-h-screen">
@@ -207,8 +195,26 @@
     let isLoading = false;
 
     document.addEventListener('DOMContentLoaded', () => {
-      setupToggleSwitch();
-      loadPopularContent();
+      // Fetch header first
+      fetch('header.html')
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById('header').innerHTML = data;
+          
+          // Setup form submission for search (if header contains search form)
+          document.querySelectorAll('form[action="search.html"]').forEach(form => {
+            form.addEventListener('submit', function(e) {
+              e.preventDefault();
+              const query = this.querySelector('input').value.trim();
+              window.location.href = `search.html?query=${encodeURIComponent(query)}`;
+            });
+          });
+          
+          // Then setup the rest of the page
+          setupToggleSwitch();
+          loadPopularContent();
+        })
+        .catch(error => console.error('Error fetching header:', error));
     });
 
     function setupToggleSwitch() {
