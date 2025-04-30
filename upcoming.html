@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MovieNeek | Upcoming</title>
+  <!-- Same head content as popular.html -->
+  <!-- ... -->
+</head>
+<body class="bg-black text-white">
+
+  <!-- Header -->  
+  <div id="header"></div>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 pt-2 pb-24 min-h-screen">
+    <!-- Page Title -->
+    <div class="sticky top-20 md:top-16 z-30 bg-black/80 backdrop-blur-sm py-4">
+      <h1 class="text-2xl md:text-3xl font-bold text-center mb-4">Upcoming Movies</h1>
+      
+      <!-- Filter Controls -->
+      <!-- Same filter controls as popular.html -->
+      <!-- ... -->
+    </div>
+
+    <!-- Results Grid -->
+    <div id="results-grid" class="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <!-- Results will be inserted here -->
+    </div>
+
+    <!-- Loading and Load More elements same as popular.html -->
+    <!-- ... -->
+  </main>
+
+<script>
+    // Same initial setup as popular.html
+    // ...
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadGenres();
+      await loadLanguages();
+      renderYearOptions();
+      renderLanguageOptions();
+      
+      setupFilterControls();
+      setupDropdowns();
+      
+      loadUpcoming();
+    });
+
+    // Same helper functions as popular.html
+    // ...
+
+    async function loadUpcoming(reset = true) {
+      if (reset) {
+        state.currentPage = 1;
+        document.getElementById('results-grid').innerHTML = '';
+      }
+      
+      const resultsContainer = document.getElementById('results-grid');
+      const loading = document.getElementById('loading');
+      const loadMoreBtn = document.getElementById('load-more-container');
+      
+      loading.classList.remove('hidden');
+      loadMoreBtn.classList.add('hidden');
+      
+      try {
+        let results = [];
+        
+        // Only movies for "Upcoming"
+        const response = await fetch(`${BASE_URL}/movie/upcoming?page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json());
+        results = response.results || [];
+        state.totalPages = response.total_pages || 1;
+        
+        // Filter results
+        const filteredResults = filterResults(results);
+        
+        if (filteredResults.length > 0) {
+          displayResults(filteredResults);
+          
+          if (state.currentPage < state.totalPages) {
+            loadMoreBtn.classList.remove('hidden');
+          }
+        } else if (reset) {
+          showNoResults();
+        }
+      } catch (error) {
+        console.error('Error loading upcoming movies:', error);
+        showError();
+      } finally {
+        loading.classList.add('hidden');
+      }
+    }
+
+    // Rest of the code same as popular.html
+    // ...
+</script>
+  
+</body>
+</html>
