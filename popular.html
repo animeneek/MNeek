@@ -303,7 +303,10 @@
         tv: []
       },
       languages: [],
-      allYears: Array.from({length: 30}, (_, i) => new Date().getFullYear() - i)
+      allYears: Array.from({length: 30}, (_, i) => new Date().getFullYear() - i),
+      allResults: [],        // Store all loaded results
+      filteredResults: [],   // Store filtered results
+      hasMoreResults: true   // Track if more results are available
     };
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -605,8 +608,12 @@
     async function loadPopularContent(reset = true) {
       if (reset) {
         state.currentPage = 1;
+        state.allResults = [];
+        state.hasMoreResults = true;
         document.getElementById('results-grid').innerHTML = '';
       }
+      
+      if (!state.hasMoreResults) return;
       
       const resultsContainer = document.getElementById('results-grid');
       const loading = document.getElementById('loading');
@@ -624,25 +631,40 @@
             fetch(`${BASE_URL}/tv/popular?page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json())
           ]);
           
-          results = [...(movies.results || []), ...(tvShows.results || [])];
-          state.totalPages = Math.max(movies.total_pages || 1, tvShows.total_pages || 1);
+          results = [
+            ...(movies.results || []).map(item => ({ ...item, media_type: 'movie' })),
+            ...(tvShows.results || []).map(item => ({ ...item, media_type: 'tv' }))
+          ];
+          state.totalPages = Math.min(movies.total_pages || 1, tvShows.total_pages || 1);
         } else if (state.filters.contentType === 'movie') {
           const response = await fetch(`${BASE_URL}/movie/popular?page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json());
-          results = response.results || [];
+          results = (response.results || []).map(item => ({ ...item, media_type: 'movie' }));
           state.totalPages = response.total_pages || 1;
         } else {
           const response = await fetch(`${BASE_URL}/tv/popular?page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json());
-          results = response.results || [];
+          results = (response.results || []).map(item => ({ ...item, media_type: 'tv' }));
           state.totalPages = response.total_pages || 1;
         }
         
-        // Filter results
-        const filteredResults = filterResults(results);
+        // Add new results to our collection
+        state.allResults = [...state.allResults, ...results];
         
-        if (filteredResults.length > 0) {
-          displayResults(filteredResults);
+        // Apply filters to all results
+        state.filteredResults = filterResults(state.allResults);
+        
+        if (state.filteredResults.length > 0) {
+          if (reset) {
+            // Display all filtered results if reset
+            displayResults(state.filteredResults);
+          } else {
+            // Display only new filtered results if loading more
+            const newFilteredResults = filterResults(results);
+            displayResults(newFilteredResults);
+          }
           
-          if (state.currentPage < state.totalPages) {
+          // Check if we should show the load more button
+          state.hasMoreResults = state.currentPage < state.totalPages;
+          if (state.hasMoreResults) {
             loadMoreBtn.classList.remove('hidden');
           }
         } else if (reset) {
@@ -657,28 +679,34 @@
     }
 
     function filterResults(results) {
-      let filtered = [...results];
-      
-      if (state.filters.genres.length > 0) {
-        filtered = filtered.filter(item => 
-          item.genre_ids && state.filters.genres.every(g => item.genre_ids.includes(g))
-        );
-      }
-      
-      if (state.filters.years.length > 0) {
-        filtered = filtered.filter(item => {
+      return results.filter(item => {
+        // Check content type filter
+        if (state.filters.contentType !== 'multi' && item.media_type !== state.filters.contentType) {
+          return false;
+        }
+        
+        // Check genre filter
+        if (state.filters.genres.length > 0) {
+          if (!item.genre_ids || !state.filters.genres.every(g => item.genre_ids.includes(g))) {
+            return false;
+          }
+        }
+        
+        // Check year filter
+        if (state.filters.years.length > 0) {
           const date = item.release_date || item.first_air_date;
-          return date && state.filters.years.includes(new Date(date).getFullYear());
-        });
-      }
-      
-      if (state.filters.language) {
-        filtered = filtered.filter(item => 
-          item.original_language === state.filters.language
-        );
-      }
-      
-      return filtered;
+          if (!date || !state.filters.years.includes(new Date(date).getFullYear())) {
+            return false;
+          }
+        }
+        
+        // Check language filter
+        if (state.filters.language && item.original_language !== state.filters.language) {
+          return false;
+        }
+        
+        return true;
+      });
     }
 
     function displayResults(results) {
