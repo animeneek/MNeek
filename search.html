@@ -348,9 +348,8 @@
       },
       languages: [],
       allYears: Array.from({length: 30}, (_, i) => new Date().getFullYear() - i),
-      allResults: [],       // Stores all raw results from API
-      filteredResults: [],   // Stores filtered results
-      displayedResults: []   // Stores currently displayed results
+      allResults: [],       // Stores ALL results from API
+      filteredResults: []   // Stores filtered results
     };
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -551,20 +550,8 @@
     }
 
     function loadMoreResults() {
-      const itemsPerPage = 20;
-      const startIdx = state.displayedResults.length;
-      const endIdx = startIdx + itemsPerPage;
-      const moreResults = state.filteredResults.slice(startIdx, endIdx);
-      
-      if (moreResults.length > 0) {
-        displayResults(moreResults, false);
-        state.displayedResults = [...state.displayedResults, ...moreResults];
-      }
-      
-      // Hide load more button if we've shown all results
-      if (state.displayedResults.length >= state.filteredResults.length) {
-        document.getElementById('load-more-container').classList.add('hidden');
-      }
+      // Fetch next page of results
+      performSearch(false);
     }
 
     function setupDropdowns() {
@@ -714,7 +701,6 @@
         state.currentPage = 1;
         state.allResults = [];
         state.filteredResults = [];
-        state.displayedResults = [];
         document.getElementById('search-results').innerHTML = '';
       }
       
@@ -755,14 +741,11 @@
           return;
         }
         
-        // Display initial set of results
-        const itemsPerPage = 20;
-        const initialResults = state.filteredResults.slice(0, itemsPerPage);
-        displayResults(initialResults, reset);
-        state.displayedResults = initialResults;
+        // Display ALL filtered results (no pagination)
+        displayResults(state.filteredResults, reset);
         
-        // Show load more button if there are more results to show
-        if (state.filteredResults.length > itemsPerPage) {
+        // Show load more button if there are more pages available from API
+        if (state.currentPage < state.totalPages) {
           loadMoreBtn.classList.remove('hidden');
         }
         
