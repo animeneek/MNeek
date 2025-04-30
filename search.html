@@ -348,8 +348,9 @@
       },
       languages: [],
       allYears: Array.from({length: 30}, (_, i) => new Date().getFullYear() - i),
-      allResults: [],       // Stores ALL results from API
-      filteredResults: []   // Stores filtered results
+      allResults: [],        // Stores ALL unique results from API
+      filteredResults: [],   // Stores filtered results
+      displayedIds: new Set() // Tracks displayed IDs to prevent duplicates
     };
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -545,13 +546,8 @@
       
       document.getElementById('load-more').addEventListener('click', () => {
         state.currentPage++;
-        loadMoreResults();
+        performSearch(false);
       });
-    }
-
-    function loadMoreResults() {
-      // Fetch next page of results
-      performSearch(false);
     }
 
     function setupDropdowns() {
@@ -701,6 +697,7 @@
         state.currentPage = 1;
         state.allResults = [];
         state.filteredResults = [];
+        state.displayedIds = new Set();
         document.getElementById('search-results').innerHTML = '';
       }
       
@@ -719,15 +716,26 @@
             fetch(`${BASE_URL}/search/movie?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json()),
             fetch(`${BASE_URL}/search/tv?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json())
           ]);
-          newResults = [...(movies.results || []), ...(tvShows.results || [])];
+          
+          // Combine and filter out duplicates
+          newResults = [...(movies.results || []), ...(tvShows.results || [])].filter(item => {
+            const uniqueId = `${item.id}-${item.media_type || 'multi'}`;
+            return !state.displayedIds.has(uniqueId) && 
+                   !state.allResults.some(existing => `${existing.id}-${existing.media_type || 'multi'}` === uniqueId);
+          });
+          
           state.totalPages = Math.max(movies.total_pages || 1, tvShows.total_pages || 1);
         } else {
           const response = await fetch(`${BASE_URL}/search/${state.filters.contentType}?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json());
-          newResults = response.results || [];
+          newResults = (response.results || []).filter(item => {
+            const uniqueId = `${item.id}-${state.filters.contentType}`;
+            return !state.displayedIds.has(uniqueId) && 
+                   !state.allResults.some(existing => `${existing.id}-${state.filters.contentType}` === uniqueId);
+          });
           state.totalPages = response.total_pages || 1;
         }
         
-        // Add new results to our complete collection
+        // Add new unique results to our complete collection
         state.allResults = [...state.allResults, ...newResults];
         
         // Apply sorting to all results
@@ -741,10 +749,24 @@
           return;
         }
         
-        // Display ALL filtered results (no pagination)
-        displayResults(state.filteredResults, reset);
+        // Display only new unique results that haven't been shown before
+        const resultsToDisplay = state.filteredResults.filter(item => {
+          const uniqueId = `${item.id}-${item.media_type || state.filters.contentType}`;
+          return !state.displayedIds.has(uniqueId);
+        });
+        
+        if (resultsToDisplay.length > 0) {
+          displayResults(resultsToDisplay, reset);
+          
+          // Add displayed IDs to our tracking set
+          resultsToDisplay.forEach(item => {
+            const uniqueId = `${item.id}-${item.media_type || state.filters.contentType}`;
+            state.displayedIds.add(uniqueId);
+          });
+        }
         
         // Show load more button if there are more pages available from API
+        // AND we haven't shown all filtered results yet
         if (state.currentPage < state.totalPages) {
           loadMoreBtn.classList.remove('hidden');
         }
