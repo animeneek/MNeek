@@ -348,9 +348,10 @@
       },
       languages: [],
       allYears: Array.from({length: 30}, (_, i) => new Date().getFullYear() - i),
-      allResults: [],        // Stores ALL unique results from API
-      filteredResults: [],   // Stores filtered results
-      displayedIds: new Set() // Tracks displayed IDs to prevent duplicates
+      allResults: [],        // Stores ALL raw results from API
+      filteredResults: [],   // Stores all filtered results
+      displayedResults: [],  // Currently shown filtered results
+      hasMorePotentialResults: true // Tracks if more pages might have matches
     };
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -697,7 +698,8 @@
         state.currentPage = 1;
         state.allResults = [];
         state.filteredResults = [];
-        state.displayedIds = new Set();
+        state.displayedResults = [];
+        state.hasMorePotentialResults = true;
         document.getElementById('search-results').innerHTML = '';
       }
       
@@ -717,57 +719,48 @@
             fetch(`${BASE_URL}/search/tv?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json())
           ]);
           
-          // Combine and filter out duplicates
-          newResults = [...(movies.results || []), ...(tvShows.results || [])].filter(item => {
-            const uniqueId = `${item.id}-${item.media_type || 'multi'}`;
-            return !state.displayedIds.has(uniqueId) && 
-                   !state.allResults.some(existing => `${existing.id}-${existing.media_type || 'multi'}` === uniqueId);
-          });
-          
+          newResults = [...(movies.results || []), ...(tvShows.results || [])];
           state.totalPages = Math.max(movies.total_pages || 1, tvShows.total_pages || 1);
         } else {
           const response = await fetch(`${BASE_URL}/search/${state.filters.contentType}?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json());
-          newResults = (response.results || []).filter(item => {
-            const uniqueId = `${item.id}-${state.filters.contentType}`;
-            return !state.displayedIds.has(uniqueId) && 
-                   !state.allResults.some(existing => `${existing.id}-${state.filters.contentType}` === uniqueId);
-          });
+          newResults = response.results || [];
           state.totalPages = response.total_pages || 1;
         }
         
-        // Add new unique results to our complete collection
+        // Add new results to our complete collection
         state.allResults = [...state.allResults, ...newResults];
         
         // Apply sorting to all results
         state.allResults = sortResults(state.allResults, state.filters.sortBy);
         
-        // Apply filters to all results
+        // Filter just the new results to find matches
+        const newFilteredResults = filterResults(newResults);
+        
+        // Add matching results to our displayed collection
+        if (newFilteredResults.length > 0) {
+          state.displayedResults = [...state.displayedResults, ...newFilteredResults];
+          displayResults(newFilteredResults, reset);
+          state.hasMorePotentialResults = true; // Found matches on this page
+        } else {
+          // No matches on this page, but might be on next pages
+          state.hasMorePotentialResults = (state.currentPage < state.totalPages);
+        }
+        
+        // Update complete filtered results collection
         state.filteredResults = filterResults(state.allResults);
         
-        if (state.filteredResults.length === 0 && reset) {
+        if (state.displayedResults.length === 0 && reset) {
           showNoResults();
           return;
         }
         
-        // Display only new unique results that haven't been shown before
-        const resultsToDisplay = state.filteredResults.filter(item => {
-          const uniqueId = `${item.id}-${item.media_type || state.filters.contentType}`;
-          return !state.displayedIds.has(uniqueId);
-        });
+        // Show load more button if:
+        // 1. There are more pages to fetch, AND
+        // 2. We either found matches or might find more
+        const shouldShowLoadMore = state.currentPage < state.totalPages && 
+                                 (newFilteredResults.length > 0 || state.hasMorePotentialResults);
         
-        if (resultsToDisplay.length > 0) {
-          displayResults(resultsToDisplay, reset);
-          
-          // Add displayed IDs to our tracking set
-          resultsToDisplay.forEach(item => {
-            const uniqueId = `${item.id}-${item.media_type || state.filters.contentType}`;
-            state.displayedIds.add(uniqueId);
-          });
-        }
-        
-        // Show load more button if there are more pages available from API
-        // AND we haven't shown all filtered results yet
-        if (state.currentPage < state.totalPages) {
+        if (shouldShowLoadMore) {
           loadMoreBtn.classList.remove('hidden');
         }
         
