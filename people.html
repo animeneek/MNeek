@@ -82,6 +82,12 @@
     .movie-poster {
       position: relative;
     }
+    .tab-container {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
   </style>
 </head>
 <body class="bg-black text-white">
@@ -135,7 +141,9 @@
 
       <!-- Tabs Container -->
       <div id="tabs-container" class="border-b border-gray-800 mt-8 mb-6">
-        <!-- Tabs will be dynamically inserted here -->
+        <div class="tab-container">
+          <!-- Tabs will be dynamically inserted here -->
+        </div>
       </div>
 
       <!-- Tab Content Container -->
@@ -145,7 +153,7 @@
     </div>
   </main>
 
-<script>
+  <script>
     const TMDB_API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
     const BASE_URL = 'https://api.themoviedb.org/3';
     const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -229,7 +237,7 @@
     }
 
     function createDynamicTabs() {
-      const tabsContainer = document.getElementById('tabs-container');
+      const tabsContainer = document.getElementById('tabs-container').querySelector('.tab-container');
       const contentContainer = document.getElementById('tab-content-container');
       
       // Group credits by department
@@ -258,7 +266,7 @@
         
         // Create tab button
         tabs.push(`
-          <button class="tab-button py-2 font-medium ${isActive ? 'active' : ''}" 
+          <button class="tab-button px-4 py-2 font-medium ${isActive ? 'active' : ''}" 
                   data-tab="${tabId}">
             ${department} (${credits.length})
           </button>
@@ -272,7 +280,7 @@
         });
         
         tabContents.push(`
-          <div id="${tabId}-tab" class="tab-panel ${isActive ? 'active' : 'hidden'}">
+          <div id="${tabId}-tab" class="tab-panel ${isActive ? 'block' : 'hidden'}">
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               ${sortedCredits.map(credit => createCreditCard(credit, department)).join('')}
             </div>
@@ -325,12 +333,16 @@
       
       tabs.forEach(tab => {
         tab.addEventListener('click', function() {
+          // Remove active class from all tabs
           tabs.forEach(t => t.classList.remove('active'));
+          // Add active class to clicked tab
           this.classList.add('active');
           
           const tabName = this.getAttribute('data-tab');
-          panels.forEach(panel => panel.classList.remove('active'));
-          document.getElementById(`${tabName}-tab`).classList.add('active');
+          // Hide all panels
+          panels.forEach(panel => panel.classList.add('hidden'));
+          // Show selected panel
+          document.getElementById(`${tabName}-tab`).classList.remove('hidden');
         });
       });
     }
