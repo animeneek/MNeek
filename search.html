@@ -787,16 +787,11 @@
             displayResults(nextChunk, false);
           }
           
-          // Show load more if we have more filtered results to display
+          // Show load more if we have more filtered results to display OR more pages to search
           const hasMoreFilteredResults = state.filteredResults.length > state.displayedResults.length;
-          loadMoreBtn.classList.toggle('hidden', !hasMoreFilteredResults);
+          const hasMorePagesToSearch = state.currentPage < state.totalPages;
+          loadMoreBtn.classList.toggle('hidden', !(hasMoreFilteredResults || hasMorePagesToSearch));
           
-          // Continue searching if we don't have enough filtered results yet
-          if (state.filteredResults.length < 20 && state.currentPage < state.totalPages) {
-            state.currentPage++;
-            performSearch(false);
-            return;
-          }
         } else {
           // No filters - just show the results normally
           if (reset) {
