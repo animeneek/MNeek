@@ -133,37 +133,14 @@
         </div>
       </div>
 
-      <!-- Tabs -->
-      <div class="border-b border-gray-800 mt-8 mb-6">
-        <div class="flex gap-6">
-          <button class="tab-button py-2 font-medium active" data-tab="acting">Acting</button>
-          <button class="tab-button py-2 font-medium" data-tab="sound">Sound</button>
-          <button class="tab-button py-2 font-medium" data-tab="crew">Crew</button>
-        </div>
+      <!-- Tabs Container -->
+      <div id="tabs-container" class="border-b border-gray-800 mt-8 mb-6">
+        <!-- Tabs will be dynamically inserted here -->
       </div>
 
-      <!-- Tab Content -->
-      <div class="tab-content">
-        <!-- Acting Tab -->
-        <div id="acting-tab" class="tab-panel active">
-          <div id="acting-content" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            <!-- Acting credits will be inserted here -->
-          </div>
-        </div>
-
-        <!-- Sound Tab -->
-        <div id="sound-tab" class="tab-panel hidden">
-          <div id="sound-content" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            <!-- Sound credits will be inserted here -->
-          </div>
-        </div>
-
-        <!-- Crew Tab -->
-        <div id="crew-tab" class="tab-panel hidden">
-          <div id="crew-content" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            <!-- Crew credits will be inserted here -->
-          </div>
-        </div>
+      <!-- Tab Content Container -->
+      <div id="tab-content-container">
+        <!-- Tab content will be dynamically inserted here -->
       </div>
     </div>
   </main>
@@ -189,7 +166,6 @@
       
       await fetchHeader();
       await loadPersonInfo();
-      setupTabs();
     });
 
     async function fetchHeader() {
@@ -208,7 +184,7 @@
         combinedCredits = await fetchTMDB(`/person/${personId}/combined_credits`);
         
         updatePersonInfo();
-        updateCredits();
+        createDynamicTabs();
       } catch (error) {
         console.error('Error loading person info:', error);
         document.getElementById('person-image-container').innerHTML = `
@@ -242,7 +218,6 @@
       const biography = document.getElementById('biography');
       biography.textContent = personInfo.biography || 'No biography available.';
       
-      // Check if biography is long enough to need "Read more"
       if (personInfo.biography && personInfo.biography.length > 500) {
         biography.textContent = personInfo.biography.substring(0, 500) + '...';
         document.getElementById('read-more').classList.remove('hidden');
@@ -253,52 +228,76 @@
       }
     }
 
-    function updateCredits() {
-      // Acting credits (cast)
-      const actingContent = document.getElementById('acting-content');
-      const actingCredits = combinedCredits.cast
-        .filter(credit => credit.media_type === 'movie' || credit.media_type === 'tv')
-        .sort((a, b) => {
+    function createDynamicTabs() {
+      const tabsContainer = document.getElementById('tabs-container');
+      const contentContainer = document.getElementById('tab-content-container');
+      
+      // Group credits by department
+      const departments = {};
+      
+      // Always include Acting if they have acting credits
+      if (combinedCredits.cast.length > 0) {
+        departments['Acting'] = combinedCredits.cast;
+      }
+      
+      // Group crew credits by department
+      combinedCredits.crew.forEach(credit => {
+        if (!departments[credit.department]) {
+          departments[credit.department] = [];
+        }
+        departments[credit.department].push(credit);
+      });
+      
+      // Create tabs for each department with credits
+      const tabs = [];
+      const tabContents = [];
+      
+      Object.entries(departments).forEach(([department, credits], index) => {
+        const isActive = index === 0;
+        const tabId = department.toLowerCase().replace(/\s+/g, '-');
+        
+        // Create tab button
+        tabs.push(`
+          <button class="tab-button py-2 font-medium ${isActive ? 'active' : ''}" 
+                  data-tab="${tabId}">
+            ${department} (${credits.length})
+          </button>
+        `);
+        
+        // Create tab content
+        const sortedCredits = [...credits].sort((a, b) => {
           const dateA = a.release_date || a.first_air_date || '';
           const dateB = b.release_date || b.first_air_date || '';
           return dateB.localeCompare(dateA); // Newest first
         });
+        
+        tabContents.push(`
+          <div id="${tabId}-tab" class="tab-panel ${isActive ? 'active' : 'hidden'}">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              ${sortedCredits.map(credit => createCreditCard(credit, department)).join('')}
+            </div>
+          </div>
+        `);
+      });
       
-      actingContent.innerHTML = actingCredits.map(credit => createCreditCard(credit)).join('');
+      // Insert tabs and content
+      tabsContainer.innerHTML = tabs.join('');
+      contentContainer.innerHTML = tabContents.join('');
       
-      // Sound credits
-      const soundContent = document.getElementById('sound-content');
-      const soundCredits = combinedCredits.crew
-        .filter(credit => credit.department === 'Sound')
-        .sort((a, b) => {
-          const dateA = a.release_date || a.first_air_date || '';
-          const dateB = b.release_date || b.first_air_date || '';
-          return dateB.localeCompare(dateA);
-        });
-      
-      soundContent.innerHTML = soundCredits.map(credit => createCreditCard(credit)).join('');
-      
-      // Crew credits (excluding Sound)
-      const crewContent = document.getElementById('crew-content');
-      const crewCredits = combinedCredits.crew
-        .filter(credit => credit.department !== 'Sound')
-        .sort((a, b) => {
-          const dateA = a.release_date || a.first_air_date || '';
-          const dateB = b.release_date || b.first_air_date || '';
-          return dateB.localeCompare(dateA);
-        });
-      
-      crewContent.innerHTML = crewCredits.map(credit => createCreditCard(credit)).join('');
+      // Setup tab switching
+      setupTabs();
     }
 
-    function createCreditCard(credit) {
+    function createCreditCard(credit, department) {
       const isMovie = credit.media_type === 'movie' || (credit.title && !credit.name);
       const title = isMovie ? credit.title : credit.name;
       const date = isMovie ? credit.release_date : credit.first_air_date;
       const year = date ? date.substring(0,4) : 'N/A';
       const percentage = credit.vote_average ? Math.round(credit.vote_average * 10) : 0;
       const posterUrl = credit.poster_path ? IMAGE_URL + credit.poster_path : DEFAULT_PROFILE;
-      const character = credit.character || credit.job || '';
+      const role = department === 'Acting' 
+        ? credit.character || 'Actor'
+        : credit.job || department;
       
       return `
         <div class="movie-card fade-in">
@@ -314,7 +313,7 @@
             </div>
             <h3 class="font-medium truncate">${title}</h3>
             <p class="text-xs text-gray-400">${year}</p>
-            <p class="text-xs text-gray-300 truncate">${character}</p>
+            <p class="text-xs text-gray-300 truncate">${role}</p>
           </a>
         </div>
       `;
@@ -330,8 +329,8 @@
           this.classList.add('active');
           
           const tabName = this.getAttribute('data-tab');
-          panels.forEach(panel => panel.classList.add('hidden'));
-          document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+          panels.forEach(panel => panel.classList.remove('active'));
+          document.getElementById(`${tabName}-tab`).classList.add('active');
         });
       });
     }
