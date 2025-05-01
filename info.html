@@ -130,6 +130,16 @@
         width: 100px;
       }
     }
+    .tab-container {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .person-image {
+      aspect-ratio: 2/3;
+      object-fit: cover;
+    }
   </style>
 </head>
 <body class="bg-black text-white">
@@ -140,27 +150,24 @@
   <!-- Main Content -->
   <main class="pb-20 pt-4">
     <div class="container mx-auto px-4">
-      <div class="info-grid grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+      <div class="info-grid grid grid-cols-1 md:grid-cols-4 gap-6 relative">
         <!-- Poster Column -->
         <div class="poster-container md:col-span-1">
-          <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden shadow-lg w-56 mx-auto">
+          <div class="person-image bg-dark rounded-lg overflow-hidden shadow-lg w-full">
             <img id="poster-image" class="w-full h-full object-cover" src="" alt="">
             <div id="rating-circle" class="rating-circle"></div>
           </div>
           
           <!-- Action Buttons -->
-          <div class="flex gap-3 mt-4 w-56 mx-auto">
-            <button id="watch-trailer" class="flex-1 bg-primary hover:bg-red-600 py-2 rounded-lg font-medium flex items-center justify-center gap-2">
+          <div class="flex gap-3 mt-4">
+            <button id="watch-trailer" class="w-full bg-primary hover:bg-red-600 py-2 rounded-lg font-medium flex items-center justify-center gap-2">
               <i class="fas fa-play"></i> Trailer
-            </button>
-            <button id="add-to-list" class="w-10 h-10 bg-dark hover:bg-gray-800 rounded-lg flex items-center justify-center">
-              <i class="far fa-bookmark"></i>
             </button>
           </div>
         </div>
 
         <!-- Info Column -->
-        <div class="md:col-span-2">
+        <div class="md:col-span-3">
           <h1 id="title" class="text-2xl sm:text-3xl md:text-4xl font-bold mb-2"></h1>
           <div class="flex flex-wrap items-center gap-2 text-sm text-gray-400 mb-4">
             <span id="year"></span>
@@ -180,7 +187,7 @@
           </div>
 
           <!-- Metadata -->
-          <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
               <h4 class="text-sm text-gray-400">Status</h4>
               <p id="status" class="font-medium"></p>
@@ -203,12 +210,12 @@
 
       <!-- Tabs -->
       <div class="border-b border-gray-800 mt-8 mb-6">
-        <div class="flex gap-6">
-          <button class="tab-button py-2 font-medium active" data-tab="cast">Cast</button>
-          <button class="tab-button py-2 font-medium" data-tab="sources">
+        <div class="tab-container">
+          <button class="tab-button px-4 py-2 font-medium active" data-tab="cast">Cast</button>
+          <button class="tab-button px-4 py-2 font-medium" data-tab="sources">
             <span id="sources-tab-label">Sources</span>
           </button>
-          <button class="tab-button py-2 font-medium" data-tab="similar">Similar</button>
+          <button class="tab-button px-4 py-2 font-medium" data-tab="similar">Similar</button>
         </div>
       </div>
 
