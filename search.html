@@ -717,7 +717,20 @@
       try {
         let newResults = [];
         
-        if (state.filters.contentType === 'multi') {
+        if (!state.currentQuery) {
+          // Show popular content when no query is provided
+          const [movies, tvShows] = await Promise.all([
+            fetch(`${BASE_URL}/movie/popular?page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json()),
+            fetch(`${BASE_URL}/tv/popular?page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json())
+          ]);
+          
+          newResults = [
+            ...(movies.results || []).map(m => ({ ...m, media_type: 'movie' })),
+            ...(tvShows.results || []).map(t => ({ ...t, media_type: 'tv' }))
+          ];
+          state.totalPages = Math.max(movies.total_pages || 1, tvShows.total_pages || 1);
+        } 
+        else if (state.filters.contentType === 'multi') {
           const [movies, tvShows] = await Promise.all([
             fetch(`${BASE_URL}/search/movie?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json()),
             fetch(`${BASE_URL}/search/tv?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json())
