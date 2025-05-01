@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MovieNeek | Search v23.30</title>
+  <title>MovieNeek | Search v23.33</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Font Awesome Icons -->
@@ -548,21 +548,8 @@
       });
       
       document.getElementById('load-more').addEventListener('click', () => {
-        // For filtered results, we already have all matches in state.filteredResults
-        if (state.filters.genres.length > 0 || state.filters.years.length > 0 || state.filters.language) {
-          const nextChunk = state.filteredResults.slice(state.displayedResults.length, state.displayedResults.length + 20);
-          state.displayedResults = [...state.displayedResults, ...nextChunk];
-          displayResults(nextChunk, false);
-          
-          // Hide load more if no more filtered results
-          if (state.displayedResults.length >= state.filteredResults.length) {
-            document.getElementById('load-more-container').classList.add('hidden');
-          }
-        } else {
-          // For non-filtered results, load next page
-          state.currentPage++;
-          performSearch(false);
-        }
+        state.currentPage++;
+        performSearch(false);
       });
     }
 
@@ -763,50 +750,21 @@
         // Add new results to our complete collection
         state.allResults = [...state.allResults, ...newResults];
         
-        // Check if we have any active filters
-        const hasActiveFilters = state.filters.genres.length > 0 || 
-                               state.filters.years.length > 0 || 
-                               state.filters.language !== null ||
-                               state.filters.contentType !== 'multi';
+        // Filter all results (not just the new ones) to maintain consistency
+        state.filteredResults = filterResults(state.allResults);
         
-        if (hasActiveFilters) {
-          // With filters - we need to collect all possible matches first
-          state.filteredResults = filterResults(state.allResults);
-          
-          // Sort the filtered results
-          state.filteredResults = sortResults(state.filteredResults, state.filters.sortBy);
-          
-          // On reset or first load, show first 20 filtered results
-          if (reset || state.displayedResults.length === 0) {
-            state.displayedResults = state.filteredResults.slice(0, 20);
-            displayResults(state.displayedResults, true);
-          }
-          
-          // Show load more if we have more filtered results to display
-          const hasMoreFilteredResults = state.filteredResults.length > state.displayedResults.length;
-          loadMoreBtn.classList.toggle('hidden', !hasMoreFilteredResults);
-          
-          // Continue searching if we don't have enough filtered results yet
-          if (state.filteredResults.length < 20 && state.currentPage < state.totalPages) {
-            state.currentPage++;
-            performSearch(false);
-            return;
-          }
+        // Apply sorting to the filtered results
+        state.filteredResults = sortResults(state.filteredResults, state.filters.sortBy);
+        
+        // If reset, show first page of filtered results
+        if (reset) {
+          state.displayedResults = state.filteredResults.slice(0, 20);
+          displayResults(state.displayedResults, true);
         } else {
-          // No filters - just show the results normally
-          state.filteredResults = sortResults(state.allResults, state.filters.sortBy);
-          
-          if (reset) {
-            state.displayedResults = state.filteredResults.slice(0, 20);
-            displayResults(state.displayedResults, true);
-          } else {
-            const nextChunk = state.filteredResults.slice(state.displayedResults.length, state.displayedResults.length + 20);
-            state.displayedResults = [...state.displayedResults, ...nextChunk];
-            displayResults(nextChunk, false);
-          }
-          
-          // Show load more if there are more results to display
-          loadMoreBtn.classList.toggle('hidden', state.displayedResults.length >= state.filteredResults.length);
+          // If loading more, show next chunk of filtered results
+          const nextChunk = state.filteredResults.slice(state.displayedResults.length, state.displayedResults.length + 20);
+          state.displayedResults = [...state.displayedResults, ...nextChunk];
+          displayResults(nextChunk, false);
         }
         
         // Show no results message if needed
@@ -814,6 +772,10 @@
           showNoResults();
           return;
         }
+        
+        // Determine if we should show the "Load More" button
+        const hasMoreResults = state.filteredResults.length > state.displayedResults.length;
+        loadMoreBtn.classList.toggle('hidden', !hasMoreResults);
         
       } catch (error) {
         console.error('Search error:', error);
@@ -842,14 +804,6 @@
 
     function filterResults(results) {
       let filtered = [...results];
-      
-      // Filter by content type if not 'multi'
-      if (state.filters.contentType !== 'multi') {
-        filtered = filtered.filter(item => 
-          (state.filters.contentType === 'movie' && (item.media_type === 'movie' || item.title)) ||
-          (state.filters.contentType === 'tv' && (item.media_type === 'tv' || item.name))
-        );
-      }
       
       if (state.filters.genres.length > 0) {
         filtered = filtered.filter(item => 
