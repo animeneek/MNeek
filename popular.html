@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MovieNeek | Popular</title>
+  <title>MovieNeek | Now Playing</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script>
@@ -133,11 +133,11 @@
   <div id="header"></div>
 
   <!-- Main Content -->
-  <main class="container mx-auto px-4 pt-2 pb-24 min-h-screen">
+  <main class="container mx-auto px-4 pt-2 pb-8 min-h-screen">
     <!-- Page Title and Toggle -->
     <div class="sticky top-20 md:top-16 z-30 bg-black/80 backdrop-blur-sm py-4">
       <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl md:text-3xl font-bold">Popular</h1>
+        <h1 class="text-2xl md:text-3xl font-bold">Now Playing</h1>
         <label class="toggle-switch">
           <input type="checkbox" id="content-toggle">
           <span class="toggle-slider"></span>
@@ -162,26 +162,6 @@
       </button>
     </div>
   </main>
-
-  <!-- Bottom Navigation (Mobile Only) -->
-  <div class="bottom-nav flex justify-around items-center py-3 md:hidden">
-    <a href="index.html" class="text-gray-400 hover:text-white flex flex-col items-center">
-      <i class="fas fa-home text-lg"></i>
-      <span class="text-xs mt-1">Home</span>
-    </a>
-    <a href="search.html" class="text-gray-400 hover:text-white flex flex-col items-center">
-      <i class="fas fa-search text-lg"></i>
-      <span class="text-xs mt-1">Search</span>
-    </a>
-    <a href="#" class="text-gray-400 hover:text-white flex flex-col items-center">
-      <i class="fas fa-heart text-lg"></i>
-      <span class="text-xs mt-1">Favorites</span>
-    </a>
-    <a href="#" class="text-gray-400 hover:text-white flex flex-col items-center">
-      <i class="fas fa-user text-lg"></i>
-      <span class="text-xs mt-1">Profile</span>
-    </a>
-  </div>
 
 <script>
     const TMDB_API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
@@ -212,7 +192,7 @@
           
           // Then setup the rest of the page
           setupToggleSwitch();
-          loadPopularContent();
+          loadNowPlayingContent();
         })
         .catch(error => console.error('Error fetching header:', error));
     });
@@ -223,11 +203,11 @@
         contentType = this.checked ? 'tv' : 'movie';
         currentPage = 1;
         document.getElementById('results-grid').innerHTML = '';
-        loadPopularContent();
+        loadNowPlayingContent();
       });
     }
 
-    async function loadPopularContent() {
+    async function loadNowPlayingContent() {
       if (isLoading) return;
       
       const resultsContainer = document.getElementById('results-grid');
@@ -239,7 +219,7 @@
       isLoading = true;
       
       try {
-        const endpoint = contentType === 'movie' ? '/movie/popular' : '/tv/popular';
+        const endpoint = contentType === 'movie' ? '/movie/now_playing' : '/tv/on_the_air';
         const response = await fetch(`${BASE_URL}${endpoint}?page=${currentPage}&api_key=${TMDB_API_KEY}`);
         const data = await response.json();
         
@@ -256,7 +236,7 @@
           showNoResults();
         }
       } catch (error) {
-        console.error('Error loading popular content:', error);
+        console.error('Error loading now playing content:', error);
         showError();
       } finally {
         loading.classList.add('hidden');
@@ -327,7 +307,7 @@
     // Load more button event
     document.getElementById('load-more').addEventListener('click', () => {
       currentPage++;
-      loadPopularContent();
+      loadNowPlayingContent();
     });
 </script>
   
