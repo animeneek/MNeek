@@ -717,72 +717,65 @@
       try {
         let newResults = [];
         
-        if (state.filters.contentType === 'multi') {
-          const [movies, tvShows] = await Promise.all([
-            fetch(`${BASE_URL}/search/movie?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json()),
-            fetch(`${BASE_URL}/search/tv?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json())
-          ]);
-          
-          newResults = [...(movies.results || []), ...(tvShows.results || [])];
-          state.totalPages = Math.max(movies.total_pages || 1, tvShows.total_pages || 1);
+        // If empty query, show popular content instead of search
+        if (!state.currentQuery.trim()) {
+          if (state.filters.contentType === 'multi') {
+            const [movies, tvShows] = await Promise.all([
+              fetch(`${BASE_URL}/discover/movie?sort_by=popularity.desc&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json()),
+              fetch(`${BASE_URL}/discover/tv?sort_by=popularity.desc&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json())
+            ]);
+            newResults = [...(movies.results || []), ...(tvShows.results || [])];
+            state.totalPages = Math.max(movies.total_pages || 1, tvShows.total_pages || 1);
+          } else {
+            const response = await fetch(`${BASE_URL}/discover/${state.filters.contentType}?sort_by=popularity.desc&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json());
+            newResults = response.results || [];
+            state.totalPages = response.total_pages || 1;
+          }
         } else {
-          const response = await fetch(`${BASE_URL}/search/${state.filters.contentType}?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json());
-          newResults = response.results || [];
-          state.totalPages = response.total_pages || 1;
+          // Normal search behavior
+          if (state.filters.contentType === 'multi') {
+            const [movies, tvShows] = await Promise.all([
+              fetch(`${BASE_URL}/search/movie?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json()),
+              fetch(`${BASE_URL}/search/tv?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json())
+            ]);
+            newResults = [...(movies.results || []), ...(tvShows.results || [])];
+            state.totalPages = Math.max(movies.total_pages || 1, tvShows.total_pages || 1);
+          } else {
+            const response = await fetch(`${BASE_URL}/search/${state.filters.contentType}?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json());
+            newResults = response.results || [];
+            state.totalPages = response.total_pages || 1;
+          }
         }
         
         // Add new results to our complete collection
         state.allResults = [...state.allResults, ...newResults];
         
-        // Apply sorting to all results
-        state.allResults = sortResults(state.allResults, state.filters.sortBy);
-        
-        // Filter just the new results to find matches
-        const newFilteredResults = filterResults(newResults);
-        
-        if (newFilteredResults.length > 0) {
-          // Found matches on this page
-          state.displayedResults = [...state.displayedResults, ...newFilteredResults];
-          displayResults(newFilteredResults, reset);
-          state.lastFilteredPage = state.currentPage;
-          state.consecutiveEmptyPages = 0;
-        } else {
-          // No matches on this page
-          state.consecutiveEmptyPages++;
-        }
-        
-        // Update complete filtered results collection
+        // Filter all results (not just the new ones) to maintain consistency
         state.filteredResults = filterResults(state.allResults);
         
-        if (state.displayedResults.length === 0 && reset) {
+        // Apply sorting to the filtered results
+        state.filteredResults = sortResults(state.filteredResults, state.filters.sortBy);
+        
+        // If reset, show first page of filtered results
+        if (reset) {
+          state.displayedResults = state.filteredResults.slice(0, 20);
+          displayResults(state.displayedResults, true);
+        } else {
+          // If loading more, show next chunk of filtered results
+          const nextChunk = state.filteredResults.slice(state.displayedResults.length, state.displayedResults.length + 20);
+          state.displayedResults = [...state.displayedResults, ...nextChunk];
+          displayResults(nextChunk, false);
+        }
+        
+        // Show no results message if needed
+        if (state.displayedResults.length === 0) {
           showNoResults();
           return;
         }
         
-        // Check if we have any active filters
-        const hasActiveFilters = state.filters.genres.length > 0 || 
-                               state.filters.years.length > 0 || 
-                               state.filters.language !== null;
-        
         // Determine if we should show the "Load More" button
-        let shouldShowLoadMore = false;
-        
-        if (hasActiveFilters) {
-          // With filters:
-          // Show if we haven't checked all pages AND (we found matches recently OR haven't checked too many empty pages)
-          shouldShowLoadMore = state.currentPage < state.totalPages && 
-                             (state.currentPage - state.lastFilteredPage < 3 || 
-                              state.consecutiveEmptyPages < 3);
-        } else {
-          // Without filters: just show if there are more pages
-          shouldShowLoadMore = state.currentPage < state.totalPages;
-        }
-        
-        if (shouldShowLoadMore) {
-          loadMoreBtn.classList.remove('hidden');
-        } else {
-          loadMoreBtn.classList.add('hidden');
-        }
+        const hasMoreResults = state.filteredResults.length > state.displayedResults.length;
+        loadMoreBtn.classList.toggle('hidden', !hasMoreResults);
         
       } catch (error) {
         console.error('Search error:', error);
@@ -798,7 +791,7 @@
           return sortBy.includes('desc') ? b.popularity - a.popularity : a.popularity - b.popularity;
         }
         if (sortBy.includes('vote_average')) {
-          return sortBy.includes('desc') ? b.vote_average - a.vote_average : a.vote_average - b.vote_average;
+          return sortBy.includes('desc') ? (b.vote_average || 0) - (a.vote_average || 0) : (a.vote_average || 0) - (b.vote_average || 0);
         }
         if (sortBy.includes('release_date')) {
           const dateA = a.release_date || a.first_air_date || '';
