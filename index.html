@@ -45,7 +45,6 @@
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       z-index: 1000;
     }
-
     .hero-slide {
       position: absolute;
       width: 100%;
@@ -194,8 +193,8 @@
     <div id="hero-dots" class="absolute bottom-8 left-0 right-0 flex justify-center gap-2"></div>
   </section>
 
-  <!-- Continue Watching Section (Will be added dynamically) -->
-  <div id="continue-watching-root"></div>
+  <!-- Continue Watching Section -->
+  <div id="continue-watching-root" class="container mx-auto px-4 pt-8"></div>
 
   <!-- Content Sections -->
   <main class="container mx-auto px-4 py-8 space-y-12">
@@ -301,112 +300,95 @@
       await initContentSections();
       setupToggleSwitches();
       setupSliderDrag();
-      initContinueWatchingSection();
+      loadContinueWatching();
     });
 
-    // Initialize Continue Watching Section
-    function initContinueWatchingSection() {
+    // Load Continue Watching Section
+    function loadContinueWatching() {
       const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
       const container = document.getElementById('continue-watching-root');
       
+      if (continueWatching.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
       container.innerHTML = `
-        <section class="container mx-auto px-4 pt-8 pb-4">
+        <section>
           <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold section-title">
               <i class="fas fa-clock text-primary mr-2"></i> Continue Watching
             </h2>
-            ${continueWatching.length > 0 ? `
-              <button id="clear-continue-watching" class="text-sm text-gray-400 hover:text-primary flex items-center">
-                Clear All <i class="fas fa-trash-alt ml-1"></i>
-              </button>
-            ` : ''}
+            <button id="clear-continue-watching" class="text-sm text-gray-400 hover:text-primary flex items-center">
+              Clear All <i class="fas fa-trash-alt ml-1"></i>
+            </button>
           </div>
-          <div class="flex gap-4 overflow-x-auto slider-container pb-4 pt-[1.2em] px-[1em] min-h-[260px]">
-            ${continueWatching.length > 0 ? 
-              continueWatching.map(item => createContinueWatchingCard(item)).join('') : `
-              <div class="continue-watching-empty w-full">
-                <i class="fas fa-clock text-4xl mb-2"></i>
-                <p>No recently watched items</p>
+          <div class="flex gap-4 overflow-x-auto slider-container pb-4 pt-[1.2em] px-[1em]">
+            ${continueWatching.map(item => `
+              <div class="movie-card-container">
+                <div class="movie-card w-40 sm:w-48 md:w-56">
+                  <a href="info.html?id=${item.id}&type=${item.type}" class="block relative">
+                    <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2 relative">
+                      <img src="${IMAGE_URL}${item.poster_path}" 
+                           onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'"
+                           class="w-full h-full object-cover">
+                      <div class="rating-circle" data-rating="${Math.round(item.vote_average * 10)}%" 
+                           style="--percentage: ${Math.round(item.vote_average * 10)}"></div>
+                      <div class="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">
+                        <div class="h-full bg-primary" style="width: ${item.progress || 0}%"></div>
+                      </div>
+                    </div>
+                    <h3 class="font-medium truncate">${item.title}</h3>
+                    <p class="text-xs text-gray-400">${item.year || 'N/A'}</p>
+                    ${item.progress ? `
+                      <div class="absolute top-2 right-2 bg-black/70 rounded-full w-8 h-8 flex items-center justify-center">
+                        <span class="text-xs font-bold">${item.progress}%</span>
+                      </div>
+                    ` : ''}
+                  </a>
+                </div>
               </div>
-            `}
+            `).join('')}
           </div>
         </section>
       `;
 
-      if (continueWatching.length > 0) {
-        document.getElementById('clear-continue-watching').addEventListener('click', () => {
-          localStorage.removeItem('continueWatching');
-          initContinueWatchingSection(); // Refresh the section
-        });
-      }
+      document.getElementById('clear-continue-watching').addEventListener('click', () => {
+        localStorage.removeItem('continueWatching');
+        loadContinueWatching();
+      });
     }
 
-    // Create continue watching card
-    function createContinueWatchingCard(item) {
-      const percentage = Math.round(item.vote_average * 10);
-      const progressPercentage = item.progress || 0;
-      
-      return `
-        <div class="movie-card-container">
-          <div class="movie-card w-40 sm:w-48 md:w-56">
-            <a href="info.html?id=${item.id}&type=${item.type}" class="block relative">
-              <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2 relative">
-                <img 
-                  src="${IMAGE_URL}${item.poster_path}" 
-                  alt="${item.title}"
-                  class="w-full h-full object-cover"
-                  onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'"
-                >
-                <div class="rating-circle" data-rating="${percentage}%" style="--percentage: ${percentage}"></div>
-                <div class="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">
-                  <div class="h-full bg-primary" style="width: ${progressPercentage}%"></div>
-                </div>
-              </div>
-              <h3 class="font-medium truncate">${item.title}</h3>
-              <p class="text-xs text-gray-400">${item.year || 'N/A'}</p>
-              ${progressPercentage > 0 ? `
-                <div class="absolute top-2 right-2 bg-black/70 rounded-full w-8 h-8 flex items-center justify-center">
-                  <span class="text-xs font-bold">${progressPercentage}%</span>
-                </div>
-              ` : ''}
-            </a>
-          </div>
-        </div>
-      `;
-    }
-
-    // Function to add item to continue watching (call this from any page when an item is clicked)
+    // Add item to Continue Watching
     function addToContinueWatching(item, type) {
+      if (!item || !item.id) return;
+      
       const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
       
-      // Check if item already exists
-      const existingIndex = continueWatching.findIndex(i => i.id === item.id && i.type === type);
-      
-      const newItem = {
+      const itemData = {
         id: item.id,
         type: type,
         title: type === 'movie' ? item.title : item.name,
         poster_path: item.poster_path,
-        vote_average: item.vote_average,
+        vote_average: item.vote_average || 0,
         year: (type === 'movie' ? item.release_date : item.first_air_date)?.substring(0,4) || 'N/A',
-        progress: 0 // Can be updated when watching
+        progress: 0
       };
+
+      const existingIndex = continueWatching.findIndex(i => i.id === item.id && i.type === type);
       
       if (existingIndex >= 0) {
-        continueWatching[existingIndex] = newItem;
+        continueWatching[existingIndex] = itemData;
       } else {
-        continueWatching.unshift(newItem);
+        continueWatching.unshift(itemData);
       }
-      
-      // Keep only the last 20 items
+
       if (continueWatching.length > 20) {
-        continueWatching.pop();
+        continueWatching.length = 20;
       }
-      
+
       localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
-      
-      // Refresh the continue watching section
-      initContinueWatchingSection();
+      loadContinueWatching();
     }
 
     // Hero Slider with Fade Effect
@@ -441,7 +423,6 @@
                 onclick="showHeroSlide(${i})"></button>
       `).join('');
 
-      // Auto-slide functionality with fade effect
       clearInterval(heroSliderInterval);
       heroSliderInterval = setInterval(() => {
         showNextHeroSlide();
@@ -487,20 +468,17 @@
         { id: 'top-rated-series', path: '/tv/top_rated' }
       ];
 
-      // Load movies
       for (const section of movieEndpoints) {
         const items = await fetchTMDB(section.path);
         document.getElementById(section.id).innerHTML = items.slice(0, 10).map(item => createCard(item, 'movie')).join('');
       }
 
-      // Load series
       for (const section of seriesEndpoints) {
         const items = await fetchTMDB(section.path);
         document.getElementById(section.id).innerHTML = items.slice(0, 10).map(item => createCard(item, 'tv')).join('');
       }
     }
 
-    // Create movie/series card
     function createCard(item, type) {
       const title = type === 'movie' ? item.title : item.name;
       const releaseDate = type === 'movie' ? item.release_date : item.first_air_date;
@@ -509,7 +487,9 @@
       return `
         <div class="movie-card-container">
           <div class="movie-card w-40 sm:w-48 md:w-56">
-            <a href="info.html?id=${item.id}&type=${type}" onclick="addToContinueWatching(${JSON.stringify(item)}, '${type}')" class="block relative">
+            <a href="info.html?id=${item.id}&type=${type}" 
+               onclick="event.preventDefault(); addToContinueWatching(${JSON.stringify(item)}, '${type}'); window.location.href='info.html?id=${item.id}&type=${type}'" 
+               class="block relative">
               <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
                 <img 
                   src="${IMAGE_URL}${item.poster_path}" 
@@ -527,7 +507,6 @@
       `;
     }
 
-    // Setup toggle switches
     function setupToggleSwitches() {
       const toggles = {
         'toggle-popular': ['popular-movies', 'popular-series'],
@@ -543,13 +522,11 @@
           document.getElementById(seriesId).classList.toggle('hidden', !this.checked);
         });
         
-        // Initialize with movies visible
         document.getElementById(movieId).classList.remove('hidden');
         document.getElementById(seriesId).classList.add('hidden');
       }
     }
 
-    // Setup slider drag functionality
     function setupSliderDrag() {
       document.querySelectorAll('.slider-container').forEach(slider => {
         let isDown = false;
@@ -583,7 +560,6 @@
       });
     }
 
-    // TMDB API Helper
     async function fetchTMDB(endpoint) {
       try {
         const res = await fetch(`${BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}`);
@@ -595,7 +571,6 @@
       }
     }
 
-    // Genre Helper
     function getGenreName(id) {
       const genres = {
         28: 'Action', 12: 'Adventure', 16: 'Animation',
