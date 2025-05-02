@@ -278,12 +278,13 @@
     </section>
   </main>
 
-  <script>
+<script>
     const TMDB_API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
     const BASE_URL = 'https://api.themoviedb.org/3';
     const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
     let heroSliderInterval;
     let currentHeroSlide = 0;
+    let continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
 
     // Initialize all sections
     document.addEventListener('DOMContentLoaded', async () => {
@@ -291,7 +292,109 @@
       await initContentSections();
       setupToggleSwitches();
       setupSliderDrag();
+      initContinueWatchingSection();
     });
+
+    // Initialize Continue Watching Section
+    async function initContinueWatchingSection() {
+      if (continueWatching.length === 0) return;
+      
+      const container = document.createElement('section');
+      container.innerHTML = `
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold section-title">
+            <i class="fas fa-clock text-primary mr-2"></i> Continue Watching
+          </h2>
+          ${continueWatching.length > 5 ? `
+            <button class="text-sm text-gray-400 hover:text-primary flex items-center" id="clear-continue-watching">
+              Clear All <i class="fas fa-trash-alt ml-1"></i>
+            </button>
+          ` : ''}
+        </div>
+        <div class="flex gap-4 overflow-x-auto slider-container pb-4 pt-[1.2em] px-[1em]" id="continue-watching-container"></div>
+      `;
+      
+      // Insert after hero section
+      document.querySelector('main').prepend(container);
+      
+      // Load continue watching items
+      const continueWatchingContainer = document.getElementById('continue-watching-container');
+      continueWatchingContainer.innerHTML = continueWatching.map(item => createContinueWatchingCard(item)).join('');
+      
+      // Add clear button functionality
+      const clearBtn = document.getElementById('clear-continue-watching');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          continueWatching = [];
+          localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
+          document.getElementById('continue-watching-container').remove();
+          clearBtn.closest('section').remove();
+        });
+      }
+    }
+
+    // Create continue watching card
+    function createContinueWatchingCard(item) {
+      const percentage = Math.round(item.vote_average * 10);
+      const progressPercentage = item.progress ? Math.min(100, Math.max(0, item.progress)) : 0;
+      
+      return `
+        <div class="movie-card-container">
+          <div class="movie-card w-40 sm:w-48 md:w-56">
+            <a href="info.html?id=${item.id}&type=${item.type}" class="block relative">
+              <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2 relative">
+                <img 
+                  src="${IMAGE_URL}${item.poster_path}" 
+                  alt="${item.title}"
+                  class="w-full h-full object-cover"
+                  onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'"
+                >
+                <div class="rating-circle" data-rating="${percentage}%" style="--percentage: ${percentage}"></div>
+                <div class="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">
+                  <div class="h-full bg-primary" style="width: ${progressPercentage}%"></div>
+                </div>
+              </div>
+              <h3 class="font-medium truncate">${item.title}</h3>
+              <p class="text-xs text-gray-400">${item.year || 'N/A'}</p>
+              ${progressPercentage > 0 ? `
+                <div class="absolute top-2 right-2 bg-black/70 rounded-full w-8 h-8 flex items-center justify-center">
+                  <span class="text-xs font-bold">${progressPercentage}%</span>
+                </div>
+              ` : ''}
+            </a>
+          </div>
+        </div>
+      `;
+    }
+
+    // Function to add item to continue watching
+    function addToContinueWatching(item, type) {
+      // Check if item already exists
+      const existingIndex = continueWatching.findIndex(i => i.id === item.id && i.type === type);
+      
+      const newItem = {
+        id: item.id,
+        type: type,
+        title: type === 'movie' ? item.title : item.name,
+        poster_path: item.poster_path,
+        vote_average: item.vote_average,
+        year: (type === 'movie' ? item.release_date : item.first_air_date)?.substring(0,4) || 'N/A',
+        progress: 0 // You can update this when user watches
+      };
+      
+      if (existingIndex >= 0) {
+        continueWatching[existingIndex] = newItem;
+      } else {
+        continueWatching.unshift(newItem); // Add to beginning
+      }
+      
+      // Keep only the last 20 items
+      if (continueWatching.length > 20) {
+        continueWatching = continueWatching.slice(0, 20);
+      }
+      
+      localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
+    }
 
     // Hero Slider with Fade Effect
     async function initHeroSlider() {
@@ -312,7 +415,7 @@
             </div>
             <h2 class="text-3xl md:text-5xl font-bold mb-3 hero-title">${movie.title}</h2>
             <p class="text-gray-300 mb-5 line-clamp-2 hero-overview">${movie.overview}</p>
-            <button onclick="window.location.href='info.html?id=${movie.id}'" 
+            <button onclick="window.location.href='info.html?id=${movie.id}';addToContinueWatching(${JSON.stringify(movie)}, 'movie')" 
                     class="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full font-medium flex items-center">
               <i class="fas fa-info-circle mr-2"></i> More Info
             </button>
@@ -393,7 +496,7 @@
       return `
         <div class="movie-card-container">
           <div class="movie-card w-40 sm:w-48 md:w-56">
-            <a href="info.html?id=${item.id}&type=${type}" class="block relative">
+            <a href="info.html?id=${item.id}&type=${type}" onclick="addToContinueWatching(${JSON.stringify(item)}, '${type}')" class="block relative">
               <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
                 <img 
                   src="${IMAGE_URL}${item.poster_path}" 
@@ -488,16 +591,6 @@
       };
       return genres[id] || 'Movie';
     }
-  </script>
-
-  <script>
-    // Fetch the header.html content and insert it into the #header div
-    fetch('header.html')
-      .then(response => response.text())
-      .then(data => {
-        document.getElementById('header').innerHTML = data;
-      })
-      .catch(error => console.error('Error fetching header:', error));
   </script>
   
 </body>
