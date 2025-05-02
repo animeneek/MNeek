@@ -327,14 +327,39 @@
       });
     });
 
-    // Load continue watching items from localStorage
+    // Continue Watching Functions
     function loadContinueWatching() {
       const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
       const container = document.getElementById('continue-watching');
       const noItems = document.getElementById('no-continue');
       
       if (continueWatching.length > 0) {
-        container.innerHTML = continueWatching.map(item => createContinueCard(item)).join('');
+        container.innerHTML = continueWatching.map(item => {
+          const percentage = Math.round(item.progress * 100);
+          const title = item.title || item.name;
+          
+          return `
+            <div class="movie-card-container">
+              <div class="movie-card w-40 sm:w-48 md:w-56">
+                <a href="info.html?id=${item.id}&type=${item.type}" class="block relative">
+                  <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
+                    <img 
+                      src="${IMAGE_URL}${item.poster_path}" 
+                      alt="${title}"
+                      class="w-full h-full object-cover"
+                      onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'"
+                    >
+                    <div class="rating-circle" data-rating="${percentage}%" style="--percentage: ${percentage}"></div>
+                    <div class="progress-bar" style="width: ${percentage}%"></div>
+                  </div>
+                  <h3 class="font-medium truncate">${title}</h3>
+                  <p class="text-xs text-gray-400">${item.type === 'movie' ? 'Movie' : 'Series'}</p>
+                </a>
+              </div>
+            </div>
+          `;
+        }).join('');
+        
         container.classList.remove('hidden');
         noItems.classList.add('hidden');
       } else {
@@ -343,31 +368,26 @@
       }
     }
 
-    // Create continue watching card
-    function createContinueCard(item) {
-      const title = item.type === 'movie' ? item.title : item.name;
-      const percentage = Math.round(item.progress * 100);
+    // This function will be called when a movie/series is opened
+    function addToContinueWatching(item) {
+      const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
       
-      return `
-        <div class="movie-card-container">
-          <div class="movie-card w-40 sm:w-48 md:w-56">
-            <a href="info.html?id=${item.id}&type=${item.type}" class="block relative">
-              <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
-                <img 
-                  src="${IMAGE_URL}${item.poster_path}" 
-                  alt="${title}"
-                  class="w-full h-full object-cover"
-                  onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'"
-                >
-                <div class="rating-circle" data-rating="${percentage}%" style="--percentage: ${percentage}"></div>
-                <div class="progress-bar" style="width: ${percentage}%"></div>
-              </div>
-              <h3 class="font-medium truncate">${title}</h3>
-              <p class="text-xs text-gray-400">${item.type === 'movie' ? 'Movie' : 'Series'}</p>
-            </a>
-          </div>
-        </div>
-      `;
+      // Check if item already exists
+      const existingIndex = continueWatching.findIndex(i => i.id === item.id && i.type === item.type);
+      
+      if (existingIndex >= 0) {
+        // Update existing item
+        continueWatching[existingIndex] = item;
+      } else {
+        // Add new item (limit to 10 items)
+        if (continueWatching.length >= 10) {
+          continueWatching.shift(); // Remove oldest item
+        }
+        continueWatching.push(item);
+      }
+      
+      localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
+      loadContinueWatching();
     }
 
     // Hero Slider with Fade Effect
@@ -470,7 +490,13 @@
       return `
         <div class="movie-card-container">
           <div class="movie-card w-40 sm:w-48 md:w-56">
-            <a href="info.html?id=${item.id}&type=${type}" class="block relative">
+            <a href="info.html?id=${item.id}&type=${type}" class="block relative" onclick="addToContinueWatching({
+              id: ${item.id},
+              type: '${type}',
+              title: '${title.replace(/'/g, "\\'")}',
+              poster_path: '${item.poster_path}',
+              progress: 0.1
+            })">
               <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
                 <img 
                   src="${IMAGE_URL}${item.poster_path}" 
