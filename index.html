@@ -180,12 +180,14 @@
   <!-- Header -->  
   <div id="header"></div>
 
-
   <!-- Hero Slider with Fade Effect -->
   <section class="relative h-[70vh] min-h-[500px] overflow-hidden" id="hero-slider-container">
     <div id="hero-slider" class="h-full w-full relative"></div>
     <div id="hero-dots" class="absolute bottom-8 left-0 right-0 flex justify-center gap-2"></div>
   </section>
+
+  <!-- Continue Watching Section (Will be added dynamically if items exist) -->
+  <div id="continue-watching-section"></div>
 
   <!-- Content Sections -->
   <main class="container mx-auto px-4 py-8 space-y-12">
@@ -291,7 +293,106 @@
       await initContentSections();
       setupToggleSwitches();
       setupSliderDrag();
+      initContinueWatchingSection();
     });
+
+    // Initialize Continue Watching Section
+    function initContinueWatchingSection() {
+      const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
+      if (continueWatching.length === 0) return;
+
+      const section = document.createElement('section');
+      section.className = 'container mx-auto px-4 py-8';
+      section.innerHTML = `
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold section-title">
+            <i class="fas fa-clock text-primary mr-2"></i> Continue Watching
+          </h2>
+          <button id="clear-continue-watching" class="text-sm text-gray-400 hover:text-primary flex items-center">
+            Clear All <i class="fas fa-trash-alt ml-1"></i>
+          </button>
+        </div>
+        <div class="flex gap-4 overflow-x-auto slider-container pb-4 pt-[1.2em] px-[1em]" id="continue-watching-container"></div>
+      `;
+
+      // Insert after hero section
+      document.querySelector('main').prepend(section);
+
+      // Load continue watching items
+      const container = document.getElementById('continue-watching-container');
+      container.innerHTML = continueWatching.map(item => createContinueWatchingCard(item)).join('');
+
+      // Setup clear button
+      document.getElementById('clear-continue-watching').addEventListener('click', () => {
+        localStorage.removeItem('continueWatching');
+        section.remove();
+      });
+    }
+
+    // Create continue watching card
+    function createContinueWatchingCard(item) {
+      const percentage = Math.round(item.vote_average * 10);
+      const progressPercentage = item.progress || 0;
+      
+      return `
+        <div class="movie-card-container">
+          <div class="movie-card w-40 sm:w-48 md:w-56">
+            <a href="info.html?id=${item.id}&type=${item.type}" class="block relative">
+              <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2 relative">
+                <img 
+                  src="${IMAGE_URL}${item.poster_path}" 
+                  alt="${item.title}"
+                  class="w-full h-full object-cover"
+                  onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'"
+                >
+                <div class="rating-circle" data-rating="${percentage}%" style="--percentage: ${percentage}"></div>
+                <div class="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">
+                  <div class="h-full bg-primary" style="width: ${progressPercentage}%"></div>
+                </div>
+              </div>
+              <h3 class="font-medium truncate">${item.title}</h3>
+              <p class="text-xs text-gray-400">${item.year || 'N/A'}</p>
+              ${progressPercentage > 0 ? `
+                <div class="absolute top-2 right-2 bg-black/70 rounded-full w-8 h-8 flex items-center justify-center">
+                  <span class="text-xs font-bold">${progressPercentage}%</span>
+                </div>
+              ` : ''}
+            </a>
+          </div>
+        </div>
+      `;
+    }
+
+    // Function to add item to continue watching (to be called from other pages)
+    function addToContinueWatching(item, type) {
+      const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
+      
+      // Check if item already exists
+      const existingIndex = continueWatching.findIndex(i => i.id === item.id && i.type === type);
+      
+      const newItem = {
+        id: item.id,
+        type: type,
+        title: type === 'movie' ? item.title : item.name,
+        poster_path: item.poster_path,
+        vote_average: item.vote_average,
+        year: (type === 'movie' ? item.release_date : item.first_air_date)?.substring(0,4) || 'N/A',
+        progress: 0 // Can be updated when watching
+      };
+      
+      if (existingIndex >= 0) {
+        continueWatching[existingIndex] = newItem;
+      } else {
+        continueWatching.unshift(newItem);
+      }
+      
+      // Keep only the last 20 items
+      if (continueWatching.length > 20) {
+        continueWatching.pop();
+      }
+      
+      localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
+    }
 
     // Hero Slider with Fade Effect
     async function initHeroSlider() {
@@ -312,7 +413,7 @@
             </div>
             <h2 class="text-3xl md:text-5xl font-bold mb-3 hero-title">${movie.title}</h2>
             <p class="text-gray-300 mb-5 line-clamp-2 hero-overview">${movie.overview}</p>
-            <button onclick="window.location.href='info.html?id=${movie.id}'" 
+            <button onclick="addToContinueWatching(${JSON.stringify(movie)}, 'movie'); window.location.href='info.html?id=${movie.id}'" 
                     class="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full font-medium flex items-center">
               <i class="fas fa-info-circle mr-2"></i> More Info
             </button>
@@ -393,7 +494,7 @@
       return `
         <div class="movie-card-container">
           <div class="movie-card w-40 sm:w-48 md:w-56">
-            <a href="info.html?id=${item.id}&type=${type}" class="block relative">
+            <a href="info.html?id=${item.id}&type=${type}" onclick="addToContinueWatching(${JSON.stringify(item)}, '${type}')" class="block relative">
               <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
                 <img 
                   src="${IMAGE_URL}${item.poster_path}" 
