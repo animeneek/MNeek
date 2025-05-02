@@ -400,57 +400,56 @@
       }
       
       localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
-      
-      // Only reload if we're on the homepage
-      if (window.location.pathname.endsWith('index.html') {
-        loadContinueWatching();
-      }
     }
 
     // Hero Slider with Fade Effect
     async function initHeroSlider() {
-      const movies = await fetchTMDB('/movie/popular');
-      const slider = document.getElementById('hero-slider');
-      const dots = document.getElementById('hero-dots');
-      
-      slider.innerHTML = movies.slice(0, 5).map((movie, index) => `
-        <div class="hero-slide ${index === 0 ? 'active' : ''}" 
-             style="background-image: url(https://image.tmdb.org/t/p/original${movie.backdrop_path})">
-          <div class="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent"></div>
-          <div class="absolute bottom-0 left-0 right-0 p-8 md:p-12 lg:p-16 max-w-4xl">
-            <div class="flex gap-2 mb-3">
-              ${movie.genre_ids.slice(0,2).map(id => `
-                <span class="bg-primary text-xs px-2 py-1 rounded">${getGenreName(id)}</span>
-              `).join('')}
-              <span class="bg-dark text-xs px-2 py-1 rounded">${movie.release_date?.substring(0,4) || '2023'}</span>
+      try {
+        const movies = await fetchTMDB('/movie/popular');
+        const slider = document.getElementById('hero-slider');
+        const dots = document.getElementById('hero-dots');
+        
+        slider.innerHTML = movies.slice(0, 5).map((movie, index) => `
+          <div class="hero-slide ${index === 0 ? 'active' : ''}" 
+               style="background-image: url(https://image.tmdb.org/t/p/original${movie.backdrop_path})">
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent"></div>
+            <div class="absolute bottom-0 left-0 right-0 p-8 md:p-12 lg:p-16 max-w-4xl">
+              <div class="flex gap-2 mb-3">
+                ${movie.genre_ids.slice(0,2).map(id => `
+                  <span class="bg-primary text-xs px-2 py-1 rounded">${getGenreName(id)}</span>
+                `).join('')}
+                <span class="bg-dark text-xs px-2 py-1 rounded">${movie.release_date?.substring(0,4) || '2023'}</span>
+              </div>
+              <h2 class="text-3xl md:text-5xl font-bold mb-3 hero-title">${movie.title}</h2>
+              <p class="text-gray-300 mb-5 line-clamp-2 hero-overview">${movie.overview}</p>
+              <button onclick="addToContinueWatching({
+                id: ${movie.id},
+                type: 'movie',
+                title: '${movie.title.replace(/'/g, "\\'")}',
+                poster_path: '${movie.poster_path}',
+                vote_average: ${movie.vote_average},
+                progress: 0.1
+              }); window.location.href='info.html?id=${movie.id}'" 
+                      class="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full font-medium flex items-center">
+                <i class="fas fa-info-circle mr-2"></i> More Info
+              </button>
             </div>
-            <h2 class="text-3xl md:text-5xl font-bold mb-3 hero-title">${movie.title}</h2>
-            <p class="text-gray-300 mb-5 line-clamp-2 hero-overview">${movie.overview}</p>
-            <button onclick="addToContinueWatching({
-              id: ${movie.id},
-              type: 'movie',
-              title: '${movie.title.replace(/'/g, "\\'")}',
-              poster_path: '${movie.poster_path}',
-              vote_average: ${movie.vote_average},
-              progress: 0.1
-            }); window.location.href='info.html?id=${movie.id}'" 
-                    class="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full font-medium flex items-center">
-              <i class="fas fa-info-circle mr-2"></i> More Info
-            </button>
           </div>
-        </div>
-      `).join('');
+        `).join('');
 
-      dots.innerHTML = movies.slice(0, 5).map((_, i) => `
-        <button class="w-3 h-3 rounded-full ${i === 0 ? 'bg-primary' : 'bg-white/30'}"
-                onclick="showHeroSlide(${i})"></button>
-      `).join('');
+        dots.innerHTML = movies.slice(0, 5).map((_, i) => `
+          <button class="w-3 h-3 rounded-full ${i === 0 ? 'bg-primary' : 'bg-white/30'}"
+                  onclick="showHeroSlide(${i})"></button>
+        `).join('');
 
-      // Auto-slide functionality with fade effect
-      clearInterval(heroSliderInterval);
-      heroSliderInterval = setInterval(() => {
-        showNextHeroSlide();
-      }, 5000);
+        // Auto-slide functionality with fade effect
+        clearInterval(heroSliderInterval);
+        heroSliderInterval = setInterval(() => {
+          showNextHeroSlide();
+        }, 5000);
+      } catch (error) {
+        console.error('Error initializing hero slider:', error);
+      }
     }
 
     function showHeroSlide(index) {
@@ -478,30 +477,34 @@
 
     // Content Sections
     async function initContentSections() {
-      const movieEndpoints = [
-        { id: 'popular-movies', path: '/movie/popular' },
-        { id: 'now-playing-movies', path: '/movie/now_playing' },
-        { id: 'upcoming-movies', path: '/movie/upcoming' },
-        { id: 'top-rated-movies', path: '/movie/top_rated' }
-      ];
+      try {
+        const movieEndpoints = [
+          { id: 'popular-movies', path: '/movie/popular' },
+          { id: 'now-playing-movies', path: '/movie/now_playing' },
+          { id: 'upcoming-movies', path: '/movie/upcoming' },
+          { id: 'top-rated-movies', path: '/movie/top_rated' }
+        ];
 
-      const seriesEndpoints = [
-        { id: 'popular-series', path: '/tv/popular' },
-        { id: 'now-playing-series', path: '/tv/on_the_air' },
-        { id: 'upcoming-series', path: '/tv/airing_today' },
-        { id: 'top-rated-series', path: '/tv/top_rated' }
-      ];
+        const seriesEndpoints = [
+          { id: 'popular-series', path: '/tv/popular' },
+          { id: 'now-playing-series', path: '/tv/on_the_air' },
+          { id: 'upcoming-series', path: '/tv/airing_today' },
+          { id: 'top-rated-series', path: '/tv/top_rated' }
+        ];
 
-      // Load movies
-      for (const section of movieEndpoints) {
-        const items = await fetchTMDB(section.path);
-        document.getElementById(section.id).innerHTML = items.slice(0, 10).map(item => createCard(item, 'movie')).join('');
-      }
+        // Load movies
+        for (const section of movieEndpoints) {
+          const items = await fetchTMDB(section.path);
+          document.getElementById(section.id).innerHTML = items.slice(0, 10).map(item => createCard(item, 'movie')).join('');
+        }
 
-      // Load series
-      for (const section of seriesEndpoints) {
-        const items = await fetchTMDB(section.path);
-        document.getElementById(section.id).innerHTML = items.slice(0, 10).map(item => createCard(item, 'tv')).join('');
+        // Load series
+        for (const section of seriesEndpoints) {
+          const items = await fetchTMDB(section.path);
+          document.getElementById(section.id).innerHTML = items.slice(0, 10).map(item => createCard(item, 'tv')).join('');
+        }
+      } catch (error) {
+        console.error('Error initializing content sections:', error);
       }
     }
 
