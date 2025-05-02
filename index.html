@@ -180,6 +180,9 @@
       .section-title {
         font-size: 1.25rem !important;
       }
+      #hero-dots {
+        bottom: 4rem !important;
+      }
     }
   </style>
 </head>
@@ -335,7 +338,8 @@
       
       if (continueWatching.length > 0) {
         container.innerHTML = continueWatching.map(item => {
-          const percentage = Math.round(item.progress * 100);
+          const progressPercentage = Math.round(item.progress * 100);
+          const ratingPercentage = Math.round(item.vote_average * 10);
           const title = item.title || item.name;
           
           return `
@@ -349,8 +353,8 @@
                       class="w-full h-full object-cover"
                       onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'"
                     >
-                    <div class="rating-circle" data-rating="${percentage}%" style="--percentage: ${percentage}"></div>
-                    <div class="progress-bar" style="width: ${percentage}%"></div>
+                    <div class="rating-circle" data-rating="${ratingPercentage}%" style="--percentage: ${ratingPercentage}"></div>
+                    <div class="progress-bar" style="width: ${progressPercentage}%"></div>
                   </div>
                   <h3 class="font-medium truncate">${title}</h3>
                   <p class="text-xs text-gray-400">${item.type === 'movie' ? 'Movie' : 'Series'}</p>
@@ -368,7 +372,7 @@
       }
     }
 
-    // This function will be called when a movie/series is opened
+    // Universal function to add to continue watching from any page
     function addToContinueWatching(item) {
       const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
       
@@ -376,18 +380,31 @@
       const existingIndex = continueWatching.findIndex(i => i.id === item.id && i.type === item.type);
       
       if (existingIndex >= 0) {
-        // Update existing item
-        continueWatching[existingIndex] = item;
+        // Update existing item (only update progress if it's higher than current)
+        if (item.progress > continueWatching[existingIndex].progress) {
+          continueWatching[existingIndex].progress = item.progress;
+        }
       } else {
         // Add new item (limit to 10 items)
         if (continueWatching.length >= 10) {
           continueWatching.shift(); // Remove oldest item
         }
-        continueWatching.push(item);
+        continueWatching.push({
+          id: item.id,
+          type: item.type,
+          title: item.title || item.name,
+          poster_path: item.poster_path,
+          vote_average: item.vote_average || 0,
+          progress: item.progress || 0.1
+        });
       }
       
       localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
-      loadContinueWatching();
+      
+      // Only reload if we're on the homepage
+      if (window.location.pathname.endsWith('index.html') {
+        loadContinueWatching();
+      }
     }
 
     // Hero Slider with Fade Effect
@@ -409,7 +426,14 @@
             </div>
             <h2 class="text-3xl md:text-5xl font-bold mb-3 hero-title">${movie.title}</h2>
             <p class="text-gray-300 mb-5 line-clamp-2 hero-overview">${movie.overview}</p>
-            <button onclick="window.location.href='info.html?id=${movie.id}'" 
+            <button onclick="addToContinueWatching({
+              id: ${movie.id},
+              type: 'movie',
+              title: '${movie.title.replace(/'/g, "\\'")}',
+              poster_path: '${movie.poster_path}',
+              vote_average: ${movie.vote_average},
+              progress: 0.1
+            }); window.location.href='info.html?id=${movie.id}'" 
                     class="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full font-medium flex items-center">
               <i class="fas fa-info-circle mr-2"></i> More Info
             </button>
@@ -495,6 +519,7 @@
               type: '${type}',
               title: '${title.replace(/'/g, "\\'")}',
               poster_path: '${item.poster_path}',
+              vote_average: ${item.vote_average},
               progress: 0.1
             })">
               <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
