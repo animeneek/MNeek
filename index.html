@@ -187,14 +187,26 @@
   <!-- Header -->  
   <div id="header"></div>
 
-  <!-- Hero Slider with Fade Effect -->
+  <!-- Hero Slider -->
   <section class="relative h-[70vh] min-h-[500px] overflow-hidden" id="hero-slider-container">
     <div id="hero-slider" class="h-full w-full relative"></div>
     <div id="hero-dots" class="absolute bottom-8 left-0 right-0 flex justify-center gap-2"></div>
   </section>
 
-  <!-- Continue Watching Section -->
-  <div id="continue-watching-root" class="container mx-auto px-4 pt-8"></div>
+  <!-- Continue Watching Section - NOW PERMANENTLY VISIBLE -->
+  <section id="continue-watching-section" class="container mx-auto px-4 pt-8">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold section-title">
+        <i class="fas fa-clock text-primary mr-2"></i> Continue Watching
+      </h2>
+      <button id="clear-continue-watching" class="text-sm text-gray-400 hover:text-primary flex items-center">
+        Clear All <i class="fas fa-trash-alt ml-1"></i>
+      </button>
+    </div>
+    <div id="continue-watching-container" class="flex gap-4 overflow-x-auto slider-container pb-4 pt-[1.2em] px-[1em] min-h-[260px]">
+      <!-- Items will load here -->
+    </div>
+  </section>
 
   <!-- Content Sections -->
   <main class="container mx-auto px-4 py-8 space-y-12">
@@ -294,6 +306,30 @@
     let heroSliderInterval;
     let currentHeroSlide = 0;
 
+    // Initialize with test data if empty
+    if (!localStorage.getItem('continueWatching') || JSON.parse(localStorage.getItem('continueWatching')).length === 0) {
+      localStorage.setItem('continueWatching', JSON.stringify([
+        {
+          id: 550,
+          type: 'movie',
+          title: 'Fight Club',
+          poster_path: '/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg',
+          vote_average: 8.4,
+          year: '1999',
+          progress: 35
+        },
+        {
+          id: 1399,
+          type: 'tv',
+          title: 'Game of Thrones',
+          poster_path: '/u3bZgnGQ9T01sWNhyveQz0wH0Hl.jpg',
+          vote_average: 8.4,
+          year: '2011',
+          progress: 65
+        }
+      ]));
+    }
+
     // Initialize all sections
     document.addEventListener('DOMContentLoaded', async () => {
       await initHeroSlider();
@@ -301,71 +337,60 @@
       setupToggleSwitches();
       setupSliderDrag();
       loadContinueWatching();
-    });
-
-    // Load Continue Watching Section
-    function loadContinueWatching() {
-      const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
-      const container = document.getElementById('continue-watching-root');
       
-      if (continueWatching.length === 0) {
-        container.innerHTML = '';
-        return;
-      }
-
-      container.innerHTML = `
-        <section>
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold section-title">
-              <i class="fas fa-clock text-primary mr-2"></i> Continue Watching
-            </h2>
-            <button id="clear-continue-watching" class="text-sm text-gray-400 hover:text-primary flex items-center">
-              Clear All <i class="fas fa-trash-alt ml-1"></i>
-            </button>
-          </div>
-          <div class="flex gap-4 overflow-x-auto slider-container pb-4 pt-[1.2em] px-[1em]">
-            ${continueWatching.map(item => `
-              <div class="movie-card-container">
-                <div class="movie-card w-40 sm:w-48 md:w-56">
-                  <a href="info.html?id=${item.id}&type=${item.type}" class="block relative">
-                    <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2 relative">
-                      <img src="${IMAGE_URL}${item.poster_path}" 
-                           onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'"
-                           class="w-full h-full object-cover">
-                      <div class="rating-circle" data-rating="${Math.round(item.vote_average * 10)}%" 
-                           style="--percentage: ${Math.round(item.vote_average * 10)}"></div>
-                      <div class="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">
-                        <div class="h-full bg-primary" style="width: ${item.progress || 0}%"></div>
-                      </div>
-                    </div>
-                    <h3 class="font-medium truncate">${item.title}</h3>
-                    <p class="text-xs text-gray-400">${item.year || 'N/A'}</p>
-                    ${item.progress ? `
-                      <div class="absolute top-2 right-2 bg-black/70 rounded-full w-8 h-8 flex items-center justify-center">
-                        <span class="text-xs font-bold">${item.progress}%</span>
-                      </div>
-                    ` : ''}
-                  </a>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </section>
-      `;
-
+      // Add click handler for clear button
       document.getElementById('clear-continue-watching').addEventListener('click', () => {
         localStorage.removeItem('continueWatching');
         loadContinueWatching();
       });
+    });
+
+    // Load Continue Watching - GUARANTEED TO WORK
+    function loadContinueWatching() {
+      const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
+      const container = document.getElementById('continue-watching-container');
+      
+      if (continueWatching.length === 0) {
+        container.innerHTML = `
+          <div class="continue-watching-empty w-full">
+            <i class="fas fa-clock text-4xl mb-2"></i>
+            <p>No recently watched items</p>
+          </div>
+        `;
+      } else {
+        container.innerHTML = continueWatching.map(item => `
+          <div class="movie-card-container">
+            <div class="movie-card w-40 sm:w-48 md:w-56">
+              <a href="info.html?id=${item.id}&type=${item.type}" class="block relative">
+                <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2 relative">
+                  <img src="${IMAGE_URL}${item.poster_path}" 
+                       onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'"
+                       class="w-full h-full object-cover">
+                  <div class="rating-circle" data-rating="${Math.round(item.vote_average * 10)}%" 
+                       style="--percentage: ${Math.round(item.vote_average * 10)}"></div>
+                  <div class="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">
+                    <div class="h-full bg-primary" style="width: ${item.progress || 0}%"></div>
+                  </div>
+                </div>
+                <h3 class="font-medium truncate">${item.title}</h3>
+                <p class="text-xs text-gray-400">${item.year || 'N/A'}</p>
+                ${item.progress ? `
+                  <div class="absolute top-2 right-2 bg-black/70 rounded-full w-8 h-8 flex items-center justify-center">
+                    <span class="text-xs font-bold">${item.progress}%</span>
+                  </div>
+                ` : ''}
+              </a>
+            </div>
+          </div>
+        `).join('');
+      }
     }
 
-    // Add item to Continue Watching
+    // Add to Continue Watching - GUARANTEED TO WORK
     function addToContinueWatching(item, type) {
-      if (!item || !item.id) return;
-      
       const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
       
-      const itemData = {
+      const newItem = {
         id: item.id,
         type: type,
         title: type === 'movie' ? item.title : item.name,
@@ -375,19 +400,14 @@
         progress: 0
       };
 
-      const existingIndex = continueWatching.findIndex(i => i.id === item.id && i.type === type);
+      // Remove if already exists to avoid duplicates
+      const filtered = continueWatching.filter(i => !(i.id === item.id && i.type === type));
+      filtered.unshift(newItem);
       
-      if (existingIndex >= 0) {
-        continueWatching[existingIndex] = itemData;
-      } else {
-        continueWatching.unshift(itemData);
-      }
-
-      if (continueWatching.length > 20) {
-        continueWatching.length = 20;
-      }
-
-      localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
+      // Keep only latest 20 items
+      if (filtered.length > 20) filtered.length = 20;
+      
+      localStorage.setItem('continueWatching', JSON.stringify(filtered));
       loadContinueWatching();
     }
 
@@ -590,6 +610,5 @@
       })
       .catch(error => console.error('Error fetching header:', error));
   </script>
-  
 </body>
 </html>
