@@ -162,6 +162,14 @@
     #hero-slider-container {
       overflow: hidden;
     }
+    .continue-watching-empty {
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+    }
     @media (max-width: 768px) {
       .hero-title {
         font-size: 1.75rem !important;
@@ -186,8 +194,8 @@
     <div id="hero-dots" class="absolute bottom-8 left-0 right-0 flex justify-center gap-2"></div>
   </section>
 
-  <!-- Continue Watching Section (Will be added dynamically if items exist) -->
-  <div id="continue-watching-section"></div>
+  <!-- Continue Watching Section (Will be added dynamically) -->
+  <div id="continue-watching-root"></div>
 
   <!-- Content Sections -->
   <main class="container mx-auto px-4 py-8 space-y-12">
@@ -299,34 +307,38 @@
     // Initialize Continue Watching Section
     function initContinueWatchingSection() {
       const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
-      if (continueWatching.length === 0) return;
-
-      const section = document.createElement('section');
-      section.className = 'container mx-auto px-4 py-8';
-      section.innerHTML = `
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-bold section-title">
-            <i class="fas fa-clock text-primary mr-2"></i> Continue Watching
-          </h2>
-          <button id="clear-continue-watching" class="text-sm text-gray-400 hover:text-primary flex items-center">
-            Clear All <i class="fas fa-trash-alt ml-1"></i>
-          </button>
-        </div>
-        <div class="flex gap-4 overflow-x-auto slider-container pb-4 pt-[1.2em] px-[1em]" id="continue-watching-container"></div>
+      const container = document.getElementById('continue-watching-root');
+      
+      container.innerHTML = `
+        <section class="container mx-auto px-4 pt-8 pb-4">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold section-title">
+              <i class="fas fa-clock text-primary mr-2"></i> Continue Watching
+            </h2>
+            ${continueWatching.length > 0 ? `
+              <button id="clear-continue-watching" class="text-sm text-gray-400 hover:text-primary flex items-center">
+                Clear All <i class="fas fa-trash-alt ml-1"></i>
+              </button>
+            ` : ''}
+          </div>
+          <div class="flex gap-4 overflow-x-auto slider-container pb-4 pt-[1.2em] px-[1em] min-h-[260px]">
+            ${continueWatching.length > 0 ? 
+              continueWatching.map(item => createContinueWatchingCard(item)).join('') : `
+              <div class="continue-watching-empty w-full">
+                <i class="fas fa-clock text-4xl mb-2"></i>
+                <p>No recently watched items</p>
+              </div>
+            `}
+          </div>
+        </section>
       `;
 
-      // Insert after hero section
-      document.querySelector('main').prepend(section);
-
-      // Load continue watching items
-      const container = document.getElementById('continue-watching-container');
-      container.innerHTML = continueWatching.map(item => createContinueWatchingCard(item)).join('');
-
-      // Setup clear button
-      document.getElementById('clear-continue-watching').addEventListener('click', () => {
-        localStorage.removeItem('continueWatching');
-        section.remove();
-      });
+      if (continueWatching.length > 0) {
+        document.getElementById('clear-continue-watching').addEventListener('click', () => {
+          localStorage.removeItem('continueWatching');
+          initContinueWatchingSection(); // Refresh the section
+        });
+      }
     }
 
     // Create continue watching card
@@ -363,7 +375,7 @@
       `;
     }
 
-    // Function to add item to continue watching (to be called from other pages)
+    // Function to add item to continue watching (call this from any page when an item is clicked)
     function addToContinueWatching(item, type) {
       const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
       
@@ -392,6 +404,9 @@
       }
       
       localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
+      
+      // Refresh the continue watching section
+      initContinueWatchingSection();
     }
 
     // Hero Slider with Fade Effect
