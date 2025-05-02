@@ -317,37 +317,40 @@
 
   // Initialize all sections
   document.addEventListener('DOMContentLoaded', async () => {
-    await initHeroSlider();
-    await initContentSections();
-    setupToggleSwitches();
-    setupSliderDrag();
-    loadContinueWatching();
-    
-    // Clear continue watching button
-    document.getElementById('clear-continue').addEventListener('click', () => {
-      localStorage.removeItem('continueWatching');
+    try {
+      await initHeroSlider();
+      await initContentSections();
+      setupToggleSwitches();
+      setupSliderDrag();
       loadContinueWatching();
-    });
+      
+      // Clear continue watching button
+      document.getElementById('clear-continue').addEventListener('click', () => {
+        localStorage.removeItem('continueWatching');
+        loadContinueWatching();
+      });
+    } catch (error) {
+      console.error('Initialization error:', error);
+    }
   });
 
-  // Continue Watching Functions - Updated to be more robust
+  // Continue Watching Functions
   function loadContinueWatching() {
     try {
       const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
       const container = document.getElementById('continue-watching');
       const noItems = document.getElementById('no-continue');
       
-      // Filter out any invalid entries and people (just in case)
+      // Filter out invalid entries
       const validItems = continueWatching.filter(item => 
-        item && item.id && (item.type === 'movie' || item.type === 'tv') && 
-        !item.media_type /* exclude people */
+        item && item.id && (item.type === 'movie' || item.type === 'tv')
       );
       
       if (validItems.length > 0) {
         container.innerHTML = validItems.map(item => {
           const progressPercentage = Math.round((item.progress || 0.1) * 100);
           const ratingPercentage = Math.round((item.vote_average || 0) * 10);
-          const title = item.title || item.name || 'Unknown Title';
+          const title = item.title || item.name || 'Unknown';
           const posterPath = item.poster_path ? IMAGE_URL + item.poster_path : 'https://via.placeholder.com/500x750?text=No+Poster';
           
           return `
@@ -385,38 +388,28 @@
     }
   }
 
-  // Universal function to add to continue watching from any page
+  // Universal function to add to continue watching
   function addToContinueWatching(item) {
     try {
-      // Validate the item
-      if (!item || !item.id || (item.type !== 'movie' && item.type !== 'tv')) {
-        console.warn('Invalid item for continue watching:', item);
-        return;
-      }
+      if (!item || !item.id || (item.type !== 'movie' && item.type !== 'tv')) return;
 
-      const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
+      let continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
       
-      // Check if item already exists
+      // Check if item exists
       const existingIndex = continueWatching.findIndex(i => i.id === item.id && i.type === item.type);
       
       if (existingIndex >= 0) {
-        // Update existing item (only update progress if it's higher than current)
+        // Update progress if higher
         if (item.progress > (continueWatching[existingIndex].progress || 0)) {
           continueWatching[existingIndex].progress = item.progress;
         }
-        // Update other fields that might have changed
-        continueWatching[existingIndex].title = item.title || item.name || continueWatching[existingIndex].title;
-        continueWatching[existingIndex].poster_path = item.poster_path || continueWatching[existingIndex].poster_path;
-        continueWatching[existingIndex].vote_average = item.vote_average || continueWatching[existingIndex].vote_average;
       } else {
-        // Add new item (limit to 10 items)
-        if (continueWatching.length >= 10) {
-          continueWatching.shift(); // Remove oldest item
-        }
+        // Add new item (limit to 10)
+        if (continueWatching.length >= 10) continueWatching.shift();
         continueWatching.push({
           id: item.id,
           type: item.type,
-          title: item.title || item.name || 'Unknown Title',
+          title: item.title || item.name || 'Unknown',
           poster_path: item.poster_path || '',
           vote_average: item.vote_average || 0,
           progress: item.progress || 0.1
@@ -424,21 +417,15 @@
       }
       
       localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
-      
-      // If we're on the index page, refresh the continue watching section
-      if (window.location.pathname.endsWith('index.html') {
-        loadContinueWatching();
-      }
     } catch (error) {
       console.error('Error adding to continue watching:', error);
     }
   }
 
-  // Make the function available globally
+  // Make function available globally
   window.addToContinueWatching = addToContinueWatching;
 
-  // Rest of your existing script remains exactly the same...
-  // Hero Slider with Fade Effect
+  // Hero Slider
   async function initHeroSlider() {
     try {
       const movies = await fetchTMDB('/movie/popular');
@@ -478,16 +465,14 @@
                 onclick="showHeroSlide(${i})"></button>
       `).join('');
 
-      // Auto-slide functionality with fade effect
       clearInterval(heroSliderInterval);
-      heroSliderInterval = setInterval(() => {
-        showNextHeroSlide();
-      }, 5000);
+      heroSliderInterval = setInterval(showNextHeroSlide, 5000);
     } catch (error) {
       console.error('Error initializing hero slider:', error);
     }
   }
 
+  // Rest of your existing functions remain exactly the same...
   function showHeroSlide(index) {
     const slides = document.querySelectorAll('.hero-slide');
     slides[currentHeroSlide].classList.remove('active');
@@ -511,7 +496,6 @@
     });
   }
 
-  // Content Sections
   async function initContentSections() {
     try {
       const movieEndpoints = [
@@ -544,7 +528,6 @@
     }
   }
 
-  // Create movie/series card
   function createCard(item, type) {
     const title = type === 'movie' ? item.title : item.name;
     const releaseDate = type === 'movie' ? item.release_date : item.first_air_date;
@@ -578,7 +561,6 @@
     `;
   }
 
-  // Setup toggle switches
   function setupToggleSwitches() {
     const toggles = {
       'toggle-popular': ['popular-movies', 'popular-series'],
@@ -594,13 +576,11 @@
         document.getElementById(seriesId).classList.toggle('hidden', !this.checked);
       });
       
-      // Initialize with movies visible
       document.getElementById(movieId).classList.remove('hidden');
       document.getElementById(seriesId).classList.add('hidden');
     }
   }
 
-  // Setup slider drag functionality
   function setupSliderDrag() {
     document.querySelectorAll('.slider-container').forEach(slider => {
       let isDown = false;
@@ -634,7 +614,6 @@
     });
   }
 
-  // TMDB API Helper
   async function fetchTMDB(endpoint) {
     try {
       const res = await fetch(`${BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}`);
@@ -646,7 +625,6 @@
     }
   }
 
-  // Genre Helper
   function getGenreName(id) {
     const genres = {
       28: 'Action', 12: 'Adventure', 16: 'Animation',
@@ -658,7 +636,7 @@
 </script>
 
 <script>
-  // Fetch the header.html content and insert it into the #header div
+  // Fetch the header.html content
   fetch('header.html')
     .then(response => response.text())
     .then(data => {
