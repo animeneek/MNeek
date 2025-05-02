@@ -162,6 +162,14 @@
     #hero-slider-container {
       overflow: hidden;
     }
+    .progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      background-color: #ff4444;
+      z-index: 3;
+    }
     @media (max-width: 768px) {
       .hero-title {
         font-size: 1.75rem !important;
@@ -180,7 +188,6 @@
   <!-- Header -->  
   <div id="header"></div>
 
-
   <!-- Hero Slider with Fade Effect -->
   <section class="relative h-[70vh] min-h-[500px] overflow-hidden" id="hero-slider-container">
     <div id="hero-slider" class="h-full w-full relative"></div>
@@ -189,6 +196,26 @@
 
   <!-- Content Sections -->
   <main class="container mx-auto px-4 py-8 space-y-12">
+    <!-- Continue Watching Section -->
+    <section>
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold section-title">
+          <i class="fas fa-clock text-primary mr-2"></i> Continue Watching
+        </h2>
+        <button id="clear-continue" class="text-sm text-gray-400 hover:text-primary flex items-center">
+          Clear All <i class="fas fa-trash-alt ml-1"></i>
+        </button>
+      </div>
+      <div class="relative">
+        <div id="continue-watching" class="flex gap-4 overflow-x-auto slider-container pb-4 pt-[1.2em] px-[1em]"></div>
+        <div id="no-continue" class="hidden text-center py-12">
+          <i class="fas fa-clock text-4xl text-gray-600 mb-4"></i>
+          <p class="text-gray-400">No items to continue watching</p>
+          <p class="text-sm text-gray-500 mt-2">Start watching movies or series and they'll appear here</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Popular Section -->
     <section>
       <div class="flex justify-between items-center mb-6">
@@ -291,7 +318,57 @@
       await initContentSections();
       setupToggleSwitches();
       setupSliderDrag();
+      loadContinueWatching();
+      
+      // Clear continue watching button
+      document.getElementById('clear-continue').addEventListener('click', () => {
+        localStorage.removeItem('continueWatching');
+        loadContinueWatching();
+      });
     });
+
+    // Load continue watching items from localStorage
+    function loadContinueWatching() {
+      const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
+      const container = document.getElementById('continue-watching');
+      const noItems = document.getElementById('no-continue');
+      
+      if (continueWatching.length > 0) {
+        container.innerHTML = continueWatching.map(item => createContinueCard(item)).join('');
+        container.classList.remove('hidden');
+        noItems.classList.add('hidden');
+      } else {
+        container.classList.add('hidden');
+        noItems.classList.remove('hidden');
+      }
+    }
+
+    // Create continue watching card
+    function createContinueCard(item) {
+      const title = item.type === 'movie' ? item.title : item.name;
+      const percentage = Math.round(item.progress * 100);
+      
+      return `
+        <div class="movie-card-container">
+          <div class="movie-card w-40 sm:w-48 md:w-56">
+            <a href="info.html?id=${item.id}&type=${item.type}" class="block relative">
+              <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
+                <img 
+                  src="${IMAGE_URL}${item.poster_path}" 
+                  alt="${title}"
+                  class="w-full h-full object-cover"
+                  onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'"
+                >
+                <div class="rating-circle" data-rating="${percentage}%" style="--percentage: ${percentage}"></div>
+                <div class="progress-bar" style="width: ${percentage}%"></div>
+              </div>
+              <h3 class="font-medium truncate">${title}</h3>
+              <p class="text-xs text-gray-400">${item.type === 'movie' ? 'Movie' : 'Series'}</p>
+            </a>
+          </div>
+        </div>
+      `;
+    }
 
     // Hero Slider with Fade Effect
     async function initHeroSlider() {
