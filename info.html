@@ -140,9 +140,6 @@
       aspect-ratio: 2/3;
       object-fit: cover;
     }
-    .json-source-btn {
-      min-width: 180px;
-    }
   </style>
 </head>
 <body class="bg-black text-white">
@@ -233,7 +230,6 @@
 
         <!-- Sources Tab -->
         <div id="sources-tab" class="tab-panel hidden">
-          <div id="json-sources-container" class="mb-6"></div>
           <div id="sources-content">
             <!-- Content will be inserted based on media type -->
           </div>
@@ -316,104 +312,15 @@
       }
     }
 
-    function getJsonSourcesForCurrentMedia() {
-      return jsonSources.find(item => 
-        item.TMDBID === mediaId && 
-        item.Class === mediaType
-      );
-    }
-
     function createEmbedUrl(src, videoId) {
       switch(src) {
-        case 'streamtape':
-          return `https://streamtape.com/e/${videoId}`;
-        case 'streamwish':
-          return `https://streamwish.to/e/${videoId}`;
-        case 'mp4upload':
-          return `https://mp4upload.com/v/${videoId}`;
-        case 'other1':
-          return `https://otherone.com/e/${videoId}`;
-        case 'other2':
-          return `https://othertwo.com/e/${videoId}`;
-        default:
-          return `https://${src}.com/e/${videoId}`;
+        case 'streamtape': return `https://streamtape.com/e/${videoId}`;
+        case 'streamwish': return `https://streamwish.to/e/${videoId}`;
+        case 'mp4upload': return `https://mp4upload.com/v/${videoId}`;
+        case 'other1': return `https://otherone.com/e/${videoId}`;
+        case 'other2': return `https://othertwo.com/e/${videoId}`;
+        default: return `https://${src}.com/e/${videoId}`;
       }
-    }
-
-    function setupJsonSources() {
-      const sourcesContainer = document.getElementById('json-sources-container');
-      const mediaSources = getJsonSourcesForCurrentMedia();
-      
-      if (!mediaSources || !mediaSources.SRC || mediaSources.SRC.length === 0) {
-        sourcesContainer.innerHTML = '';
-        return;
-      }
-      
-      let sourcesHTML = '<h3 class="text-lg font-semibold mb-3">Additional Sources</h3>';
-      sourcesHTML += '<div class="flex flex-wrap gap-3">';
-      
-      for (let i = 0; i < mediaSources.SRC.length; i++) {
-        const src = mediaSources.SRC[i];
-        const sourceName = mediaSources.Source[i] || `Source ${i+1}`;
-        const videoId = mediaSources.VIDEOID[i];
-        
-        if (!videoId) continue;
-        
-        const embedUrl = createEmbedUrl(src, videoId);
-        
-        sourcesHTML += `
-          <button class="json-source-btn bg-dark hover:bg-gray-800 px-4 py-2 rounded-lg font-medium"
-                  data-source="${embedUrl}">
-            ${sourceName}
-          </button>
-        `;
-      }
-      
-      sourcesHTML += '</div>';
-      sourcesContainer.innerHTML = sourcesHTML;
-      
-      // Add event listeners to the buttons
-      document.querySelectorAll('.json-source-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          showModal(
-            `${mediaInfo.title || mediaInfo.name}`,
-            this.getAttribute('data-source')
-          );
-        });
-      });
-    }
-
-    function setupSeasonJsonSources(seasonNumber) {
-      const mediaSources = getJsonSourcesForCurrentMedia();
-      
-      if (!mediaSources || !mediaSources.SRC || mediaSources.SRC.length === 0) {
-        return '';
-      }
-      
-      let sourcesHTML = '<div class="flex flex-wrap gap-3 mb-4">';
-      
-      for (let i = 0; i < mediaSources.SRC.length; i++) {
-        const src = mediaSources.SRC[i];
-        const sourceName = mediaSources.Source[i] || `Source ${i+1}`;
-        const videoId = mediaSources.VIDEOID[i];
-        
-        if (!videoId) continue;
-        
-        // Only show sources that mention this season number in the name
-        if (sourceName.toLowerCase().includes(`season ${seasonNumber}`) {
-          const embedUrl = createEmbedUrl(src, videoId);
-          
-          sourcesHTML += `
-            <button class="json-source-btn bg-dark hover:bg-gray-800 px-4 py-2 rounded-lg font-medium"
-                    data-source="${embedUrl}">
-              ${sourceName}
-            </button>
-          `;
-        }
-      }
-      
-      sourcesHTML += '</div>';
-      return sourcesHTML;
     }
 
     async function loadMediaInfo() {
@@ -432,9 +339,6 @@
           setupMovieSources();
           document.getElementById('sources-tab-label').textContent = 'Sources';
         }
-        
-        // Setup JSON sources
-        setupJsonSources();
       } catch (error) {
         console.error('Error loading media info:', error);
         document.getElementById('poster-container').innerHTML = `
@@ -452,20 +356,46 @@
 
     function setupMovieSources() {
       const sourcesContent = document.getElementById('sources-content');
-      sourcesContent.innerHTML = `
-        <div class="flex flex-wrap gap-4">
-          <button class="source-btn bg-primary hover:bg-red-600 px-4 py-2 rounded-lg font-medium"
-                  data-source="https://player.embed-api.stream/?id=${mediaId}&type=movie">
-            Source 1
-          </button>
-        </div>
+      const mediaSources = jsonSources.find(item => 
+        item.TMDBID === mediaId && item.Class === 'movie'
+      );
+
+      let sourcesHTML = '<div class="flex flex-wrap gap-4">';
+      
+      // Default source
+      sourcesHTML += `
+        <button class="source-btn bg-primary hover:bg-red-600 px-4 py-2 rounded-lg font-medium"
+                data-source="https://player.embed-api.stream/?id=${mediaId}&type=movie">
+          Source 1
+        </button>
       `;
       
-      document.querySelector('.source-btn').addEventListener('click', function() {
-        showModal(
-          `${mediaInfo.title}`, 
-          this.getAttribute('data-source')
-        );
+      // Add JSON sources if available
+      if (mediaSources) {
+        mediaSources.SRC.forEach((src, i) => {
+          const sourceName = mediaSources.Source[i] || `Source ${i+2}`;
+          const videoId = mediaSources.VIDEOID[i];
+          if (videoId) {
+            sourcesHTML += `
+              <button class="source-btn bg-dark hover:bg-gray-800 px-4 py-2 rounded-lg font-medium"
+                      data-source="${createEmbedUrl(src, videoId)}">
+                ${sourceName}
+              </button>
+            `;
+          }
+        });
+      }
+      
+      sourcesHTML += '</div>';
+      sourcesContent.innerHTML = sourcesHTML;
+      
+      document.querySelectorAll('.source-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          showModal(
+            `${mediaInfo.title}`, 
+            this.getAttribute('data-source')
+          );
+        });
       });
     }
 
@@ -519,6 +449,30 @@
             ? IMAGE_URL + mediaInfo.poster_path 
             : DEFAULT_POSTER;
         
+        // Add season sources from JSON if available
+        const seasonSources = jsonSources.find(item => 
+          item.TMDBID === mediaId && item.Class === 'series'
+        );
+
+        let seasonSourcesHTML = '';
+        if (seasonSources) {
+          seasonSources.SRC.forEach((src, i) => {
+            const sourceName = seasonSources.Source[i];
+            const videoId = seasonSources.VIDEOID[i];
+            
+            // Only show sources that mention this season number
+            if (videoId && sourceName && sourceName.toLowerCase().includes(`season ${seasonNumber}`)) {
+              seasonSourcesHTML += `
+                <button class="source-btn bg-dark hover:bg-gray-800 px-4 py-1 rounded text-sm mb-2"
+                        data-source="${createEmbedUrl(src, videoId)}"
+                        data-title="${mediaInfo.name} - ${sourceName}">
+                  ${sourceName}
+                </button>
+              `;
+            }
+          });
+        }
+        
         let episodesHTML = '';
         
         seasonInfo.episodes.forEach(episode => {
@@ -552,9 +506,6 @@
           `;
         });
         
-        // Add season-level sources from JSON
-        const seasonJsonSources = setupSeasonJsonSources(seasonNumber);
-        
         document.getElementById('season-details-container').innerHTML = `
           <div class="flex items-center gap-4 mb-4">
             <img src="${seasonPoster}" 
@@ -565,7 +516,7 @@
               <p class="text-gray-300">${seasonInfo.air_date ? seasonInfo.air_date.substring(0,4) : ''} • ${seasonInfo.episodes.length} Episodes</p>
             </div>
           </div>
-          ${seasonJsonSources}
+          ${seasonSourcesHTML ? `<div class="mb-4">${seasonSourcesHTML}</div>` : ''}
           <p class="text-gray-300 mb-6">${seasonInfo.overview || 'No overview available.'}</p>
           
           <h4 class="font-semibold mb-3">Episodes</h4>
