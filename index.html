@@ -585,5 +585,65 @@
       })
       .catch(error => console.error('Error fetching header:', error));
   </script>
+
+  <script>
+// ========== API CONFIG ==========
+const API_KEY = 'your_api_key_here';
+const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+
+// ========== CONTINUE WATCHING ==========
+const continueWatchingKey = 'continueWatchingList';
+
+// Save item to localStorage
+function saveToContinueWatching(item) {
+  let list = JSON.parse(localStorage.getItem(continueWatchingKey)) || [];
+
+  // Remove if already exists (prevent duplicates)
+  list = list.filter(i => i.id !== item.id || i.media_type !== item.media_type);
+
+  // Add item to the beginning
+  list.unshift(item);
+
+  // Limit to last 10
+  if (list.length > 10) list = list.slice(0, 10);
+
+  localStorage.setItem(continueWatchingKey, JSON.stringify(list));
+}
+
+// Load and render "Continue Watching"
+function loadContinueWatching() {
+  const container = document.getElementById('continueSection');
+  if (!container) return;
+
+  const list = JSON.parse(localStorage.getItem(continueWatchingKey)) || [];
+
+  if (list.length === 0) {
+    container.innerHTML = '<p class="text-white px-4">No recent activity.</p>';
+    return;
+  }
+
+  container.innerHTML = list.map(item => `
+    <div class="min-w-[150px]">
+      <a href="info.html?media_type=${item.media_type}&id=${item.id}">
+        <img src="${IMAGE_BASE_URL + item.poster_path}" class="rounded-lg shadow-md hover:scale-105 duration-200" alt="${item.title || item.name}" />
+        <p class="text-white text-sm mt-1 truncate">${item.title || item.name}</p>
+      </a>
+    </div>
+  `).join('');
+}
+
+// ========== USAGE EXAMPLES ==========
+
+// Example: Call this when user clicks to open a movie/TV
+// saveToContinueWatching({ id: 123, media_type: 'movie', title: 'Inception', poster_path: '/inception.jpg' });
+
+// Example: Load continue watching on home page
+// Call this on DOMContentLoaded or window load
+document.addEventListener('DOMContentLoaded', () => {
+  loadContinueWatching();
+});
+
+</script>
+
 </body>
 </html>
