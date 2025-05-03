@@ -213,7 +213,7 @@
         <div class="tab-container">
           <button class="tab-button px-4 py-2 font-medium active" data-tab="cast">Cast</button>
           <button class="tab-button px-4 py-2 font-medium" data-tab="sources">
-            <span id="sources-tab-label">Sources</span>
+            <span id="sources-tab-label">Watch Here</span>
           </button>
           <button class="tab-button px-4 py-2 font-medium" data-tab="similar">Similar</button>
         </div>
@@ -366,7 +366,7 @@
       sourcesHTML += `
         <button class="source-btn bg-primary hover:bg-red-600 px-4 py-2 rounded-lg font-medium"
                 data-source="https://player.embed-api.stream/?id=${mediaId}&type=movie">
-          Source 1
+          Default Source
         </button>
       `;
       
@@ -436,7 +436,7 @@
         seasonsHTML += `
           <div class="season-selector flex gap-3 overflow-x-auto pb-4 mb-6">
             ${seasons.map(season => `
-              <button class="season-btn min-w-[80px] px-4 py-2 rounded-full bg-dark hover:bg-gray-800 ${season.season_number === 1 ? 'bg-primary hover:bg-red-600' : ''}"
+              <button class="season-btn min-w-[80px] px-4 py-2 rounded-full bg-dark hover:bg-[#ff4444] ${season.season_number === 1 ? 'bg-primary hover:bg-red-600' : ''}"
                       data-season="${season.season_number}">
                 ${season.name}
               </button>
@@ -451,10 +451,10 @@
           btn.addEventListener('click', async function() {
             document.querySelectorAll('.season-btn').forEach(b => {
               b.classList.remove('bg-primary', 'hover:bg-red-600');
-              b.classList.add('bg-dark', 'hover:bg-gray-800');
+              b.classList.add('bg-dark', 'hover:bg-[#ff4444]');
             });
             this.classList.add('bg-primary', 'hover:bg-red-600');
-            this.classList.remove('bg-dark', 'hover:bg-gray-800');
+            this.classList.remove('bg-dark', 'hover:bg-[#ff4444]');
             
             currentSeason = parseInt(this.getAttribute('data-season'));
             await loadSeasonDetails(showInfo.id, currentSeason);
@@ -513,7 +513,7 @@
                   <button class="source-btn mt-2 bg-primary hover:bg-red-600 px-4 py-1 rounded text-sm"
                           data-source="https://player.embed-api.stream/?id=${mediaId}&s=${seasonNumber}&e=${episode.episode_number}"
                           data-title="${mediaInfo.name} - S${seasonNumber}E${episode.episode_number} - ${episode.name}">
-                    Source 1
+                    Watch Now
                   </button>
                 </div>
               </div>
