@@ -46,6 +46,20 @@
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    .modal-overlay {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      max-width: 900px;
+      width: 95%;
+      max-height: 90vh;
+    }
+    .modal-header {
+      background: #222;
+      border-bottom: 1px solid #333;
+    }
   </style>
 </head>
 <body class="bg-black text-white">
@@ -58,33 +72,29 @@
     <div class="container mx-auto px-4">
       <h1 class="text-3xl font-bold mb-6">Live TV Channels</h1>
       
-      <!-- Live Player -->
-      <div class="mb-8">
-        <div class="w-full bg-dark rounded-lg overflow-hidden shadow-lg">
-          <div class="aspect-w-16 aspect-h-9">
-            <iframe id="liveIframe" class="w-full h-full" allowfullscreen></iframe>
-          </div>
-        </div>
-      </div>
-
-      <!-- Channel Picker -->
-      <div class="bg-dark p-4 rounded-lg mb-8">
-        <div class="flex flex-col md:flex-row gap-4">
-          <select id="channelSelect" class="py-3 px-4 bg-dark text-white rounded-lg border border-gray-700 flex-grow">
-            <option value="" disabled selected>Select a channel</option>
-          </select>
-          <button id="playBtn" class="py-3 px-6 bg-primary hover:bg-red-600 text-white rounded-lg font-medium">
-            <i class="fas fa-play mr-2"></i> Play
-          </button>
-        </div>
-      </div>
-
-      <!-- Channel Grid -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        <!-- Channels will be loaded here -->
+      <!-- Alphabetical Channel Groups -->
+      <div id="channelGroups" class="space-y-8">
+        <!-- Groups will be loaded here -->
       </div>
     </div>
   </main>
+
+  <!-- Modal Structure -->
+  <div id="modal" class="fixed inset-0 bg-black/90 z-50 hidden modal-overlay">
+    <div class="modal-content bg-dark rounded-lg overflow-hidden">
+      <div class="modal-header p-4 flex justify-between items-center">
+        <h3 id="modal-title" class="text-lg font-bold"></h3>
+        <button id="close-modal" class="text-white text-2xl">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="p-4">
+        <div class="aspect-w-16 aspect-h-9 w-full">
+          <iframe id="modal-iframe" class="w-full h-[50vh]" frameborder="0" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     const DEFAULT_LOGO = 'https://github.com/animeneek/MN/raw/main/assets/Black%20and%20White%20Modern%20Coming%20soon%20Poster.png';
@@ -93,8 +103,8 @@
     document.addEventListener('DOMContentLoaded', async () => {
       await fetchHeader();
       await loadSources();
-      setupPlayButton();
-      renderChannelGrid();
+      renderChannelGroups();
+      setupModal();
     });
 
     async function fetchHeader() {
@@ -111,69 +121,110 @@
       try {
         const response = await fetch('sources.json');
         sources = await response.json();
-        
-        const select = document.getElementById('channelSelect');
-        Object.keys(sources).forEach(key => {
-          const option = document.createElement('option');
-          option.value = key;
-          option.textContent = sources[key].name;
-          select.appendChild(option);
-        });
       } catch (error) {
         console.error('Error loading sources:', error);
+        // Fallback data if sources.json fails
+        sources = {
+          "asports": {
+            "name": "A Sports",
+            "src": "https://cdn.crichdplays.ru/embed2.php?id=asports",
+            "img": "https://cdn.crichdplays.ru/asports.jpg"
+          },
+          "astrocric": {
+            "name": "Astrocric",
+            "src": "https://cdn.crichdplays.ru/embed2.php?id=astrocric",
+            "img": "https://cdn.crichdplays.ru/astrocric.jpg"
+          }
+        };
       }
     }
 
-    function setupPlayButton() {
-      const btn = document.getElementById('playBtn');
-      btn.addEventListener('click', () => {
-        const selectedKey = document.getElementById('channelSelect').value;
-        if (selectedKey && sources[selectedKey]) {
-          const iframe = document.getElementById('liveIframe');
-          iframe.src = sources[selectedKey].src;
+    function renderChannelGroups() {
+      const groupsContainer = document.getElementById('channelGroups');
+      
+      // Group channels by first letter
+      const groupedChannels = {};
+      Object.keys(sources).forEach(key => {
+        const firstLetter = sources[key].name.charAt(0).toUpperCase();
+        if (!groupedChannels[firstLetter]) {
+          groupedChannels[firstLetter] = [];
+        }
+        groupedChannels[firstLetter].push({
+          id: key,
+          ...sources[key]
+        });
+      });
+      
+      // Sort letters alphabetically
+      const sortedLetters = Object.keys(groupedChannels).sort();
+      
+      // Create a group for each letter
+      sortedLetters.forEach(letter => {
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'fade-in';
+        
+        const letterHeading = document.createElement('h2');
+        letterHeading.className = 'text-2xl font-bold mb-4';
+        letterHeading.textContent = letter;
+        
+        const gridDiv = document.createElement('div');
+        gridDiv.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
+        
+        // Sort channels in this group alphabetically
+        groupedChannels[letter].sort((a, b) => a.name.localeCompare(b.name));
+        
+        // Add each channel in this group
+        groupedChannels[letter].forEach(channel => {
+          const channelCard = document.createElement('div');
+          channelCard.className = 'channel-card p-4 flex flex-col items-center cursor-pointer';
           
-          // Highlight the playing channel in the grid
-          document.querySelectorAll('.channel-card').forEach(card => {
-            card.classList.remove('ring-2', 'ring-primary');
-            if (card.dataset.channel === selectedKey) {
-              card.classList.add('ring-2', 'ring-primary');
-            }
+          channelCard.innerHTML = `
+            <img src="${channel.img || DEFAULT_LOGO}" 
+                 alt="${channel.name}" 
+                 class="channel-logo mb-3">
+            <h3 class="text-center font-medium">${channel.name}</h3>
+          `;
+          
+          channelCard.addEventListener('click', () => {
+            showModal(channel.name, channel.src);
           });
+          
+          gridDiv.appendChild(channelCard);
+        });
+        
+        groupDiv.appendChild(letterHeading);
+        groupDiv.appendChild(gridDiv);
+        groupsContainer.appendChild(groupDiv);
+      });
+    }
+
+    function setupModal() {
+      const modal = document.getElementById('modal');
+      const closeBtn = document.getElementById('close-modal');
+      const iframe = document.getElementById('modal-iframe');
+      
+      closeBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        iframe.src = '';
+      });
+      
+      // Close modal when clicking outside content
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.add('hidden');
+          iframe.src = '';
         }
       });
     }
 
-    function renderChannelGrid() {
-      const grid = document.querySelector('.grid');
+    function showModal(title, url) {
+      const modal = document.getElementById('modal');
+      const iframe = document.getElementById('modal-iframe');
+      const modalTitle = document.getElementById('modal-title');
       
-      Object.keys(sources).forEach(key => {
-        const channel = sources[key];
-        const logoUrl = channel.logo || DEFAULT_LOGO;
-        
-        const channelCard = document.createElement('div');
-        channelCard.className = 'channel-card fade-in p-4 flex flex-col items-center cursor-pointer';
-        channelCard.dataset.channel = key;
-        
-        channelCard.innerHTML = `
-          <img src="${logoUrl}" 
-               alt="${channel.name}" 
-               class="channel-logo mb-3">
-          <h3 class="text-center font-medium">${channel.name}</h3>
-        `;
-        
-        channelCard.addEventListener('click', () => {
-          document.getElementById('channelSelect').value = key;
-          document.getElementById('liveIframe').src = channel.src;
-          
-          // Highlight the selected channel
-          document.querySelectorAll('.channel-card').forEach(card => {
-            card.classList.remove('ring-2', 'ring-primary');
-          });
-          channelCard.classList.add('ring-2', 'ring-primary');
-        });
-        
-        grid.appendChild(channelCard);
-      });
+      modalTitle.textContent = title;
+      iframe.src = url;
+      modal.classList.remove('hidden');
     }
   </script>
 </body>
