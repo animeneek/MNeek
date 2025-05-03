@@ -37,18 +37,6 @@
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       z-index: 1000;
     }
-    .loading-spinner {
-      display: inline-block;
-      width: 1rem;
-      height: 1rem;
-      border: 2px solid rgba(255,255,255,.3);
-      border-radius: 50%;
-      border-top-color: #fff;
-      animation: spin 1s ease-in-out infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
   </style>
 </head>
 <body>
@@ -81,9 +69,8 @@
 
       <!-- Desktop Menu -->
       <nav class="flex space-x-6">
-        <a href="javascript:void(0)" onclick="getRandomMedia(this)" class="text-gray-300 hover:text-primary text-sm font-medium flex items-center">
-          <span id="random-text">Random</span>
-          <span id="random-spinner" class="loading-spinner ml-1 hidden"></span>
+        <a href="javascript:void(0)" onclick="getRandomMedia()" class="text-gray-300 hover:text-primary text-sm font-medium">
+          Random
         </a>
         <a href="search.html?query=" class="text-gray-300 hover:text-primary text-sm font-medium">Browse</a>
         <a href="livetv.html" class="text-gray-300 hover:text-primary text-sm font-medium">Live TV</a>
@@ -122,11 +109,9 @@
       <i class="fas fa-home fa-sm mb-1"></i>
       <span>Home</span>
     </a>
-    <a href="javascript:void(0)" onclick="getRandomMedia(this)" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
-      <span id="mobile-random-icon">
-        <i class="fas fa-random fa-sm mb-1"></i>
-      </span>
-      <span id="mobile-random-text">Random</span>
+    <a href="javascript:void(0)" onclick="getRandomMedia()" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
+      <i class="fas fa-random fa-sm mb-1"></i>
+      <span>Random</span>
     </a>
     <a href="search.html?query=" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
       <i class="fas fa-search fa-sm mb-1"></i>
@@ -145,10 +130,10 @@
   <!-- Spacer (Prevents content from hiding under header) -->
   <div class="h-24 md:h-20"></div>
 
-  <!-- Search Form Handling -->
+  <!-- Search Form Handling + Updated Random Function -->
   <script>
     const TMDB_API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
-    
+
     document.querySelectorAll('form').forEach(form => {
       form.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -161,76 +146,33 @@
       });
     });
 
-    // Working random media function with loading states
-    async function getRandomMedia(buttonElement) {
-      // Show loading state
-      const desktopText = document.getElementById('random-text');
-      const desktopSpinner = document.getElementById('random-spinner');
-      const mobileIcon = document.getElementById('mobile-random-icon');
-      const mobileText = document.getElementById('mobile-random-text');
-      
-      if (buttonElement.classList.contains('md:hidden')) {
-        // Mobile
-        mobileIcon.innerHTML = '<span class="loading-spinner"></span>';
-        mobileText.textContent = 'Loading...';
-      } else {
-        // Desktop
-        desktopText.textContent = 'Loading';
-        desktopSpinner.classList.remove('hidden');
-      }
-      
+    // Improved truly random fetch from TMDB
+    async function getRandomMedia() {
+      const mediaType = Math.random() > 0.5 ? 'movie' : 'tv';
+
       try {
-        // First decide if we'll pick a movie or TV show
-        const mediaType = Math.random() > 0.5 ? 'movie' : 'tv';
-        
-        // Get popular items (more reliable than discover)
-        const response = await fetch(
-          `https://api.themoviedb.org/3/${mediaType}/popular?api_key=${TMDB_API_KEY}&page=${Math.floor(Math.random() * 10) + 1}`
-        );
-        const data = await response.json();
-        
-        if (data.results && data.results.length > 0) {
-          // Filter out adult content and items without IDs
-          const validResults = data.results.filter(item => item.id && !item.adult);
-          
-          if (validResults.length > 0) {
-            const randomItem = validResults[Math.floor(Math.random() * validResults.length)];
+        const countRes = await fetch(`https://api.themoviedb.org/3/${mediaType}/popular?api_key=${TMDB_API_KEY}`);
+        const countData = await countRes.json();
+        const totalPages = Math.min(countData.total_pages, 500);
+        const randomPage = Math.floor(Math.random() * totalPages) + 1;
+
+        const res = await fetch(`https://api.themoviedb.org/3/${mediaType}/popular?api_key=${TMDB_API_KEY}&page=${randomPage}`);
+        const data = await res.json();
+
+        if (data.results?.length) {
+          const valid = data.results.filter(item => item.id && !item.adult);
+          if (valid.length) {
+            const randomItem = valid[Math.floor(Math.random() * valid.length)];
             window.location.href = `info.html?id=${randomItem.id}&type=${mediaType}`;
             return;
           }
         }
-        
-        // If we got here, use fallback
-        useHardcodedFallback();
-      } catch (error) {
-        console.error('Error fetching random media:', error);
-        useHardcodedFallback();
-      } finally {
-        // Reset button states
-        if (buttonElement.classList.contains('md:hidden')) {
-          mobileIcon.innerHTML = '<i class="fas fa-random fa-sm mb-1"></i>';
-          mobileText.textContent = 'Random';
-        } else {
-          desktopText.textContent = 'Random';
-          desktopSpinner.classList.add('hidden');
-        }
-      }
-    }
 
-    function useHardcodedFallback() {
-      const mediaItems = [
-        {id: 1233069, type: 'movie'}, // Your example movie
-        {id: 299534, type: 'movie'},  // Avengers: Endgame
-        {id: 1399, type: 'tv'},       // Game of Thrones
-        {id: 155, type: 'movie'},     // The Dark Knight
-        {id: 60574, type: 'tv'},      // Peaky Blinders
-        {id: 238, type: 'movie'},     // The Godfather
-        {id: 66732, type: 'tv'},      // Stranger Things
-        {id: 496243, type: 'movie'},  // Parasite
-        {id: 82856, type: 'tv'}       // The Mandalorian
-      ];
-      const randomItem = mediaItems[Math.floor(Math.random() * mediaItems.length)];
-      window.location.href = `info.html?id=${randomItem.id}&type=${randomItem.type}`;
+        alert("Could not fetch a random title. Try again.");
+      } catch (err) {
+        console.error("Random fetch error:", err);
+        alert("Failed to fetch random content.");
+      }
     }
   </script>
 </body>
