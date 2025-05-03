@@ -37,6 +37,18 @@
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       z-index: 1000;
     }
+    .loading-spinner {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -58,7 +70,7 @@
           <input
             type="text"
             name="query"
-            placeholder="Search movies, series, people..."
+            placeholder="Search movies, series..."
             class="w-full bg-dark text-white px-4 py-2 rounded-full focus:outline-none focus:ring-1 focus:ring-primary text-sm placeholder-gray-400"
           >
           <button type="submit" class="absolute right-3 top-2 text-gray-400 hover:text-primary">
@@ -69,11 +81,12 @@
 
       <!-- Desktop Menu -->
       <nav class="flex space-x-6">
-        <a href="movies.html" class="text-gray-300 hover:text-primary text-sm font-medium">Movies</a>
-        <a href="series.html" class="text-gray-300 hover:text-primary text-sm font-medium">Series</a>
+        <a href="javascript:void(0)" onclick="getRandomMedia(this)" class="text-gray-300 hover:text-primary text-sm font-medium flex items-center">
+          <span id="random-text">Random</span>
+        </a>
+        <a href="search.html?query=" class="text-gray-300 hover:text-primary text-sm font-medium">Browse</a>
         <a href="livetv.html" class="text-gray-300 hover:text-primary text-sm font-medium">Live TV</a>
         <a href="https://animeneek.github.io/AnimeNeek" class="text-gray-300 hover:text-primary text-sm font-medium">Anime</a>
-        <a href="people.html" class="text-gray-300 hover:text-primary text-sm font-medium">People</a>
       </nav>
     </div>
   </header>
@@ -104,13 +117,19 @@
 
   <!-- Mobile Bottom Navigation (Minimalist Icons) -->
   <nav class="md:hidden bottom-nav flex justify-around items-center py-3">
-    <a href="movies.html" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
-      <i class="fas fa-film fa-sm mb-1"></i>
-      <span>Movies</span>
+    <a href="index.html" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
+      <i class="fas fa-home fa-sm mb-1"></i>
+      <span>Home</span>
     </a>
-    <a href="series.html" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
-      <i class="fas fa-tv fa-sm mb-1"></i>
-      <span>Series</span>
+    <a href="javascript:void(0)" onclick="getRandomMedia(this)" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
+      <span id="mobile-random-icon">
+        <i class="fas fa-random fa-sm mb-1"></i>
+      </span>
+      <span id="mobile-random-text">Random</span>
+    </a>
+    <a href="search.html?query=" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
+      <i class="fas fa-search fa-sm mb-1"></i>
+      <span>Browse</span>
     </a>
     <a href="livetv.html" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
       <i class="fas fa-broadcast-tower fa-sm mb-1"></i>
@@ -120,10 +139,6 @@
       <i class="fas fa-ghost fa-sm mb-1"></i>
       <span>Anime</span>
     </a>
-    <a href="people.html" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
-      <i class="fas fa-users fa-sm mb-1"></i>
-      <span>People</span>
-    </a>
   </nav>
 
   <!-- Spacer (Prevents content from hiding under header) -->
@@ -131,13 +146,128 @@
 
   <!-- Search Form Handling -->
   <script>
+    const TMDB_API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
+    
     document.querySelectorAll('form').forEach(form => {
       form.addEventListener('submit', function(e) {
         e.preventDefault();
         const query = this.querySelector('input').value.trim();
-        window.location.href = `search.html?query=${encodeURIComponent(query)}`;
+        if (query) {
+          window.location.href = `search.html?query=${encodeURIComponent(query)}`;
+        } else {
+          window.location.href = 'search.html?query=';
+        }
       });
     });
+
+    // Improved random media function with loading states
+    async function getRandomMedia(buttonElement) {
+      // Show loading state
+      const desktopText = document.getElementById('random-text');
+      const desktopSpinner = document.getElementById('random-spinner');
+      const mobileIcon = document.getElementById('mobile-random-icon');
+      const mobileText = document.getElementById('mobile-random-text');
+      
+      if (buttonElement.classList.contains('md:hidden')) {
+        // Mobile
+        mobileIcon.innerHTML = '<span class="loading-spinner"></span>';
+        mobileText.textContent = 'Loading...';
+      } else {
+        // Desktop
+        desktopText.textContent = 'Loading';
+        desktopSpinner.classList.remove('hidden');
+      }
+      
+      try {
+        // First get a random media type (movie or tv)
+        const mediaType = Math.random() > 0.5 ? 'movie' : 'tv';
+        
+        // Get total pages (capped at 500 as TMDB maximum)
+        const discoverRes = await fetch(
+          `https://api.themoviedb.org/3/discover/${mediaType}?api_key=${TMDB_API_KEY}`
+        );
+        const discoverData = await discoverRes.json();
+        const totalPages = Math.min(discoverData.total_pages, 500);
+        
+        // Get a random page
+        const randomPage = Math.floor(Math.random() * totalPages) + 1;
+        
+        // Fetch items from random page
+        const randomRes = await fetch(
+          `https://api.themoviedb.org/3/discover/${mediaType}?api_key=${TMDB_API_KEY}&page=${randomPage}`
+        );
+        const randomData = await randomRes.json();
+        
+        if (randomData.results && randomData.results.length > 0) {
+          // Filter out adult content and items without IDs
+          const validResults = randomData.results.filter(item => 
+            item.id && !item.adult
+          );
+          
+          if (validResults.length > 0) {
+            const randomItem = validResults[Math.floor(Math.random() * validResults.length)];
+            window.location.href = `info.html?id=${randomItem.id}&type=${mediaType}`;
+            return;
+          }
+        }
+        
+        // Fallback to popular if no results
+        await getPopularRandom();
+      } catch (error) {
+        console.error('Error fetching random media:', error);
+        // Fallback to popular if error occurs
+        await getPopularRandom();
+      } finally {
+        // Reset button states
+        if (buttonElement.classList.contains('md:hidden')) {
+          mobileIcon.innerHTML = '<i class="fas fa-random fa-sm mb-1"></i>';
+          mobileText.textContent = 'Random';
+        } else {
+          desktopText.textContent = 'Random';
+          desktopSpinner.classList.add('hidden');
+        }
+      }
+    }
+
+    // Fallback to popular items
+    async function getPopularRandom() {
+      try {
+        // Get both popular movies and TV shows
+        const [moviesRes, tvRes] = await Promise.all([
+          fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}`),
+          fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${TMDB_API_KEY}`)
+        ]);
+        
+        const [moviesData, tvData] = await Promise.all([moviesRes.json(), tvRes.json()]);
+        
+        // Combine results and filter valid items
+        const allResults = [
+          ...(moviesData.results || []).map(item => ({...item, media_type: 'movie'})),
+          ...(tvData.results || []).map(item => ({...item, media_type: 'tv'}))
+        ].filter(item => item.id && !item.adult);
+        
+        if (allResults.length > 0) {
+          const randomItem = allResults[Math.floor(Math.random() * allResults.length)];
+          window.location.href = `info.html?id=${randomItem.id}&type=${randomItem.media_type}`;
+        } else {
+          // Ultimate fallback to hardcoded list
+          const mediaItems = [
+            {id: 299534, type: 'movie'}, // Avengers: Endgame
+            {id: 1399, type: 'tv'},     // Game of Thrones
+            {id: 155, type: 'movie'},   // The Dark Knight
+            {id: 60574, type: 'tv'},    // Peaky Blinders
+            {id: 238, type: 'movie'},   // The Godfather
+            {id: 66732, type: 'tv'},    // Stranger Things
+            {id: 496243, type: 'movie'},// Parasite
+            {id: 82856, type: 'tv'}     // The Mandalorian
+          ];
+          const randomItem = mediaItems[Math.floor(Math.random() * mediaItems.length)];
+          window.location.href = `info.html?id=${randomItem.id}&type=${randomItem.type}`;
+        }
+      } catch (error) {
+        console.error('Error fetching popular media:', error);
+      }
+    }
   </script>
 </body>
 </html>
