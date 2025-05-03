@@ -377,7 +377,7 @@
           const videoId = mediaSources.VIDEOID[i];
           if (videoId) {
             sourcesHTML += `
-              <button class="source-btn bg-dark hover:bg-gray-800 px-4 py-2 rounded-lg font-medium"
+              <button class="source-btn bg-primary hover:bg-red-600 px-4 py-2 rounded-lg font-medium"
                       data-source="${createEmbedUrl(src, videoId)}">
                 ${sourceName}
               </button>
@@ -403,8 +403,36 @@
       try {
         const seasonsContainer = document.getElementById('sources-content');
         const seasons = showInfo.seasons.filter(s => s.season_number > 0);
+        const mediaSources = jsonSources.find(item => 
+          item.TMDBID === mediaId && item.Class === 'series'
+        );
+
+        let seasonsHTML = '';
         
-        let seasonsHTML = `
+        // Add full series sources if available
+        if (mediaSources) {
+          seasonsHTML += '<div class="mb-6"><h3 class="text-lg font-semibold mb-3">Full Series Sources</h3>';
+          seasonsHTML += '<div class="flex flex-wrap gap-3">';
+          
+          mediaSources.SRC.forEach((src, i) => {
+            const sourceName = mediaSources.Source[i];
+            const videoId = mediaSources.VIDEOID[i];
+            
+            if (videoId && sourceName && sourceName.toLowerCase().includes('full season')) {
+              seasonsHTML += `
+                <button class="source-btn bg-primary hover:bg-red-600 px-4 py-2 rounded-lg font-medium"
+                        data-source="${createEmbedUrl(src, videoId)}"
+                        data-title="${mediaInfo.name} - ${sourceName}">
+                  ${sourceName}
+                </button>
+              `;
+            }
+          });
+          
+          seasonsHTML += '</div></div>';
+        }
+        
+        seasonsHTML += `
           <div class="season-selector flex gap-3 overflow-x-auto pb-4 mb-6">
             ${seasons.map(season => `
               <button class="season-btn min-w-[80px] px-4 py-2 rounded-full bg-dark hover:bg-gray-800 ${season.season_number === 1 ? 'bg-primary hover:bg-red-600' : ''}"
@@ -432,6 +460,16 @@
           });
         });
         
+        // Add click handlers for series sources
+        document.querySelectorAll('.source-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            showModal(
+              this.getAttribute('data-title'),
+              this.getAttribute('data-source')
+            );
+          });
+        });
+        
         if (seasons.length > 0) {
           await loadSeasonDetails(showInfo.id, 1);
         }
@@ -448,30 +486,6 @@
           : mediaInfo.poster_path 
             ? IMAGE_URL + mediaInfo.poster_path 
             : DEFAULT_POSTER;
-        
-        // Add season sources from JSON if available
-        const seasonSources = jsonSources.find(item => 
-          item.TMDBID === mediaId && item.Class === 'series'
-        );
-
-        let seasonSourcesHTML = '';
-        if (seasonSources) {
-          seasonSources.SRC.forEach((src, i) => {
-            const sourceName = seasonSources.Source[i];
-            const videoId = seasonSources.VIDEOID[i];
-            
-            // Only show sources that mention this season number
-            if (videoId && sourceName && sourceName.toLowerCase().includes(`season ${seasonNumber}`)) {
-              seasonSourcesHTML += `
-                <button class="source-btn bg-dark hover:bg-gray-800 px-4 py-1 rounded text-sm mb-2"
-                        data-source="${createEmbedUrl(src, videoId)}"
-                        data-title="${mediaInfo.name} - ${sourceName}">
-                  ${sourceName}
-                </button>
-              `;
-            }
-          });
-        }
         
         let episodesHTML = '';
         
@@ -516,7 +530,6 @@
               <p class="text-gray-300">${seasonInfo.air_date ? seasonInfo.air_date.substring(0,4) : ''} • ${seasonInfo.episodes.length} Episodes</p>
             </div>
           </div>
-          ${seasonSourcesHTML ? `<div class="mb-4">${seasonSourcesHTML}</div>` : ''}
           <p class="text-gray-300 mb-6">${seasonInfo.overview || 'No overview available.'}</p>
           
           <h4 class="font-semibold mb-3">Episodes</h4>
