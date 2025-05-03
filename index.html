@@ -193,7 +193,7 @@
     <div id="hero-dots" class="absolute bottom-8 left-0 right-0 flex justify-center gap-2"></div>
   </section>
 
-  <!-- Continue Watching Section - NOW PERMANENTLY VISIBLE -->
+  <!-- Continue Watching Section -->
   <section id="continue-watching-section" class="container mx-auto px-4 pt-8">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold section-title">
@@ -204,7 +204,10 @@
       </button>
     </div>
     <div id="continue-watching-container" class="flex gap-4 overflow-x-auto slider-container pb-4 pt-[1.2em] px-[1em] min-h-[260px]">
-      <!-- Items will load here -->
+      <div class="continue-watching-empty w-full">
+        <i class="fas fa-clock text-4xl mb-2"></i>
+        <p>No recently watched items</p>
+      </div>
     </div>
   </section>
 
@@ -306,30 +309,6 @@
     let heroSliderInterval;
     let currentHeroSlide = 0;
 
-    // Initialize with test data if empty
-    if (!localStorage.getItem('continueWatching') || JSON.parse(localStorage.getItem('continueWatching')).length === 0) {
-      localStorage.setItem('continueWatching', JSON.stringify([
-        {
-          id: 550,
-          type: 'movie',
-          title: 'Fight Club',
-          poster_path: '/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg',
-          vote_average: 8.4,
-          year: '1999',
-          progress: 35
-        },
-        {
-          id: 1399,
-          type: 'tv',
-          title: 'Game of Thrones',
-          poster_path: '/u3bZgnGQ9T01sWNhyveQz0wH0Hl.jpg',
-          vote_average: 8.4,
-          year: '2011',
-          progress: 65
-        }
-      ]));
-    }
-
     // Initialize all sections
     document.addEventListener('DOMContentLoaded', async () => {
       await initHeroSlider();
@@ -338,14 +317,14 @@
       setupSliderDrag();
       loadContinueWatching();
       
-      // Add click handler for clear button
+      // Clear button handler
       document.getElementById('clear-continue-watching').addEventListener('click', () => {
-        localStorage.removeItem('continueWatching');
+        localStorage.setItem('continueWatching', JSON.stringify([]));
         loadContinueWatching();
       });
     });
 
-    // Load Continue Watching - GUARANTEED TO WORK
+    // Load Continue Watching
     function loadContinueWatching() {
       const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
       const container = document.getElementById('continue-watching-container');
@@ -368,17 +347,9 @@
                        class="w-full h-full object-cover">
                   <div class="rating-circle" data-rating="${Math.round(item.vote_average * 10)}%" 
                        style="--percentage: ${Math.round(item.vote_average * 10)}"></div>
-                  <div class="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">
-                    <div class="h-full bg-primary" style="width: ${item.progress || 0}%"></div>
-                  </div>
                 </div>
                 <h3 class="font-medium truncate">${item.title}</h3>
                 <p class="text-xs text-gray-400">${item.year || 'N/A'}</p>
-                ${item.progress ? `
-                  <div class="absolute top-2 right-2 bg-black/70 rounded-full w-8 h-8 flex items-center justify-center">
-                    <span class="text-xs font-bold">${item.progress}%</span>
-                  </div>
-                ` : ''}
               </a>
             </div>
           </div>
@@ -386,8 +357,10 @@
       }
     }
 
-    // Add to Continue Watching - GUARANTEED TO WORK
+    // Add to Continue Watching
     function addToContinueWatching(item, type) {
+      if (!item || !item.id) return false;
+      
       const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
       
       const newItem = {
@@ -396,11 +369,10 @@
         title: type === 'movie' ? item.title : item.name,
         poster_path: item.poster_path,
         vote_average: item.vote_average || 0,
-        year: (type === 'movie' ? item.release_date : item.first_air_date)?.substring(0,4) || 'N/A',
-        progress: 0
+        year: (type === 'movie' ? item.release_date : item.first_air_date)?.substring(0,4) || 'N/A'
       };
 
-      // Remove if already exists to avoid duplicates
+      // Remove if already exists
       const filtered = continueWatching.filter(i => !(i.id === item.id && i.type === type));
       filtered.unshift(newItem);
       
@@ -409,9 +381,11 @@
       
       localStorage.setItem('continueWatching', JSON.stringify(filtered));
       loadContinueWatching();
+      
+      return true;
     }
 
-    // Hero Slider with Fade Effect
+    // Hero Slider
     async function initHeroSlider() {
       const movies = await fetchTMDB('/movie/popular');
       const slider = document.getElementById('hero-slider');
@@ -430,10 +404,11 @@
             </div>
             <h2 class="text-3xl md:text-5xl font-bold mb-3 hero-title">${movie.title}</h2>
             <p class="text-gray-300 mb-5 line-clamp-2 hero-overview">${movie.overview}</p>
-            <button onclick="addToContinueWatching(${JSON.stringify(movie)}, 'movie'); window.location.href='info.html?id=${movie.id}'" 
-                    class="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full font-medium flex items-center">
+            <a href="info.html?id=${movie.id}" 
+               onclick="return addToContinueWatching(${JSON.stringify(movie)}, 'movie')" 
+               class="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full font-medium flex items-center inline-block">
               <i class="fas fa-info-circle mr-2"></i> More Info
-            </button>
+            </a>
           </div>
         </div>
       `).join('');
@@ -508,7 +483,7 @@
         <div class="movie-card-container">
           <div class="movie-card w-40 sm:w-48 md:w-56">
             <a href="info.html?id=${item.id}&type=${type}" 
-               onclick="event.preventDefault(); addToContinueWatching(${JSON.stringify(item)}, '${type}'); window.location.href='info.html?id=${item.id}&type=${type}'" 
+               onclick="return addToContinueWatching(${JSON.stringify(item)}, '${type}')" 
                class="block relative">
               <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
                 <img 
@@ -602,7 +577,7 @@
   </script>
 
   <script>
-    // Fetch the header.html content and insert it into the #header div
+    // Fetch the header.html content
     fetch('header.html')
       .then(response => response.text())
       .then(data => {
