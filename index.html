@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MovieNeek | Home v13.56</title>
+  <title>MovieNeek | Home</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script>
@@ -45,6 +45,7 @@
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       z-index: 1000;
     }
+
     .hero-slide {
       position: absolute;
       width: 100%;
@@ -161,14 +162,6 @@
     #hero-slider-container {
       overflow: hidden;
     }
-    .continue-watching-empty {
-      min-height: 260px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #6b7280;
-    }
     @media (max-width: 768px) {
       .hero-title {
         font-size: 1.75rem !important;
@@ -187,28 +180,11 @@
   <!-- Header -->  
   <div id="header"></div>
 
-  <!-- Hero Slider -->
+
+  <!-- Hero Slider with Fade Effect -->
   <section class="relative h-[70vh] min-h-[500px] overflow-hidden" id="hero-slider-container">
     <div id="hero-slider" class="h-full w-full relative"></div>
     <div id="hero-dots" class="absolute bottom-8 left-0 right-0 flex justify-center gap-2"></div>
-  </section>
-
-  <!-- Continue Watching Section -->
-  <section id="continue-watching-section" class="container mx-auto px-4 pt-8">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold section-title">
-        <i class="fas fa-clock text-primary mr-2"></i> Continue Watching
-      </h2>
-      <button id="clear-continue-watching" class="text-sm text-gray-400 hover:text-primary flex items-center">
-        Clear All <i class="fas fa-trash-alt ml-1"></i>
-      </button>
-    </div>
-    <div id="continue-watching-container" class="flex gap-4 overflow-x-auto slider-container pb-4 pt-[1.2em] px-[1em] min-h-[260px]">
-      <div class="continue-watching-empty w-full">
-        <i class="fas fa-clock text-4xl mb-2"></i>
-        <p>No recently watched items</p>
-      </div>
-    </div>
   </section>
 
   <!-- Content Sections -->
@@ -315,87 +291,9 @@
       await initContentSections();
       setupToggleSwitches();
       setupSliderDrag();
-      loadContinueWatching();
-      
-      // Clear button handler
-      document.getElementById('clear-continue-watching').addEventListener('click', () => {
-        localStorage.setItem('continueWatching', JSON.stringify([]));
-        loadContinueWatching();
-      });
     });
 
-    // Load Continue Watching
-    function loadContinueWatching() {
-      const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
-      const container = document.getElementById('continue-watching-container');
-      
-      if (continueWatching.length === 0) {
-        container.innerHTML = `
-          <div class="continue-watching-empty w-full">
-            <i class="fas fa-clock text-4xl mb-2"></i>
-            <p>No recently watched items</p>
-          </div>
-        `;
-      } else {
-        container.innerHTML = continueWatching.map(item => `
-          <div class="movie-card-container flex-shrink-0">
-            <div class="movie-card w-40 sm:w-48 md:w-56">
-              <a href="info.html?id=${item.id}&type=${item.type}" class="block relative">
-                <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2 relative">
-                  <img src="${IMAGE_URL}${item.poster_path}" 
-                       onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'"
-                       class="w-full h-full object-cover">
-                  <div class="rating-circle" data-rating="${Math.round(item.vote_average * 10)}%" 
-                       style="--percentage: ${Math.round(item.vote_average * 10)}"></div>
-                </div>
-                <h3 class="font-medium truncate">${item.title}</h3>
-                <p class="text-xs text-gray-400">${item.year || 'N/A'}</p>
-              </a>
-            </div>
-          </div>
-        `).join('');
-      }
-    }
-
-    // Add to Continue Watching (now global so it can be called from other pages)
-    window.addToContinueWatching = function(item, type) {
-      if (!item || !item.id) return false;
-      
-      const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
-      
-      // Create a normalized item
-      const newItem = {
-        id: item.id,
-        type: type,
-        title: type === 'movie' ? item.title : item.name,
-        poster_path: item.poster_path,
-        vote_average: item.vote_average || 0,
-        year: (type === 'movie' ? item.release_date : item.first_air_date)?.substring(0,4) || 'N/A'
-      };
-
-      // Remove if already exists to avoid duplicates
-      const existingIndex = continueWatching.findIndex(i => i.id === item.id && i.type === type);
-      if (existingIndex !== -1) {
-        continueWatching.splice(existingIndex, 1);
-      }
-      
-      // Add to the beginning of the array
-      continueWatching.unshift(newItem);
-      
-      // Keep only latest 20 items
-      if (continueWatching.length > 20) continueWatching.length = 20;
-      
-      localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
-      
-      // Only update UI if we're on the home page
-      if (window.location.pathname.endsWith('index.html') {
-        loadContinueWatching();
-      }
-      
-      return true;
-    }
-
-    // Hero Slider
+    // Hero Slider with Fade Effect
     async function initHeroSlider() {
       const movies = await fetchTMDB('/movie/popular');
       const slider = document.getElementById('hero-slider');
@@ -414,11 +312,10 @@
             </div>
             <h2 class="text-3xl md:text-5xl font-bold mb-3 hero-title">${movie.title}</h2>
             <p class="text-gray-300 mb-5 line-clamp-2 hero-overview">${movie.overview}</p>
-            <a href="info.html?id=${movie.id}" 
-               onclick="return addToContinueWatching(${JSON.stringify(movie)}, 'movie')" 
-               class="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full font-medium flex items-center inline-block">
+            <button onclick="window.location.href='info.html?id=${movie.id}'" 
+                    class="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full font-medium flex items-center">
               <i class="fas fa-info-circle mr-2"></i> More Info
-            </a>
+            </button>
           </div>
         </div>
       `).join('');
@@ -428,6 +325,7 @@
                 onclick="showHeroSlide(${i})"></button>
       `).join('');
 
+      // Auto-slide functionality with fade effect
       clearInterval(heroSliderInterval);
       heroSliderInterval = setInterval(() => {
         showNextHeroSlide();
@@ -473,28 +371,29 @@
         { id: 'top-rated-series', path: '/tv/top_rated' }
       ];
 
+      // Load movies
       for (const section of movieEndpoints) {
         const items = await fetchTMDB(section.path);
         document.getElementById(section.id).innerHTML = items.slice(0, 10).map(item => createCard(item, 'movie')).join('');
       }
 
+      // Load series
       for (const section of seriesEndpoints) {
         const items = await fetchTMDB(section.path);
         document.getElementById(section.id).innerHTML = items.slice(0, 10).map(item => createCard(item, 'tv')).join('');
       }
     }
 
+    // Create movie/series card
     function createCard(item, type) {
       const title = type === 'movie' ? item.title : item.name;
       const releaseDate = type === 'movie' ? item.release_date : item.first_air_date;
       const percentage = Math.round(item.vote_average * 10);
       
       return `
-        <div class="movie-card-container flex-shrink-0">
+        <div class="movie-card-container">
           <div class="movie-card w-40 sm:w-48 md:w-56">
-            <a href="info.html?id=${item.id}&type=${type}" 
-               onclick="return addToContinueWatching(${JSON.stringify(item)}, '${type}')" 
-               class="block relative">
+            <a href="info.html?id=${item.id}&type=${type}" class="block relative">
               <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
                 <img 
                   src="${IMAGE_URL}${item.poster_path}" 
@@ -512,6 +411,7 @@
       `;
     }
 
+    // Setup toggle switches
     function setupToggleSwitches() {
       const toggles = {
         'toggle-popular': ['popular-movies', 'popular-series'],
@@ -527,11 +427,13 @@
           document.getElementById(seriesId).classList.toggle('hidden', !this.checked);
         });
         
+        // Initialize with movies visible
         document.getElementById(movieId).classList.remove('hidden');
         document.getElementById(seriesId).classList.add('hidden');
       }
     }
 
+    // Setup slider drag functionality
     function setupSliderDrag() {
       document.querySelectorAll('.slider-container').forEach(slider => {
         let isDown = false;
@@ -565,6 +467,7 @@
       });
     }
 
+    // TMDB API Helper
     async function fetchTMDB(endpoint) {
       try {
         const res = await fetch(`${BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}`);
@@ -576,6 +479,7 @@
       }
     }
 
+    // Genre Helper
     function getGenreName(id) {
       const genres = {
         28: 'Action', 12: 'Adventure', 16: 'Animation',
@@ -587,7 +491,7 @@
   </script>
 
   <script>
-    // Fetch the header.html content
+    // Fetch the header.html content and insert it into the #header div
     fetch('header.html')
       .then(response => response.text())
       .then(data => {
@@ -595,6 +499,6 @@
       })
       .catch(error => console.error('Error fetching header:', error));
   </script>
-
+  
 </body>
 </html>
