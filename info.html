@@ -372,6 +372,7 @@
       
       // Add JSON sources if available
       if (mediaSources) {
+        sourcesHTML += '<h3 class="w-full text-lg font-semibold mb-2">Additional Sources</h3>';
         mediaSources.SRC.forEach((src, i) => {
           const sourceName = mediaSources.Source[i] || `Source ${i+2}`;
           const videoId = mediaSources.VIDEOID[i];
@@ -409,16 +410,16 @@
 
         let seasonsHTML = '';
         
-        // Add full series sources if available
+        // Add additional sources if available
         if (mediaSources) {
-          seasonsHTML += '<div class="mb-6"><h3 class="text-lg font-semibold mb-3">Full Series Sources</h3>';
+          seasonsHTML += '<div class="mb-6"><h3 class="text-lg font-semibold mb-3">Additional Sources</h3>';
           seasonsHTML += '<div class="flex flex-wrap gap-3">';
           
           mediaSources.SRC.forEach((src, i) => {
             const sourceName = mediaSources.Source[i];
             const videoId = mediaSources.VIDEOID[i];
             
-            if (videoId && sourceName && sourceName.toLowerCase().includes('full season')) {
+            if (videoId && sourceName) {
               seasonsHTML += `
                 <button class="source-btn bg-primary hover:bg-red-600 px-4 py-2 rounded-lg font-medium"
                         data-source="${createEmbedUrl(src, videoId)}"
