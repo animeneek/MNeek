@@ -45,6 +45,7 @@
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       z-index: 1000;
     }
+
     .hero-slide {
       position: absolute;
       width: 100%;
@@ -161,14 +162,6 @@
     #hero-slider-container {
       overflow: hidden;
     }
-    .continue-watching-empty {
-      min-height: 260px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #6b7280;
-    }
     @media (max-width: 768px) {
       .hero-title {
         font-size: 1.75rem !important;
@@ -187,28 +180,11 @@
   <!-- Header -->  
   <div id="header"></div>
 
-  <!-- Hero Slider -->
+
+  <!-- Hero Slider with Fade Effect -->
   <section class="relative h-[70vh] min-h-[500px] overflow-hidden" id="hero-slider-container">
     <div id="hero-slider" class="h-full w-full relative"></div>
     <div id="hero-dots" class="absolute bottom-8 left-0 right-0 flex justify-center gap-2"></div>
-  </section>
-
-  <!-- Continue Watching Section -->
-  <section id="continue-watching-section" class="container mx-auto px-4 pt-8">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold section-title">
-        <i class="fas fa-clock text-primary mr-2"></i> Continue Watching
-      </h2>
-      <button id="clear-continue-watching" class="text-sm text-gray-400 hover:text-primary flex items-center">
-        Clear All <i class="fas fa-trash-alt ml-1"></i>
-      </button>
-    </div>
-    <div id="continue-watching-container" class="flex gap-4 overflow-x-auto slider-container pb-4 pt-[1.2em] px-[1em] min-h-[260px]">
-      <div class="continue-watching-empty w-full">
-        <i class="fas fa-clock text-4xl mb-2"></i>
-        <p>No recently watched items</p>
-      </div>
-    </div>
   </section>
 
   <!-- Content Sections -->
@@ -302,7 +278,7 @@
     </section>
   </main>
 
-<script>
+  <script>
     const TMDB_API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
     const BASE_URL = 'https://api.themoviedb.org/3';
     const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -311,274 +287,131 @@
 
     // Initialize all sections
     document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        await initHeroSlider();
-        await initContentSections();
-        setupToggleSwitches();
-        setupSliderDrag();
-        loadContinueWatching();
-        
-        // Clear button handler
-        document.getElementById('clear-continue-watching').addEventListener('click', () => {
-          localStorage.setItem('continueWatching', JSON.stringify([]));
-          loadContinueWatching();
-        });
-      } catch (error) {
-        console.error('Initialization error:', error);
-      }
+      await initHeroSlider();
+      await initContentSections();
+      setupToggleSwitches();
+      setupSliderDrag();
     });
 
-    // Load Continue Watching - FIXED AND WORKING
-    function loadContinueWatching() {
-      try {
-        const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
-        const container = document.getElementById('continue-watching-container');
-        
-        if (!continueWatching.length) {
-          container.innerHTML = `
-            <div class="continue-watching-empty w-full">
-              <i class="fas fa-clock text-4xl mb-2"></i>
-              <p>No recently watched items</p>
-            </div>
-          `;
-          return;
-        }
-
-        container.innerHTML = continueWatching.map(item => {
-          const posterUrl = item.poster_path 
-            ? `${IMAGE_URL}${item.poster_path}`
-            : 'https://via.placeholder.com/500x750?text=No+Poster';
-          
-          return `
-          <div class="movie-card-container flex-shrink-0" style="min-width: 160px;">
-            <div class="movie-card w-40 sm:w-48 md:w-56">
-              <a href="info.html?id=${item.id}&type=${item.type}" class="block relative">
-                <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2 relative">
-                  <img src="${posterUrl}" 
-                       class="w-full h-full object-cover"
-                       onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'">
-                  <div class="rating-circle" data-rating="${Math.round(item.vote_average * 10)}%" 
-                       style="--percentage: ${Math.round(item.vote_average * 10)}"></div>
-                </div>
-                <h3 class="font-medium truncate">${item.title || 'Untitled'}</h3>
-                <p class="text-xs text-gray-400">${item.year || 'N/A'}</p>
-              </a>
-            </div>
-          </div>
-          `;
-        }).join('');
-
-        // Reinitialize slider drag for new elements
-        setupSliderDrag();
-      } catch (error) {
-        console.error('Error loading continue watching:', error);
-      }
-    }
-
-    // Add to Continue Watching - FIXED AND WORKING
-    window.addToContinueWatching = function(item, type) {
-      try {
-        if (!item || !item.id) {
-          console.error('Invalid item:', item);
-          return false;
-        }
-        
-        let continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
-        
-        // Create normalized item
-        const newItem = {
-          id: item.id,
-          type: type,
-          title: type === 'movie' ? item.title : item.name,
-          poster_path: item.poster_path,
-          vote_average: item.vote_average || 0,
-          year: (type === 'movie' 
-            ? item.release_date 
-            : item.first_air_date)?.substring(0,4) || 'N/A'
-        };
-
-        // Remove if already exists
-        continueWatching = continueWatching.filter(i => 
-          !(i.id === newItem.id && i.type === newItem.type)
-        );
-        
-        // Add to beginning
-        continueWatching.unshift(newItem);
-        
-        // Limit to 20 items
-        continueWatching = continueWatching.slice(0, 20);
-        
-        // Save to storage
-        localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
-        
-        // Update UI if on home page
-        if (window.location.pathname.endsWith('index.html') || 
-            window.location.pathname === '/' || 
-            window.location.pathname.endsWith('index.htm')) {
-          loadContinueWatching();
-        }
-        
-        return true;
-      } catch (error) {
-        console.error('Error adding to continue watching:', error);
-        return false;
-      }
-    }
-
-    // Hero Slider - WORKING
+    // Hero Slider with Fade Effect
     async function initHeroSlider() {
-      try {
-        const movies = await fetchTMDB('/movie/popular');
-        if (!movies?.length) {
-          console.error('No movies found for hero slider');
-          return;
-        }
-
-        const slider = document.getElementById('hero-slider');
-        const dots = document.getElementById('hero-dots');
-        
-        slider.innerHTML = movies.slice(0, 5).map((movie, index) => {
-          const backdropUrl = movie.backdrop_path
-            ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}`
-            : 'https://via.placeholder.com/1920x1080?text=No+Backdrop';
-          
-          return `
-          <div class="hero-slide ${index === 0 ? 'active' : ''}" 
-               style="background-image: url(${backdropUrl})">
-            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent"></div>
-            <div class="absolute bottom-0 left-0 right-0 p-8 md:p-12 lg:p-16 max-w-4xl">
-              <div class="flex gap-2 mb-3">
-                ${(movie.genre_ids?.slice(0,2) || []).map(id => `
-                  <span class="bg-primary text-xs px-2 py-1 rounded">${getGenreName(id)}</span>
-                `).join('')}
-                <span class="bg-dark text-xs px-2 py-1 rounded">${movie.release_date?.substring(0,4) || 'N/A'}</span>
-              </div>
-              <h2 class="text-3xl md:text-5xl font-bold mb-3 hero-title">${movie.title || 'Untitled'}</h2>
-              <p class="text-gray-300 mb-5 line-clamp-2 hero-overview">${movie.overview || 'No description available'}</p>
-              <a href="info.html?id=${movie.id}" 
-                 onclick="return addToContinueWatching(${JSON.stringify(movie)}, 'movie')" 
-                 class="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full font-medium flex items-center inline-block">
-                <i class="fas fa-info-circle mr-2"></i> More Info
-              </a>
+      const movies = await fetchTMDB('/movie/popular');
+      const slider = document.getElementById('hero-slider');
+      const dots = document.getElementById('hero-dots');
+      
+      slider.innerHTML = movies.slice(0, 5).map((movie, index) => `
+        <div class="hero-slide ${index === 0 ? 'active' : ''}" 
+             style="background-image: url(https://image.tmdb.org/t/p/original${movie.backdrop_path})">
+          <div class="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent"></div>
+          <div class="absolute bottom-0 left-0 right-0 p-8 md:p-12 lg:p-16 max-w-4xl">
+            <div class="flex gap-2 mb-3">
+              ${movie.genre_ids.slice(0,2).map(id => `
+                <span class="bg-primary text-xs px-2 py-1 rounded">${getGenreName(id)}</span>
+              `).join('')}
+              <span class="bg-dark text-xs px-2 py-1 rounded">${movie.release_date?.substring(0,4) || '2023'}</span>
             </div>
+            <h2 class="text-3xl md:text-5xl font-bold mb-3 hero-title">${movie.title}</h2>
+            <p class="text-gray-300 mb-5 line-clamp-2 hero-overview">${movie.overview}</p>
+            <button onclick="window.location.href='info.html?id=${movie.id}'" 
+                    class="bg-white/10 hover:bg-white/20 px-6 py-2 rounded-full font-medium flex items-center">
+              <i class="fas fa-info-circle mr-2"></i> More Info
+            </button>
           </div>
-          `;
-        }).join('');
+        </div>
+      `).join('');
 
-        dots.innerHTML = movies.slice(0, 5).map((_, i) => `
-          <button class="w-3 h-3 rounded-full ${i === 0 ? 'bg-primary' : 'bg-white/30'}"
-                  onclick="showHeroSlide(${i})"></button>
-        `).join('');
+      dots.innerHTML = movies.slice(0, 5).map((_, i) => `
+        <button class="w-3 h-3 rounded-full ${i === 0 ? 'bg-primary' : 'bg-white/30'}"
+                onclick="showHeroSlide(${i})"></button>
+      `).join('');
 
-        clearInterval(heroSliderInterval);
-        heroSliderInterval = setInterval(() => {
-          showNextHeroSlide();
-        }, 5000);
-      } catch (error) {
-        console.error('Error initializing hero slider:', error);
-      }
+      // Auto-slide functionality with fade effect
+      clearInterval(heroSliderInterval);
+      heroSliderInterval = setInterval(() => {
+        showNextHeroSlide();
+      }, 5000);
     }
 
     function showHeroSlide(index) {
       const slides = document.querySelectorAll('.hero-slide');
-      if (!slides.length) return;
-      
-      slides[currentHeroSlide]?.classList.remove('active');
+      slides[currentHeroSlide].classList.remove('active');
       currentHeroSlide = index;
-      slides[currentHeroSlide]?.classList.add('active');
+      slides[currentHeroSlide].classList.add('active');
       updateHeroDots();
     }
 
     function showNextHeroSlide() {
       const slides = document.querySelectorAll('.hero-slide');
-      if (!slides.length) return;
-      
-      slides[currentHeroSlide]?.classList.remove('active');
+      slides[currentHeroSlide].classList.remove('active');
       currentHeroSlide = (currentHeroSlide + 1) % slides.length;
-      slides[currentHeroSlide]?.classList.add('active');
+      slides[currentHeroSlide].classList.add('active');
       updateHeroDots();
     }
 
     function updateHeroDots() {
-      const dots = document.getElementById('hero-dots')?.children;
-      if (!dots) return;
-      
+      const dots = document.getElementById('hero-dots').children;
       Array.from(dots).forEach((dot, i) => {
         dot.className = `w-3 h-3 rounded-full ${i === currentHeroSlide ? 'bg-primary' : 'bg-white/30'}`;
       });
     }
 
-    // Content Sections - WORKING
+    // Content Sections
     async function initContentSections() {
-      try {
-        const movieEndpoints = [
-          { id: 'popular-movies', path: '/movie/popular' },
-          { id: 'now-playing-movies', path: '/movie/now_playing' },
-          { id: 'upcoming-movies', path: '/movie/upcoming' },
-          { id: 'top-rated-movies', path: '/movie/top_rated' }
-        ];
+      const movieEndpoints = [
+        { id: 'popular-movies', path: '/movie/popular' },
+        { id: 'now-playing-movies', path: '/movie/now_playing' },
+        { id: 'upcoming-movies', path: '/movie/upcoming' },
+        { id: 'top-rated-movies', path: '/movie/top_rated' }
+      ];
 
-        const seriesEndpoints = [
-          { id: 'popular-series', path: '/tv/popular' },
-          { id: 'now-playing-series', path: '/tv/on_the_air' },
-          { id: 'upcoming-series', path: '/tv/airing_today' },
-          { id: 'top-rated-series', path: '/tv/top_rated' }
-        ];
+      const seriesEndpoints = [
+        { id: 'popular-series', path: '/tv/popular' },
+        { id: 'now-playing-series', path: '/tv/on_the_air' },
+        { id: 'upcoming-series', path: '/tv/airing_today' },
+        { id: 'top-rated-series', path: '/tv/top_rated' }
+      ];
 
-        // Load movies
-        await Promise.all(movieEndpoints.map(async section => {
-          const items = await fetchTMDB(section.path);
-          if (items?.length) {
-            document.getElementById(section.id).innerHTML = 
-              items.slice(0, 10).map(item => createCard(item, 'movie')).join('');
-          }
-        }));
+      // Load movies
+      for (const section of movieEndpoints) {
+        const items = await fetchTMDB(section.path);
+        document.getElementById(section.id).innerHTML = items.slice(0, 10).map(item => createCard(item, 'movie')).join('');
+      }
 
-        // Load series
-        await Promise.all(seriesEndpoints.map(async section => {
-          const items = await fetchTMDB(section.path);
-          if (items?.length) {
-            document.getElementById(section.id).innerHTML = 
-              items.slice(0, 10).map(item => createCard(item, 'tv')).join('');
-          }
-        }));
-      } catch (error) {
-        console.error('Error initializing content sections:', error);
+      // Load series
+      for (const section of seriesEndpoints) {
+        const items = await fetchTMDB(section.path);
+        document.getElementById(section.id).innerHTML = items.slice(0, 10).map(item => createCard(item, 'tv')).join('');
       }
     }
 
+    // Create movie/series card
     function createCard(item, type) {
       const title = type === 'movie' ? item.title : item.name;
       const releaseDate = type === 'movie' ? item.release_date : item.first_air_date;
-      const year = releaseDate?.substring(0,4) || 'N/A';
-      const percentage = Math.round((item.vote_average || 0) * 10);
-      const posterUrl = item.poster_path 
-        ? `${IMAGE_URL}${item.poster_path}`
-        : 'https://via.placeholder.com/500x750?text=No+Poster';
+      const percentage = Math.round(item.vote_average * 10);
       
       return `
-        <div class="movie-card-container flex-shrink-0" style="min-width: 160px;">
+        <div class="movie-card-container">
           <div class="movie-card w-40 sm:w-48 md:w-56">
-            <a href="info.html?id=${item.id}&type=${type}" 
-               onclick="return addToContinueWatching(${JSON.stringify(item)}, '${type}')" 
-               class="block relative">
+            <a href="info.html?id=${item.id}&type=${type}" class="block relative">
               <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
                 <img 
-                  src="${posterUrl}" 
-                  alt="${title || 'Untitled'}"
+                  src="${IMAGE_URL}${item.poster_path}" 
+                  alt="${title}"
                   class="w-full h-full object-cover"
                   onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'"
                 >
                 <div class="rating-circle" data-rating="${percentage}%" style="--percentage: ${percentage}"></div>
               </div>
-              <h3 class="font-medium truncate">${title || 'Untitled'}</h3>
-              <p class="text-xs text-gray-400">${year}</p>
+              <h3 class="font-medium truncate">${title}</h3>
+              <p class="text-xs text-gray-400">${releaseDate?.substring(0,4) || '2023'}</p>
             </a>
           </div>
         </div>
       `;
     }
 
+    // Setup toggle switches
     function setupToggleSwitches() {
       const toggles = {
         'toggle-popular': ['popular-movies', 'popular-series'],
@@ -589,18 +422,18 @@
 
       for (const [toggleId, [movieId, seriesId]] of Object.entries(toggles)) {
         const toggle = document.getElementById(toggleId);
-        if (!toggle) continue;
-        
         toggle.addEventListener('change', function() {
-          document.getElementById(movieId)?.classList.toggle('hidden', this.checked);
-          document.getElementById(seriesId)?.classList.toggle('hidden', !this.checked);
+          document.getElementById(movieId).classList.toggle('hidden', this.checked);
+          document.getElementById(seriesId).classList.toggle('hidden', !this.checked);
         });
         
-        document.getElementById(movieId)?.classList.remove('hidden');
-        document.getElementById(seriesId)?.classList.add('hidden');
+        // Initialize with movies visible
+        document.getElementById(movieId).classList.remove('hidden');
+        document.getElementById(seriesId).classList.add('hidden');
       }
     }
 
+    // Setup slider drag functionality
     function setupSliderDrag() {
       document.querySelectorAll('.slider-container').forEach(slider => {
         let isDown = false;
@@ -634,53 +467,38 @@
       });
     }
 
+    // TMDB API Helper
     async function fetchTMDB(endpoint) {
       try {
         const res = await fetch(`${BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}`);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
-        return data.results || [];
+        return data.results;
       } catch (err) {
         console.error(`Error fetching ${endpoint}:`, err);
         return [];
       }
     }
 
+    // Genre Helper
     function getGenreName(id) {
       const genres = {
         28: 'Action', 12: 'Adventure', 16: 'Animation',
         35: 'Comedy', 80: 'Crime', 18: 'Drama',
-        10751: 'Family', 14: 'Fantasy', 36: 'History',
-        27: 'Horror', 10402: 'Music', 9648: 'Mystery',
-        10749: 'Romance', 878: 'Sci-Fi', 10770: 'TV',
-        53: 'Thriller', 10752: 'War', 37: 'Western'
+        10751: 'Family', 14: 'Fantasy', 36: 'History'
       };
       return genres[id] || 'Movie';
     }
+  </script>
 
-    // Fetch header
+  <script>
+    // Fetch the header.html content and insert it into the #header div
     fetch('header.html')
-      .then(response => {
-        if (!response.ok) throw new Error('Failed to load header');
-        return response.text();
-      })
+      .then(response => response.text())
       .then(data => {
         document.getElementById('header').innerHTML = data;
       })
-      .catch(error => {
-        console.error('Error fetching header:', error);
-        document.getElementById('header').innerHTML = `
-          <nav class="glass-nav py-4 px-6 fixed top-0 left-0 right-0 z-50">
-            <div class="container mx-auto flex justify-between items-center">
-              <a href="index.html" class="text-xl font-bold text-primary">MovieNeek</a>
-              <div class="flex gap-4">
-                <a href="search.html" class="hover:text-primary"><i class="fas fa-search"></i></a>
-              </div>
-            </div>
-          </nav>
-        `;
-      });
+      .catch(error => console.error('Error fetching header:', error));
   </script>
-
+  
 </body>
 </html>
