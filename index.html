@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MovieNeek | Home</title>
+  <title>MovieNeek | Home v13.56</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script>
@@ -338,7 +338,7 @@
         `;
       } else {
         container.innerHTML = continueWatching.map(item => `
-          <div class="movie-card-container">
+          <div class="movie-card-container flex-shrink-0">
             <div class="movie-card w-40 sm:w-48 md:w-56">
               <a href="info.html?id=${item.id}&type=${item.type}" class="block relative">
                 <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2 relative">
@@ -357,12 +357,13 @@
       }
     }
 
-    // Add to Continue Watching
-    function addToContinueWatching(item, type) {
+    // Add to Continue Watching (now global so it can be called from other pages)
+    window.addToContinueWatching = function(item, type) {
       if (!item || !item.id) return false;
       
       const continueWatching = JSON.parse(localStorage.getItem('continueWatching')) || [];
       
+      // Create a normalized item
       const newItem = {
         id: item.id,
         type: type,
@@ -372,15 +373,24 @@
         year: (type === 'movie' ? item.release_date : item.first_air_date)?.substring(0,4) || 'N/A'
       };
 
-      // Remove if already exists
-      const filtered = continueWatching.filter(i => !(i.id === item.id && i.type === type));
-      filtered.unshift(newItem);
+      // Remove if already exists to avoid duplicates
+      const existingIndex = continueWatching.findIndex(i => i.id === item.id && i.type === type);
+      if (existingIndex !== -1) {
+        continueWatching.splice(existingIndex, 1);
+      }
+      
+      // Add to the beginning of the array
+      continueWatching.unshift(newItem);
       
       // Keep only latest 20 items
-      if (filtered.length > 20) filtered.length = 20;
+      if (continueWatching.length > 20) continueWatching.length = 20;
       
-      localStorage.setItem('continueWatching', JSON.stringify(filtered));
-      loadContinueWatching();
+      localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
+      
+      // Only update UI if we're on the home page
+      if (window.location.pathname.endsWith('index.html') {
+        loadContinueWatching();
+      }
       
       return true;
     }
@@ -480,7 +490,7 @@
       const percentage = Math.round(item.vote_average * 10);
       
       return `
-        <div class="movie-card-container">
+        <div class="movie-card-container flex-shrink-0">
           <div class="movie-card w-40 sm:w-48 md:w-56">
             <a href="info.html?id=${item.id}&type=${type}" 
                onclick="return addToContinueWatching(${JSON.stringify(item)}, '${type}')" 
