@@ -92,6 +92,10 @@
       padding: 8px 0;
       z-index: 10;
     }
+    #playerjs-container {
+      width: 100%;
+      height: 100%;
+    }
   </style>
 </head>
 <body class="bg-black text-white">
@@ -124,6 +128,7 @@
         <div class="aspect-w-16 aspect-h-9 w-full">
           <iframe id="modal-iframe" class="w-full h-[50vh] hidden" frameborder="0" allowfullscreen></iframe>
           <video id="modal-video" class="w-full h-[50vh] hidden" controls autoplay></video>
+          <div id="playerjs-container" class="w-full h-[50vh] hidden"></div>
         </div>
       </div>
     </div>
@@ -132,6 +137,7 @@
   <script>
     const DEFAULT_LOGO = 'https://github.com/animeneek/MN/raw/main/assets/Black%20and%20White%20Modern%20Coming%20soon%20Poster.png';
     let sources = {};
+    let playerjsLoaded = false;
 
     document.addEventListener('DOMContentLoaded', async () => {
       await fetchHeader();
@@ -167,6 +173,11 @@
             "name": "Astrocric",
             "src": "https://cdn.crichdplays.ru/embed2.php?id=astrocric",
             "img": "https://cdn.crichdplays.ru/astrocric.jpg"
+          },
+          "actionmax": {
+            "name": "Action Max",
+            "src": "https://playlist.fasttvcdn.com/pl/aipomvl0iozr0ha530i0xw/Aflam/playlist/0.m3u8",
+            "img": "https://bx-tv.com/wp-content/uploads/2021/07/action-max.jpg"
           }
         };
       }
@@ -239,11 +250,13 @@
       const closeBtn = document.getElementById('close-modal');
       const iframe = document.getElementById('modal-iframe');
       const video = document.getElementById('modal-video');
+      const playerjsContainer = document.getElementById('playerjs-container');
       
       closeBtn.addEventListener('click', () => {
         modal.classList.add('hidden');
         iframe.src = '';
         video.src = '';
+        playerjsContainer.innerHTML = '';
         if (video.hls) {
           video.hls.destroy();
           video.hls = null;
@@ -256,6 +269,7 @@
           modal.classList.add('hidden');
           iframe.src = '';
           video.src = '';
+          playerjsContainer.innerHTML = '';
           if (video.hls) {
             video.hls.destroy();
             video.hls = null;
@@ -264,27 +278,73 @@
       });
     }
 
+    function loadPlayerJS(url, containerId) {
+      return new Promise((resolve) => {
+        if (window.Playerjs) {
+          resolve();
+          return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = 'https://bx-tv.com/bxtv1-playerjs.js';
+        script.onload = () => resolve();
+        script.onerror = () => {
+          console.error('Failed to load PlayerJS');
+          resolve();
+        };
+        document.body.appendChild(script);
+      }).then(() => {
+        if (window.Playerjs) {
+          const playerId = 'playerjs-' + Date.now();
+          const playerDiv = document.createElement('div');
+          playerDiv.id = playerId;
+          document.getElementById(containerId).appendChild(playerDiv);
+          
+          new Playerjs({
+            id: playerId,
+            file: url
+          });
+        } else {
+          console.error('PlayerJS not available after loading');
+        }
+      });
+    }
+
     function showModal(title, url) {
       const modal = document.getElementById('modal');
       const iframe = document.getElementById('modal-iframe');
       const video = document.getElementById('modal-video');
+      const playerjsContainer = document.getElementById('playerjs-container');
       const modalTitle = document.getElementById('modal-title');
       
       modalTitle.textContent = title;
       
-      // Reset both players
+      // Reset all players
       iframe.classList.add('hidden');
       iframe.src = '';
       video.classList.add('hidden');
       video.src = '';
-      video.controls = false;
+      playerjsContainer.classList.add('hidden');
+      playerjsContainer.innerHTML = '';
+      
       if (video.hls) {
         video.hls.destroy();
         video.hls = null;
       }
-      
-      // Check if URL is an M3U8 stream
-      if (url.includes('.m3u8')) {
+
+      // Check for PlayerJS embed pattern
+      if (url.includes('PlayerjsAsync') || url.includes('new Playerjs')) {
+        playerjsContainer.classList.remove('hidden');
+        const playerjsRegex = /file:"([^"]+)"/;
+        const match = url.match(playerjsRegex);
+        if (match && match[1]) {
+          loadPlayerJS(match[1], 'playerjs-container');
+        } else {
+          console.error('Could not extract PlayerJS URL');
+        }
+      }
+      // Check for HLS stream
+      else if (url.includes('.m3u8')) {
         video.classList.remove('hidden');
         
         if (Hls.isSupported()) {
@@ -313,8 +373,20 @@
             });
           });
         }
-      } else {
-        // Regular iframe embed
+      }
+      // Check for direct video files (mp4, webm, etc)
+      else if (url.match(/\.(mp4|webm|ogg|mov|mkv|avi|flv|wmv|mpg|mpeg|3gp)$/i)) {
+        video.classList.remove('hidden');
+        video.src = url;
+        video.addEventListener('loadedmetadata', function() {
+          video.play().catch(e => {
+            console.log('Autoplay prevented, showing controls');
+            video.controls = true;
+          });
+        });
+      }
+      // Default to iframe embed
+      else {
         iframe.classList.remove('hidden');
         iframe.src = url;
       }
