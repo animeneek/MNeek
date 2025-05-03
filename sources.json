@@ -159,6 +159,11 @@
     "name": "Bikini Girls Show",
     "src": "https://fash1043.cloudycdn.services/slive/ftv_midnite_secrets_adaptive.smil/chunklist_b1300000_t64MzYwcA==.m3u8",
     "img":"https://bx-tv.com/wp-content/uploads/2021/05/us-bikini-girls-show-and-tell.jpg"
+  },
+  "actionmax": {
+    "name": "Action Max",
+    "src": "https://playlist.fasttvcdn.com/pl/aipomvl0iozr0ha530i0xw/Aflam/playlist/0.m3u8?st2=Wvmu0N2KkiYKfon-pO8m7Q&e2=1703514364",
+    "img":"https://bx-tv.com/wp-content/uploads/2021/07/action-max.jpg"
   }
   
 }
