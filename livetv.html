@@ -30,15 +30,35 @@
       background: #222;
       border-radius: 8px;
       overflow: hidden;
-      transition: transform 0.2s ease;
+      transition: all 0.3s ease;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
     .channel-card:hover {
       transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(255, 68, 68, 0.2);
+    }
+    .channel-logo-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
     .channel-logo {
-      width: 80px;
-      height: 80px;
+      max-width: 120px;
+      max-height: 120px;
+      width: auto;
+      height: auto;
       object-fit: contain;
+    }
+    .channel-name {
+      text-align: center;
+      font-weight: 500;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      word-break: break-word;
     }
     .fade-in {
       animation: fadeIn 0.3s ease-in-out;
@@ -63,6 +83,14 @@
     }
     #modal-video {
       background-color: #000;
+      width: 100%;
+    }
+    .channel-group-title {
+      position: sticky;
+      top: 80px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 8px 0;
+      z-index: 10;
     }
   </style>
 </head>
@@ -74,7 +102,7 @@
   <!-- Main Content -->
   <main class="pb-20 pt-4">
     <div class="container mx-auto px-4">
-      <h1 class="text-3xl font-bold mb-6">Live TV Channels</h1>
+      <h1 class="text-3xl font-bold mb-6 sticky top-16 bg-black py-4 z-10">Live TV Channels</h1>
       
       <!-- Alphabetical Channel Groups -->
       <div id="channelGroups" class="space-y-8">
@@ -88,14 +116,14 @@
     <div class="modal-content bg-dark rounded-lg overflow-hidden">
       <div class="modal-header p-4 flex justify-between items-center">
         <h3 id="modal-title" class="text-lg font-bold"></h3>
-        <button id="close-modal" class="text-white text-2xl">
+        <button id="close-modal" class="text-white text-2xl hover:text-primary transition-colors">
           <i class="fas fa-times"></i>
         </button>
       </div>
       <div class="p-4">
         <div class="aspect-w-16 aspect-h-9 w-full">
           <iframe id="modal-iframe" class="w-full h-[50vh] hidden" frameborder="0" allowfullscreen></iframe>
-          <video id="modal-video" class="w-full h-[50vh] hidden" controls></video>
+          <video id="modal-video" class="w-full h-[50vh] hidden" controls autoplay></video>
         </div>
       </div>
     </div>
@@ -169,11 +197,11 @@
         groupDiv.className = 'fade-in';
         
         const letterHeading = document.createElement('h2');
-        letterHeading.className = 'text-2xl font-bold mb-4';
+        letterHeading.className = 'channel-group-title text-2xl font-bold mb-4';
         letterHeading.textContent = letter;
         
         const gridDiv = document.createElement('div');
-        gridDiv.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
+        gridDiv.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4';
         
         // Sort channels in this group alphabetically
         groupedChannels[letter].sort((a, b) => a.name.localeCompare(b.name));
@@ -181,13 +209,16 @@
         // Add each channel in this group
         groupedChannels[letter].forEach(channel => {
           const channelCard = document.createElement('div');
-          channelCard.className = 'channel-card p-4 flex flex-col items-center cursor-pointer';
+          channelCard.className = 'channel-card cursor-pointer';
           
           channelCard.innerHTML = `
-            <img src="${channel.img || DEFAULT_LOGO}" 
-                 alt="${channel.name}" 
-                 class="channel-logo mb-3">
-            <h3 class="text-center font-medium">${channel.name}</h3>
+            <div class="channel-logo-container">
+              <img src="${channel.img || DEFAULT_LOGO}" 
+                   alt="${channel.name}" 
+                   class="channel-logo"
+                   loading="lazy">
+            </div>
+            <h3 class="channel-name">${channel.name}</h3>
           `;
           
           channelCard.addEventListener('click', () => {
@@ -246,6 +277,7 @@
       iframe.src = '';
       video.classList.add('hidden');
       video.src = '';
+      video.controls = false;
       if (video.hls) {
         video.hls.destroy();
         video.hls = null;
@@ -256,7 +288,12 @@
         video.classList.remove('hidden');
         
         if (Hls.isSupported()) {
-          const hls = new Hls();
+          const hls = new Hls({
+            maxBufferLength: 30,
+            maxMaxBufferLength: 600,
+            maxBufferSize: 60*1000*1000,
+            maxBufferHole: 5.0
+          });
           hls.loadSource(url);
           hls.attachMedia(video);
           hls.on(Hls.Events.MANIFEST_PARSED, function() {
