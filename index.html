@@ -45,7 +45,6 @@
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       z-index: 1000;
     }
-
     .hero-slide {
       position: absolute;
       width: 100%;
@@ -162,6 +161,14 @@
     #hero-slider-container {
       overflow: hidden;
     }
+    .continue-watching-empty {
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+    }
     @media (max-width: 768px) {
       .hero-title {
         font-size: 1.75rem !important;
@@ -180,11 +187,28 @@
   <!-- Header -->  
   <div id="header"></div>
 
-
-  <!-- Hero Slider with Fade Effect -->
+  <!-- Hero Slider -->
   <section class="relative h-[70vh] min-h-[500px] overflow-hidden" id="hero-slider-container">
     <div id="hero-slider" class="h-full w-full relative"></div>
     <div id="hero-dots" class="absolute bottom-8 left-0 right-0 flex justify-center gap-2"></div>
+  </section>
+
+  <!-- Continue Watching Section -->
+  <section id="continue-watching-section" class="container mx-auto px-4 pt-8">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold section-title">
+        <i class="fas fa-clock text-primary mr-2"></i> Continue Watching
+      </h2>
+      <button id="clear-continue-watching" class="text-sm text-gray-400 hover:text-primary flex items-center">
+        Clear All <i class="fas fa-trash-alt ml-1"></i>
+      </button>
+    </div>
+    <div id="continue-watching-container" class="flex gap-4 overflow-x-auto slider-container pb-4 pt-[1.2em] px-[1em] min-h-[260px]">
+      <div class="continue-watching-empty w-full">
+        <i class="fas fa-clock text-4xl mb-2"></i>
+        <p>No recently watched items</p>
+      </div>
+    </div>
   </section>
 
   <!-- Content Sections -->
@@ -656,6 +680,7 @@
           </nav>
         `;
       });
-  </script>  
+  </script>
+
 </body>
 </html>
