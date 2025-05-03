@@ -140,6 +140,9 @@
       aspect-ratio: 2/3;
       object-fit: cover;
     }
+    .json-source-btn {
+      min-width: 180px;
+    }
   </style>
 </head>
 <body class="bg-black text-white">
@@ -152,19 +155,19 @@
     <div class="container mx-auto px-4">
       <div class="info-grid grid grid-cols-1 md:grid-cols-4 gap-6 relative">
         <!-- Poster Column -->
-<div class="poster-container md:col-span-1">
-  <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden shadow-lg w-full relative">
-    <img id="poster-image" class="w-full h-full object-cover" src="" alt="">
-    <div id="rating-circle" class="rating-circle"></div>
-  </div>
-  
-  <!-- Action Buttons -->
-  <div class="flex gap-3 mt-4">
-    <button id="watch-trailer" class="w-full bg-primary hover:bg-red-600 py-2 rounded-lg font-medium flex items-center justify-center gap-2">
-      <i class="fas fa-play"></i> Trailer
-    </button>
-  </div>
-</div>
+        <div class="poster-container md:col-span-1">
+          <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden shadow-lg w-full relative">
+            <img id="poster-image" class="w-full h-full object-cover" src="" alt="">
+            <div id="rating-circle" class="rating-circle"></div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="flex gap-3 mt-4">
+            <button id="watch-trailer" class="w-full bg-primary hover:bg-red-600 py-2 rounded-lg font-medium flex items-center justify-center gap-2">
+              <i class="fas fa-play"></i> Trailer
+            </button>
+          </div>
+        </div>
 
         <!-- Info Column -->
         <div class="md:col-span-3">
@@ -230,6 +233,7 @@
 
         <!-- Sources Tab -->
         <div id="sources-tab" class="tab-panel hidden">
+          <div id="json-sources-container" class="mb-6"></div>
           <div id="sources-content">
             <!-- Content will be inserted based on media type -->
           </div>
@@ -262,16 +266,18 @@
     </div>
   </div>
 
-<script>
+  <script>
     const TMDB_API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
     const BASE_URL = 'https://api.themoviedb.org/3';
     const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
     const DEFAULT_POSTER = 'https://github.com/animeneek/MN/raw/main/assets/Black%20and%20White%20Modern%20Coming%20soon%20Poster.png';
+    const JSON_SOURCES_URL = 'https://raw.githubusercontent.com/animeneek/MovieNeek/main/MovieNeek.json';
     
     let mediaType = 'movie';
     let mediaId = 0;
     let currentSeason = 1;
     let mediaInfo = null;
+    let jsonSources = [];
 
     document.addEventListener('DOMContentLoaded', async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -284,6 +290,7 @@
       }
       
       await fetchHeader();
+      await loadJsonSources();
       await loadMediaInfo();
       setupTabs();
       setupModal();
@@ -297,6 +304,116 @@
       } catch (error) {
         console.error('Error loading header:', error);
       }
+    }
+
+    async function loadJsonSources() {
+      try {
+        const response = await fetch(JSON_SOURCES_URL);
+        jsonSources = await response.json();
+      } catch (error) {
+        console.error('Error loading JSON sources:', error);
+        jsonSources = [];
+      }
+    }
+
+    function getJsonSourcesForCurrentMedia() {
+      return jsonSources.find(item => 
+        item.TMDBID === mediaId && 
+        item.Class === mediaType
+      );
+    }
+
+    function createEmbedUrl(src, videoId) {
+      switch(src) {
+        case 'streamtape':
+          return `https://streamtape.com/e/${videoId}`;
+        case 'streamwish':
+          return `https://streamwish.to/e/${videoId}`;
+        case 'mp4upload':
+          return `https://mp4upload.com/v/${videoId}`;
+        case 'other1':
+          return `https://otherone.com/e/${videoId}`;
+        case 'other2':
+          return `https://othertwo.com/e/${videoId}`;
+        default:
+          return `https://${src}.com/e/${videoId}`;
+      }
+    }
+
+    function setupJsonSources() {
+      const sourcesContainer = document.getElementById('json-sources-container');
+      const mediaSources = getJsonSourcesForCurrentMedia();
+      
+      if (!mediaSources || !mediaSources.SRC || mediaSources.SRC.length === 0) {
+        sourcesContainer.innerHTML = '';
+        return;
+      }
+      
+      let sourcesHTML = '<h3 class="text-lg font-semibold mb-3">Additional Sources</h3>';
+      sourcesHTML += '<div class="flex flex-wrap gap-3">';
+      
+      for (let i = 0; i < mediaSources.SRC.length; i++) {
+        const src = mediaSources.SRC[i];
+        const sourceName = mediaSources.Source[i] || `Source ${i+1}`;
+        const videoId = mediaSources.VIDEOID[i];
+        
+        if (!videoId) continue;
+        
+        const embedUrl = createEmbedUrl(src, videoId);
+        
+        sourcesHTML += `
+          <button class="json-source-btn bg-dark hover:bg-gray-800 px-4 py-2 rounded-lg font-medium"
+                  data-source="${embedUrl}">
+            ${sourceName}
+          </button>
+        `;
+      }
+      
+      sourcesHTML += '</div>';
+      sourcesContainer.innerHTML = sourcesHTML;
+      
+      // Add event listeners to the buttons
+      document.querySelectorAll('.json-source-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          showModal(
+            `${mediaInfo.title || mediaInfo.name}`,
+            this.getAttribute('data-source')
+          );
+        });
+      });
+    }
+
+    function setupSeasonJsonSources(seasonNumber) {
+      const mediaSources = getJsonSourcesForCurrentMedia();
+      
+      if (!mediaSources || !mediaSources.SRC || mediaSources.SRC.length === 0) {
+        return '';
+      }
+      
+      let sourcesHTML = '<div class="flex flex-wrap gap-3 mb-4">';
+      
+      for (let i = 0; i < mediaSources.SRC.length; i++) {
+        const src = mediaSources.SRC[i];
+        const sourceName = mediaSources.Source[i] || `Source ${i+1}`;
+        const videoId = mediaSources.VIDEOID[i];
+        
+        if (!videoId) continue;
+        
+        // Only show sources that mention this season number in the name
+        if (sourceName.toLowerCase().includes(`season ${seasonNumber}`) {
+          const embedUrl = createEmbedUrl(src, videoId);
+          
+          sourcesHTML += `
+            <button class="json-source-btn bg-dark hover:bg-gray-800 px-4 py-2 rounded-lg font-medium"
+                    data-source="${embedUrl}">
+              ${sourceName}
+            </button>
+          `;
+        }
+      }
+      
+      sourcesHTML += '</div>';
+      return sourcesHTML;
     }
 
     async function loadMediaInfo() {
@@ -315,6 +432,9 @@
           setupMovieSources();
           document.getElementById('sources-tab-label').textContent = 'Sources';
         }
+        
+        // Setup JSON sources
+        setupJsonSources();
       } catch (error) {
         console.error('Error loading media info:', error);
         document.getElementById('poster-container').innerHTML = `
@@ -432,6 +552,9 @@
           `;
         });
         
+        // Add season-level sources from JSON
+        const seasonJsonSources = setupSeasonJsonSources(seasonNumber);
+        
         document.getElementById('season-details-container').innerHTML = `
           <div class="flex items-center gap-4 mb-4">
             <img src="${seasonPoster}" 
@@ -442,6 +565,7 @@
               <p class="text-gray-300">${seasonInfo.air_date ? seasonInfo.air_date.substring(0,4) : ''} • ${seasonInfo.episodes.length} Episodes</p>
             </div>
           </div>
+          ${seasonJsonSources}
           <p class="text-gray-300 mb-6">${seasonInfo.overview || 'No overview available.'}</p>
           
           <h4 class="font-semibold mb-3">Episodes</h4>
