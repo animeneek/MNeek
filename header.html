@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MovieNeek</title>
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Glass Effect & Custom Styles -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <script>
     tailwind.config = {
       theme: {
@@ -43,7 +40,6 @@
   <!-- Desktop Header -->
   <header class="glass-nav fixed top-0 left-0 right-0 z-50 hidden md:block">
     <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-      <!-- Logo (Links to index.html) -->
       <a href="index.html" class="flex items-center">
         <img 
           src="https://github.com/animeneek/MN/blob/main/assets/Movieneek_Raider%20Crusader_001.png?raw=true" 
@@ -51,8 +47,6 @@
           class="h-9 w-auto"
         >
       </a>
-
-      <!-- Search Bar (Centered) -->
       <div class="flex-1 max-w-xl mx-4">
         <form action="search.html" method="GET" class="relative">
           <input
@@ -66,8 +60,6 @@
           </button>
         </form>
       </div>
-
-      <!-- Desktop Menu -->
       <nav class="flex space-x-6">
         <a href="javascript:void(0)" onclick="getRandomMedia()" class="text-gray-300 hover:text-primary text-sm font-medium">
           Random
@@ -79,9 +71,8 @@
     </div>
   </header>
 
-  <!-- Mobile Header (Logo + Search) -->
+  <!-- Mobile Header -->
   <div class="md:hidden glass-nav fixed top-0 left-0 right-0 z-40 pt-3 pb-3 px-4">
-    <!-- Logo (Smaller) -->
     <a href="index.html" class="flex justify-center mb-3">
       <img 
         src="https://github.com/animeneek/MN/blob/main/assets/Movieneek_Raider%20Crusader_001.png?raw=true" 
@@ -89,7 +80,6 @@
         class="h-7 w-auto opacity-90"
       >
     </a>
-    <!-- Search Bar -->
     <form action="search.html" method="GET" class="relative">
       <input
         type="text"
@@ -103,7 +93,7 @@
     </form>
   </div>
 
-  <!-- Mobile Bottom Navigation (Minimalist Icons) -->
+  <!-- Mobile Bottom Nav -->
   <nav class="md:hidden bottom-nav flex justify-around items-center py-3">
     <a href="index.html" class="text-gray-400 hover:text-primary flex flex-col items-center text-xs">
       <i class="fas fa-home fa-sm mb-1"></i>
@@ -127,10 +117,10 @@
     </a>
   </nav>
 
-  <!-- Spacer (Prevents content from hiding under header) -->
+  <!-- Spacer -->
   <div class="h-24 md:h-20"></div>
 
-  <!-- Search Form Handling + Updated Random Function -->
+  <!-- Scripts -->
   <script>
     const TMDB_API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
 
@@ -146,7 +136,6 @@
       });
     });
 
-    // Improved truly random fetch from TMDB
     async function getRandomMedia() {
       const mediaType = Math.random() > 0.5 ? 'movie' : 'tv';
 
@@ -163,7 +152,7 @@
           const valid = data.results.filter(item => item.id && !item.adult);
           if (valid.length) {
             const randomItem = valid[Math.floor(Math.random() * valid.length)];
-            window.location.href = `info.html?id=${randomItem.id}&type=${mediaType}`;
+            window.location.href = `MNeek/info.html?id=${randomItem.id}&type=${mediaType}`;
             return;
           }
         }
