@@ -753,68 +753,96 @@
       }
     }
 
-    async function performSearch(reset = true) {
-      if (reset) {
-        state.currentPage = 1;
-        state.allResults = [];
-        state.filteredResults = [];
-        state.displayedResults = [];
-        document.getElementById('search-results').innerHTML = '';
+async function performSearch(reset = true) {
+  if (reset) {
+    state.currentPage = 1;
+    state.allResults = [];
+    state.filteredResults = [];
+    state.displayedResults = [];
+    document.getElementById('search-results').innerHTML = '';
+  }
+
+  const resultsContainer = document.getElementById('search-results');
+  const loading = document.getElementById('loading');
+  const loadMoreBtn = document.getElementById('load-more-container');
+
+  loading.classList.remove('hidden');
+  loadMoreBtn.classList.add('hidden');
+
+  try {
+    let newResults = [];
+
+    const query = state.currentQuery.trim();
+
+    if (query) {
+      // Perform search with query (Search API doesn't support filters directly)
+      if (state.filters.contentType === 'multi') {
+        const [movies, tvShows] = await Promise.all([
+          fetch(`${BASE_URL}/search/movie?query=${encodeURIComponent(query)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json()),
+          fetch(`${BASE_URL}/search/tv?query=${encodeURIComponent(query)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json())
+        ]);
+        newResults = [...(movies.results || []), ...(tvShows.results || [])];
+        state.totalPages = Math.max(movies.total_pages || 1, tvShows.total_pages || 1);
+      } else {
+        const response = await fetch(`${BASE_URL}/search/${state.filters.contentType}?query=${encodeURIComponent(query)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json());
+        newResults = response.results || [];
+        state.totalPages = response.total_pages || 1;
       }
-      
-      const resultsContainer = document.getElementById('search-results');
-      const loading = document.getElementById('loading');
-      const loadMoreBtn = document.getElementById('load-more-container');
-      
-      loading.classList.remove('hidden');
-      loadMoreBtn.classList.add('hidden');
-      
-      try {
-        let newResults = [];
-        
-        if (state.currentQuery.trim()) {
-          // Normal search with query
-          if (state.filters.contentType === 'multi') {
-            const [movies, tvShows] = await Promise.all([
-              fetch(`${BASE_URL}/search/movie?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json()),
-              fetch(`${BASE_URL}/search/tv?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json())
-            ]);
-            newResults = [...(movies.results || []), ...(tvShows.results || [])];
-            state.totalPages = Math.max(movies.total_pages || 1, tvShows.total_pages || 1);
-          } else {
-            const response = await fetch(`${BASE_URL}/search/${state.filters.contentType}?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json());
-            newResults = response.results || [];
-            state.totalPages = response.total_pages || 1;
-          }
-        } else {
-          // Discover popular content when no query
-          if (state.filters.contentType === 'multi') {
-            const [movies, tvShows] = await Promise.all([
-              fetch(`${BASE_URL}/discover/movie?sort_by=popularity.desc&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json()),
-              fetch(`${BASE_URL}/discover/tv?sort_by=popularity.desc&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json())
-            ]);
-            newResults = [...(movies.results || []), ...(tvShows.results || [])];
-            state.totalPages = Math.max(movies.total_pages || 1, tvShows.total_pages || 1);
-          } else {
-            const response = await fetch(`${BASE_URL}/discover/${state.filters.contentType}?sort_by=popularity.desc&page=${state.currentPage}&api_key=${TMDB_API_KEY}`).then(res => res.json());
-            newResults = response.results || [];
-            state.totalPages = response.total_pages || 1;
-          }
+
+      // Client-side filtering since Search API doesn't support filters
+      state.allResults = [...state.allResults, ...newResults];
+      filterExistingResults();
+
+    } else {
+      // Use Discover API when no query - supports filtering server-side
+      const contentType = state.filters.contentType === 'multi' ? 'movie' : state.filters.contentType;
+      let url = `${BASE_URL}/discover/${contentType}?api_key=${TMDB_API_KEY}&page=${state.currentPage}`;
+
+      // Add filters to URL
+      url += `&sort_by=${state.filters.sortBy}`;
+      if (state.filters.genres.length > 0) {
+        url += `&with_genres=${state.filters.genres.join(',')}`;
+      }
+      if (state.filters.language) {
+        url += `&with_original_language=${state.filters.language}`;
+      }
+      if (state.filters.years.length > 0) {
+        // Use only the first year (Discover doesn't support multiple years directly)
+        if (contentType === 'movie') {
+          url += `&primary_release_year=${state.filters.years[0]}`;
+        } else if (contentType === 'tv') {
+          url += `&first_air_date_year=${state.filters.years[0]}`;
         }
+      }
 
-        // Add new results to allResults
-        state.allResults = [...state.allResults, ...newResults];
-        
-        // Filter ALL results (including newly loaded ones)
-        filterExistingResults();
+      const response = await fetch(url).then(res => res.json());
+      newResults = response.results || [];
+      state.totalPages = response.total_pages || 1;
 
-      } catch (error) {
-        console.error('Search error:', error);
-        showError(reset);
-      } finally {
-        loading.classList.add('hidden');
+      // No need to filter client-side here
+      state.allResults = [...state.allResults, ...newResults];
+      state.filteredResults = state.allResults;
+      state.displayedResults = state.filteredResults.slice(0, 20 * state.currentPage);
+
+      document.getElementById('search-results').innerHTML = '';
+      displayResults(state.displayedResults, true);
+
+      const hasMoreResults = state.filteredResults.length > state.displayedResults.length || state.currentPage < state.totalPages;
+      document.getElementById('load-more-container').classList.toggle('hidden', !hasMoreResults);
+
+      if (state.displayedResults.length === 0) {
+        showNoResults();
       }
     }
+
+  } catch (error) {
+    console.error('Search error:', error);
+    showError(reset);
+  } finally {
+    loading.classList.add('hidden');
+  }
+}
+
 
     function sortResults(results, sortBy) {
       return [...results].sort((a, b) => {
