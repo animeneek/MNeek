@@ -350,9 +350,7 @@
       allYears: Array.from({length: 30}, (_, i) => new Date().getFullYear() - i),
       allResults: [],
       filteredResults: [],
-      displayedResults: [],
-      isFiltering: false,
-      hasFiltersApplied: false
+      displayedResults: []
     };
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -420,10 +418,7 @@
             ? state.filters.genres.filter(id => id !== genreId) 
             : [...state.filters.genres, genreId];
           updateActiveFilters();
-          state.hasFiltersApplied = state.filters.genres.length > 0 || 
-                                 state.filters.years.length > 0 || 
-                                 state.filters.language !== null;
-          performSearch(true);
+          filterExistingResults();
           renderGenreOptions();
         });
       });
@@ -450,12 +445,9 @@
             const year = parseInt(this.getAttribute('data-year'));
             state.filters.years = state.filters.years.includes(year)
               ? state.filters.years.filter(y => y !== year)
-              : [year]; // TMDB only supports single year filter
+              : [...state.filters.years, year];
             updateActiveFilters();
-            state.hasFiltersApplied = state.filters.genres.length > 0 || 
-                                   state.filters.years.length > 0 || 
-                                   state.filters.language !== null;
-            performSearch(true);
+            filterExistingResults();
             renderYearOptions();
           });
         });
@@ -488,10 +480,7 @@
             const langCode = this.getAttribute('data-code');
             state.filters.language = state.filters.language === langCode ? null : langCode;
             updateActiveFilters();
-            state.hasFiltersApplied = state.filters.genres.length > 0 || 
-                                   state.filters.years.length > 0 || 
-                                   state.filters.language !== null;
-            performSearch(true);
+            filterExistingResults();
             renderLanguageOptions();
           });
         });
@@ -512,9 +501,6 @@
           });
           
           updateActiveFilters();
-          state.hasFiltersApplied = state.filters.genres.length > 0 || 
-                                 state.filters.years.length > 0 || 
-                                 state.filters.language !== null;
           performSearch(true);
           this.closest('.filter-dropdown').classList.remove('open');
         });
@@ -529,10 +515,7 @@
           });
           
           updateActiveFilters();
-          state.hasFiltersApplied = state.filters.genres.length > 0 || 
-                                 state.filters.years.length > 0 || 
-                                 state.filters.language !== null;
-          performSearch(true);
+          filterExistingResults();
           this.closest('.filter-dropdown').classList.remove('open');
         });
       });
@@ -545,7 +528,6 @@
           language: null,
           sortBy: 'popularity.desc'
         };
-        state.hasFiltersApplied = false;
         
         document.getElementById('content-type-label').textContent = 'All';
         document.querySelectorAll('[data-type]').forEach(opt => {
@@ -704,13 +686,69 @@
               break;
           }
           
-          state.hasFiltersApplied = state.filters.genres.length > 0 || 
-                                 state.filters.years.length > 0 || 
-                                 state.filters.language !== null;
           updateActiveFilters();
           performSearch(true);
         });
       });
+    }
+
+    function filterExistingResults() {
+      state.filteredResults = state.allResults.filter(item => {
+        // Content type filter
+        if (state.filters.contentType !== 'multi') {
+          const isMovie = item.media_type === 'movie' || (item.title && !item.name);
+          const isTV = item.media_type === 'tv' || (item.name && !item.title);
+          
+          if (state.filters.contentType === 'movie' && !isMovie) return false;
+          if (state.filters.contentType === 'tv' && !isTV) return false;
+        }
+        
+        // Genre filter - require ALL selected genres
+        if (state.filters.genres.length > 0) {
+          const itemGenres = item.genre_ids || [];
+          const hasAllGenres = state.filters.genres.every(genreId => 
+            itemGenres.includes(genreId)
+          );
+          if (!hasAllGenres) return false;
+        }
+        
+        // Year filter
+        if (state.filters.years.length > 0) {
+          const date = item.release_date || item.first_air_date;
+          if (!date) return false;
+          
+          const year = parseInt(date.substring(0, 4));
+          if (!state.filters.years.includes(year)) return false;
+        }
+        
+        // Language filter
+        if (state.filters.language) {
+          const lang = item.original_language;
+          if (lang !== state.filters.language) return false;
+        }
+        
+        return true;
+      });
+      
+      // Sort the filtered results
+      state.filteredResults = sortResults(state.filteredResults, state.filters.sortBy);
+      
+      // Update displayed results (20 per page)
+      state.displayedResults = state.filteredResults.slice(0, 20 * state.currentPage);
+      
+      // Update the UI
+      document.getElementById('search-results').innerHTML = '';
+      displayResults(state.displayedResults, true);
+      
+      // Show/hide load more button
+      const hasMoreResults = state.filteredResults.length > state.displayedResults.length || 
+                           (state.currentPage < state.totalPages);
+      document.getElementById('load-more-container').classList.toggle('hidden', !hasMoreResults);
+      
+      // Show no results message if needed
+      if (state.displayedResults.length === 0 && state.allResults.length > 0) {
+        showNoResults();
+      }
     }
 
     async function performSearch(reset = true) {
@@ -736,25 +774,8 @@
         
         if (state.currentQuery.trim()) {
           params.append('query', state.currentQuery);
-        }
-        
-        // Apply filters to API call if any are active
-        if (state.hasFiltersApplied) {
-          if (state.filters.genres.length > 0) {
-            params.append('with_genres', state.filters.genres.join(','));
-          }
-          if (state.filters.years.length > 0) {
-            // TMDB only supports single year filter
-            params.append('year', state.filters.years[0]);
-          }
-          if (state.filters.language) {
-            params.append('with_original_language', state.filters.language);
-          }
-          params.append('sort_by', state.filters.sortBy);
-        }
-        
-        if (state.currentQuery.trim()) {
-          // Search with query
+          
+          // For search queries, we'll filter client-side after getting results
           if (state.filters.contentType === 'multi') {
             const [movies, tvShows] = await Promise.all([
               fetch(`${BASE_URL}/search/movie?${params.toString()}`).then(res => res.json()),
@@ -768,7 +789,18 @@
             state.totalPages = response.total_pages || 1;
           }
         } else {
-          // Discover popular content
+          // For discover (no query), apply filters to API call
+          if (state.filters.genres.length > 0) {
+            params.append('with_genres', state.filters.genres.join(','));
+          }
+          if (state.filters.years.length > 0) {
+            params.append('year', state.filters.years[0]); // TMDB only supports single year
+          }
+          if (state.filters.language) {
+            params.append('with_original_language', state.filters.language);
+          }
+          params.append('sort_by', state.filters.sortBy);
+          
           if (state.filters.contentType === 'multi') {
             const [movies, tvShows] = await Promise.all([
               fetch(`${BASE_URL}/discover/movie?${params.toString()}`).then(res => res.json()),
@@ -785,35 +817,9 @@
 
         // Add new results
         state.allResults = [...state.allResults, ...newResults];
-        state.filteredResults = [...state.allResults];
         
-        // Apply client-side filters (for multiple years since API only supports one)
-        if (state.filters.years.length > 1) {
-          state.filteredResults = state.filteredResults.filter(item => {
-            const date = item.release_date || item.first_air_date;
-            if (!date) return false;
-            const year = parseInt(date.substring(0, 4));
-            return state.filters.years.includes(year);
-          });
-        }
-        
-        // Sort results
-        state.filteredResults = sortResults(state.filteredResults, state.filters.sortBy);
-        
-        // Update displayed results (20 per page)
-        state.displayedResults = state.filteredResults.slice(0, 20 * state.currentPage);
-        document.getElementById('search-results').innerHTML = '';
-        displayResults(state.displayedResults, true);
-        
-        // Show/hide load more button
-        const hasMoreResults = state.filteredResults.length > state.displayedResults.length || 
-                             (state.currentPage < state.totalPages);
-        document.getElementById('load-more-container').classList.toggle('hidden', !hasMoreResults);
-        
-        // Show no results message if needed
-        if (state.displayedResults.length === 0) {
-          showNoResults();
-        }
+        // Filter results (client-side for search queries, or additional filtering for discover)
+        filterExistingResults();
 
       } catch (error) {
         console.error('Search error:', error);
