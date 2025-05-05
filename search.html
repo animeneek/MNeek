@@ -694,7 +694,7 @@
     }
 
     function filterExistingResults() {
-      // Filter the existing results based on current filters
+      // Filter ALL loaded results based on current filters
       state.filteredResults = state.allResults.filter(item => {
         // Content type filter
         if (state.filters.contentType !== 'multi') {
@@ -705,13 +705,13 @@
           if (state.filters.contentType === 'tv' && !isTV) return false;
         }
         
-        // Genre filter
+        // Genre filter - require ALL selected genres
         if (state.filters.genres.length > 0) {
           const itemGenres = item.genre_ids || [];
-          const hasMatchingGenre = state.filters.genres.some(genreId => 
+          const hasAllGenres = state.filters.genres.every(genreId => 
             itemGenres.includes(genreId)
           );
-          if (!hasMatchingGenre) return false;
+          if (!hasAllGenres) return false;
         }
         
         // Year filter
@@ -736,18 +736,19 @@
       state.filteredResults = sortResults(state.filteredResults, state.filters.sortBy);
       
       // Reset displayed results to first chunk
-      state.displayedResults = state.filteredResults.slice(0, 20);
+      state.displayedResults = state.filteredResults.slice(0, 20 * state.currentPage);
       
       // Update the UI
       document.getElementById('search-results').innerHTML = '';
       displayResults(state.displayedResults, true);
       
-      // Show/hide load more button
-      const hasMoreResults = state.filteredResults.length > state.displayedResults.length;
+      // Show/hide load more button based on whether there are more results to show
+      const hasMoreResults = state.filteredResults.length > state.displayedResults.length || 
+                           (state.currentPage < state.totalPages && state.filteredResults.length === state.displayedResults.length);
       document.getElementById('load-more-container').classList.toggle('hidden', !hasMoreResults);
       
       // Show no results message if needed
-      if (state.displayedResults.length === 0) {
+      if (state.displayedResults.length === 0 && state.allResults.length > 0) {
         showNoResults();
       }
     }
@@ -801,16 +802,11 @@
           }
         }
 
-        // Add new results
+        // Add new results to allResults
         state.allResults = [...state.allResults, ...newResults];
         
-        // Filter the results (including the new ones)
+        // Filter ALL results (including newly loaded ones)
         filterExistingResults();
-
-        // Show load more if more pages exist and we haven't filtered too much
-        const hasMoreResults = state.currentPage < state.totalPages && 
-                             state.filteredResults.length === state.displayedResults.length;
-        loadMoreBtn.classList.toggle('hidden', !hasMoreResults);
 
       } catch (error) {
         console.error('Search error:', error);
