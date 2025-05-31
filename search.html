@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MovieNeek | Search</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            dark: '#222',
+            primary: '#ff4444',
+          },
+          fontSize: {
+            'xs': '0.75rem',
+            'sm': '0.875rem',
+            'base': '1rem',
+            'lg': '1.125rem',
+            'xl': '1.25rem',
+            '2xl': '1.5rem',
+            '3xl': '1.75rem',
+            '4xl': '2rem',
+            '5xl': '2.5rem',
+          }
+        },
+      },
+    };
+  </script>
+  <style>
+    .glass-nav {
+      background: rgba(10, 10, 10, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(20, 20, 20, 0.95);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      z-index: 1000;
+    }
+    .movie-card {
+      transition: all 0.3s ease;
+      transform-origin: center bottom;
+    }
+    .movie-card:hover {
+      transform: scale(1.05);
+      z-index: 20;
+    }
+    .movie-card-container {
+      position: relative;
+      overflow: visible;
+    }
+    .movie-poster {
+      position: relative;
+      overflow: hidden;
+    }
+    .movie-poster::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 30%;
+      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+    }
+    .rating-circle {
+      --percentage: 0;
+      --primary: #ff4444;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: 
+        radial-gradient(closest-side, #111 85%, transparent 86%),
+        conic-gradient(var(--primary) calc(var(--percentage)*1%), #222 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      border: 2px solid #111;
+      z-index: 2;
+    }
+    .rating-circle::before {
+      content: attr(data-rating);
+      font-size: 9px;
+      font-weight: bold;
+    }
+    .filter-chip {
+      background: rgba(255, 68, 68, 0.1);
+      border: 1px solid rgba(255, 68, 68, 0.3);
+      transition: all 0.2s ease;
+    }
+    .filter-chip:hover {
+      background: rgba(255, 68, 68, 0.2);
+    }
+    .filter-chip.active {
+      background: rgba(255, 68, 68, 0.3);
+      border-color: rgba(255, 68, 68, 0.7);
+    }
+    .slider-container {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      cursor: grab;
+    }
+    .slider-container::-webkit-scrollbar {
+      display: none;
+    }
+    .slider-container:active {
+      cursor: grabbing;
+    }
+    @media (max-width: 768px) {
+      .section-title {
+        font-size: 1.25rem !important;
+      }
+      .search-input {
+        font-size: 1rem !important;
+      }
+    }
+    .loading-spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #ff4444;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="bg-black text-white">
+
+  <!-- Header -->  
+  <div id="header"></div>
+
+  <!-- Search Section -->
+  <section class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto relative">
+      <div class="relative">
+        <input type="text" id="search-input" placeholder="Search for movies, TV shows..." 
+               class="w-full bg-dark border border-gray-800 rounded-full py-3 px-6 pr-12 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent search-input">
+        <button id="search-button" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-primary">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+      
+      <!-- Filters Dropdown -->
+      <div class="mt-4">
+        <button id="filters-toggle" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white">
+          <i class="fas fa-sliders-h"></i> Filters
+        </button>
+        
+        <div id="filters-panel" class="hidden mt-4 p-4 bg-dark rounded-lg border border-gray-800">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Type Filter -->
+            <div>
+              <label class="block text-sm font-medium mb-2">Type</label>
+              <div class="flex gap-2">
+                <button class="filter-chip px-3 py-1 rounded-full text-sm type-filter" data-type="all">
+                  All
+                </button>
+                <button class="filter-chip px-3 py-1 rounded-full text-sm type-filter" data-type="movie">
+                  Movies
+                </button>
+                <button class="filter-chip px-3 py-1 rounded-full text-sm type-filter" data-type="tv">
+                  TV Shows
+                </button>
+              </div>
+            </div>
+            
+            <!-- Genre Filter -->
+            <div>
+              <label class="block text-sm font-medium mb-2">Genre</label>
+              <div class="flex gap-2 flex-wrap genre-filters">
+                <select id="genre-select" class="bg-gray-900 text-white rounded px-3 py-1 text-sm w-full">
+                  <option value="">Select Genre</option>
+                  <!-- Filled by JavaScript -->
+                </select>
+              </div>
+            </div>
+            
+            <!-- Year Filter -->
+            <div>
+              <label class="block text-sm font-medium mb-2">Year</label>
+              <div class="flex gap-2">
+                <input type="number" id="year-from" placeholder="From" min="1900" max="2023" 
+                       class="bg-gray-900 text-white rounded px-3 py-1 text-sm w-1/2">
+                <input type="number" id="year-to" placeholder="To" min="1900" max="2023" 
+                       class="bg-gray-900 text-white rounded px-3 py-1 text-sm w-1/2">
+              </div>
+            </div>
+            
+            <!-- Language Filter -->
+            <div>
+              <label class="block text-sm font-medium mb-2">Language</label>
+              <select id="language-select" class="bg-gray-900 text-white rounded px-3 py-1 text-sm w-full">
+                <option value="">All Languages</option>
+                <!-- Filled by JavaScript -->
+              </select>
+            </div>
+            
+            <!-- Sort Options -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-2">Sort By</label>
+              <div class="flex gap-2 flex-wrap">
+                <button class="filter-chip px-3 py-1 rounded-full text-sm sort-option" data-sort="popularity.desc">
+                  Popularity
+                </button>
+                <button class="filter-chip px-3 py-1 rounded-full text-sm sort-option" data-sort="vote_average.desc">
+                  Rating
+                </button>
+                <button class="filter-chip px-3 py-1 rounded-full text-sm sort-option" data-sort="release_date.desc">
+                  Newest
+                </button>
+                <button class="filter-chip px-3 py-1 rounded-full text-sm sort-option" data-sort="release_date.asc">
+                  Oldest
+                </button>
+                <button class="filter-chip px-3 py-1 rounded-full text-sm sort-option" data-sort="revenue.desc">
+                  Revenue
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex justify-between mt-4">
+            <button id="clear-filters" class="text-sm text-gray-400 hover:text-primary flex items-center">
+              <i class="fas fa-times mr-1"></i> Clear Filters
+            </button>
+            <button id="apply-filters" class="bg-primary hover:bg-opacity-90 px-4 py-1 rounded-full text-sm">
+              Apply Filters
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Active Filters -->
+      <div id="active-filters" class="flex flex-wrap gap-2 mt-4 hidden"></div>
+    </div>
+  </section>
+
+  <!-- Search Results -->
+  <section class="container mx-auto px-4 pb-12">
+    <div id="search-status" class="text-center py-8 hidden">
+      <i class="fas fa-search text-4xl text-gray-600 mb-4"></i>
+      <h3 class="text-xl font-medium">Search for movies and TV shows</h3>
+      <p class="text-gray-400 mt-2">Results will appear here</p>
+    </div>
+    
+    <div id="no-results" class="text-center py-8 hidden">
+      <i class="fas fa-frown text-4xl text-gray-600 mb-4"></i>
+      <h3 class="text-xl font-medium">No results found</h3>
+      <p class="text-gray-400 mt-2">Try different search terms or filters</p>
+    </div>
+    
+    <div id="search-results" class="hidden">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold section-title">
+          <i class="fas fa-list-ul text-primary mr-2"></i> Results
+        </h2>
+        <div id="result-count" class="text-sm text-gray-400"></div>
+      </div>
+      
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4" id="results-grid"></div>
+      
+      <div id="loading-more" class="text-center py-8 hidden">
+        <div class="loading-spinner inline-block"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const TMDB_API_KEY = 'e3afd4c89e3351edad9e875ff7a01f0c';
+    const BASE_URL = 'https://api.themoviedb.org/3';
+    const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
+    
+    // Current search state
+    let currentSearch = {
+      query: '',
+      type: 'all', // 'all', 'movie', 'tv'
+      genre: null,
+      yearFrom: null,
+      yearTo: null,
+      language: null,
+      sort: 'popularity.desc',
+      page: 1,
+      totalPages: 1,
+      totalResults: 0,
+      loading: false
+    };
+    
+    // Genre and language data
+    let movieGenres = [];
+    let tvGenres = [];
+    let languages = [];
+    
+    // DOM elements
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
+    const filtersToggle = document.getElementById('filters-toggle');
+    const filtersPanel = document.getElementById('filters-panel');
+    const activeFilters = document.getElementById('active-filters');
+    const searchStatus = document.getElementById('search-status');
+    const noResults = document.getElementById('no-results');
+    const searchResults = document.getElementById('search-results');
+    const resultsGrid = document.getElementById('results-grid');
+    const loadingMore = document.getElementById('loading-more');
+    const resultCount = document.getElementById('result-count');
+    
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load header
+      fetch('header.html')
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById('header').innerHTML = data;
+        })
+        .catch(error => console.error('Error fetching header:', error));
+      
+      // Load genres and languages
+      await loadGenres();
+      await loadLanguages();
+      
+      // Setup event listeners
+      setupEventListeners();
+      
+      // Check for URL parameters (for direct linking to searches)
+      checkUrlParameters();
+      
+      // Show initial search status
+      searchStatus.classList.remove('hidden');
+    });
+    
+    // Load movie and TV genres from TMDB
+    async function loadGenres() {
+      try {
+        const [movieRes, tvRes] = await Promise.all([
+          fetch(`${BASE_URL}/genre/movie/list?api_key=${TMDB_API_KEY}`),
+          fetch(`${BASE_URL}/genre/tv/list?api_key=${TMDB_API_KEY}`)
+        ]);
+        
+        const movieData = await movieRes.json();
+        const tvData = await tvRes.json();
+        
+        movieGenres = movieData.genres;
+        tvGenres = tvData.genres;
+        
+        // Populate genre select
+        const genreSelect = document.getElementById('genre-select');
+        genreSelect.innerHTML = '<option value="">Select Genre</option>';
+        
+        // Add movie genres
+        movieGenres.forEach(genre => {
+          const option = document.createElement('option');
+          option.value = genre.id;
+          option.textContent = genre.name;
+          option.dataset.type = 'movie';
+          genreSelect.appendChild(option);
+        });
+        
+        // Add TV genres
+        tvGenres.forEach(genre => {
+          const option = document.createElement('option');
+          option.value = genre.id;
+          option.textContent = `${genre.name} (TV)`;
+          option.dataset.type = 'tv';
+          genreSelect.appendChild(option);
+        });
+        
+      } catch (err) {
+        console.error('Error loading genres:', err);
+      }
+    }
+    
+    // Load languages from TMDB
+    async function loadLanguages() {
+      try {
+        const res = await fetch(`${BASE_URL}/configuration/languages?api_key=${TMDB_API_KEY}`);
+        languages = await res.json();
+        
+        // Sort languages by English name
+        languages.sort((a, b) => a.english_name.localeCompare(b.english_name));
+        
+        // Populate language select
+        const languageSelect = document.getElementById('language-select');
+        languages.forEach(lang => {
+          const option = document.createElement('option');
+          option.value = lang.iso_639_1;
+          option.textContent = lang.english_name;
+          languageSelect.appendChild(option);
+        });
+        
+      } catch (err) {
+        console.error('Error loading languages:', err);
+      }
+    }
+    
+    // Setup event listeners
+    function setupEventListeners() {
+      // Search on button click
+      searchButton.addEventListener('click', () => {
+        performSearch();
+      });
+      
+      // Search on Enter key
+      searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          performSearch();
+        }
+      });
+      
+      // Toggle filters panel
+      filtersToggle.addEventListener('click', () => {
+        filtersPanel.classList.toggle('hidden');
+      });
+      
+      // Type filter buttons
+      document.querySelectorAll('.type-filter').forEach(button => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('.type-filter').forEach(btn => btn.classList.remove('active'));
+          button.classList.add('active');
+          currentSearch.type = button.dataset.type;
+        });
+      });
+      
+      // Sort option buttons
+      document.querySelectorAll('.sort-option').forEach(button => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('.sort-option').forEach(btn => btn.classList.remove('active'));
+          button.classList.add('active');
+          currentSearch.sort = button.dataset.sort;
+        });
+      });
+      
+      // Apply filters button
+      document.getElementById('apply-filters').addEventListener('click', () => {
+        applyFilters();
+        filtersPanel.classList.add('hidden');
+      });
+      
+      // Clear filters button
+      document.getElementById('clear-filters').addEventListener('click', () => {
+        clearFilters();
+      });
+      
+      // Infinite scroll
+      window.addEventListener('scroll', () => {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 && 
+            !currentSearch.loading && 
+            currentSearch.page < currentSearch.totalPages &&
+            currentSearch.query) {
+          loadMoreResults();
+        }
+      });
+    }
+    
+    // Check for URL parameters
+    function checkUrlParameters() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const query = urlParams.get('q');
+      const type = urlParams.get('type');
+      const genre = urlParams.get('genre');
+      const yearFrom = urlParams.get('year_from');
+      const yearTo = urlParams.get('year_to');
+      const language = urlParams.get('language');
+      const sort = urlParams.get('sort');
+      
+      if (query) {
+        searchInput.value = query;
+        currentSearch.query = query;
+        
+        if (type) currentSearch.type = type;
+        if (genre) currentSearch.genre = genre;
+        if (yearFrom) currentSearch.yearFrom = yearFrom;
+        if (yearTo) currentSearch.yearTo = yearTo;
+        if (language) currentSearch.language = language;
+        if (sort) currentSearch.sort = sort;
+        
+        // Update UI to reflect filters
+        updateFilterUI();
+        
+        // Perform the search
+        performSearch();
+      }
+    }
+    
+    // Update URL with current search parameters
+    function updateUrl() {
+      const params = new URLSearchParams();
+      
+      if (currentSearch.query) params.set('q', currentSearch.query);
+      if (currentSearch.type !== 'all') params.set('type', currentSearch.type);
+      if (currentSearch.genre) params.set('genre', currentSearch.genre);
+      if (currentSearch.yearFrom) params.set('year_from', currentSearch.yearFrom);
+      if (currentSearch.yearTo) params.set('year_to', currentSearch.yearTo);
+      if (currentSearch.language) params.set('language', currentSearch.language);
+      if (currentSearch.sort !== 'popularity.desc') params.set('sort', currentSearch.sort);
+      
+      window.history.pushState({}, '', `?${params.toString()}`);
+    }
+    
+    // Perform a new search
+    function performSearch() {
+      const query = searchInput.value.trim();
+      
+      if (!query) {
+        searchStatus.classList.remove('hidden');
+        noResults.classList.add('hidden');
+        searchResults.classList.add('hidden');
+        return;
+      }
+      
+      // Reset search state
+      currentSearch.query = query;
+      currentSearch.page = 1;
+      currentSearch.totalPages = 1;
+      currentSearch.totalResults = 0;
+      
+      // Update URL
+      updateUrl();
+      
+      // Show loading state
+      searchStatus.classList.add('hidden');
+      noResults.classList.add('hidden');
+      searchResults.classList.remove('hidden');
+      resultsGrid.innerHTML = '';
+      loadingMore.classList.remove('hidden');
+      
+      // Perform the search
+      fetchSearchResults();
+    }
+    
+    // Apply filters to current search
+    function applyFilters() {
+      currentSearch.genre = document.getElementById('genre-select').value || null;
+      currentSearch.yearFrom = document.getElementById('year-from').value || null;
+      currentSearch.yearTo = document.getElementById('year-to').value || null;
+      currentSearch.language = document.getElementById('language-select').value || null;
+      
+      // Reset to first page
+      currentSearch.page = 1;
+      currentSearch.totalPages = 1;
+      currentSearch.totalResults = 0;
+      
+      // Update URL
+      updateUrl();
+      
+      // Update active filters display
+      updateActiveFilters();
+      
+      // Show loading state
+      resultsGrid.innerHTML = '';
+      loadingMore.classList.remove('hidden');
+      
+      // Perform the search
+      fetchSearchResults();
+    }
+    
+    // Clear all filters
+    function clearFilters() {
+      // Reset search state
+      currentSearch.type = 'all';
+      currentSearch.genre = null;
+      currentSearch.yearFrom = null;
+      currentSearch.yearTo = null;
+      currentSearch.language = null;
+      currentSearch.sort = 'popularity.desc';
+      currentSearch.page = 1;
+      currentSearch.totalPages = 1;
+      
+      // Reset UI
+      document.querySelectorAll('.type-filter').forEach(btn => btn.classList.remove('active'));
+      document.querySelector('.type-filter[data-type="all"]').classList.add('active');
+      
+      document.getElementById('genre-select').value = '';
+      document.getElementById('year-from').value = '';
+      document.getElementById('year-to').value = '';
+      document.getElementById('language-select').value = '';
+      
+      document.querySelectorAll('.sort-option').forEach(btn => btn.classList.remove('active'));
+      document.querySelector('.sort-option[data-sort="popularity.desc"]').classList.add('active');
+      
+      // Update URL
+      updateUrl();
+      
+      // Update active filters
+      updateActiveFilters();
+      
+      // If we have a query, perform the search
+      if (currentSearch.query) {
+        resultsGrid.innerHTML = '';
+        loadingMore.classList.remove('hidden');
+        fetchSearchResults();
+      }
+    }
+    
+    // Update filter UI based on current search state
+    function updateFilterUI() {
+      // Type filter
+      document.querySelectorAll('.type-filter').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.type-filter[data-type="${currentSearch.type || 'all'}"]`).classList.add('active');
+      
+      // Genre select
+      if (currentSearch.genre) {
+        document.getElementById('genre-select').value = currentSearch.genre;
+      }
+      
+      // Year inputs
+      if (currentSearch.yearFrom) {
+        document.getElementById('year-from').value = currentSearch.yearFrom;
+      }
+      if (currentSearch.yearTo) {
+        document.getElementById('year-to').value = currentSearch.yearTo;
+      }
+      
+      // Language select
+      if (currentSearch.language) {
+        document.getElementById('language-select').value = currentSearch.language;
+      }
+      
+      // Sort option
+      document.querySelectorAll('.sort-option').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.sort-option[data-sort="${currentSearch.sort || 'popularity.desc'}"]`).classList.add('active');
+      
+      // Update active filters
+      updateActiveFilters();
+    }
+    
+    // Update active filters display
+    function updateActiveFilters() {
+      activeFilters.innerHTML = '';
+      
+      const filters = [];
+      
+      if (currentSearch.type !== 'all') {
+        filters.push({
+          name: `Type: ${currentSearch.type === 'movie' ? 'Movies' : 'TV Shows'}`,
+          key: 'type',
+          value: 'all'
+        });
+      }
+      
+      if (currentSearch.genre) {
+        const genreId = parseInt(currentSearch.genre);
+        let genreName = '';
+        
+        // Find genre name
+        if (currentSearch.type === 'movie' || currentSearch.type === 'all') {
+          const movieGenre = movieGenres.find(g => g.id === genreId);
+          if (movieGenre) genreName = movieGenre.name;
+        }
+        
+        if ((!genreName || currentSearch.type === 'tv') && currentSearch.type !== 'movie') {
+          const tvGenre = tvGenres.find(g => g.id === genreId);
+          if (tvGenre) genreName = tvGenre.name;
+        }
+        
+        if (!genreName) genreName = 'Genre';
+        
+        filters.push({
+          name: `Genre: ${genreName}`,
+          key: 'genre',
+          value: null
+        });
+      }
+      
+      if (currentSearch.yearFrom || currentSearch.yearTo) {
+        let yearText = 'Year: ';
+        if (currentSearch.yearFrom && currentSearch.yearTo) {
+          yearText += `${currentSearch.yearFrom}-${currentSearch.yearTo}`;
+        } else if (currentSearch.yearFrom) {
+          yearText += `From ${currentSearch.yearFrom}`;
+        } else {
+          yearText += `To ${currentSearch.yearTo}`;
+        }
+        
+        filters.push({
+          name: yearText,
+          key: 'year',
+          value: null
+        });
+      }
+      
+      if (currentSearch.language) {
+        const language = languages.find(l => l.iso_639_1 === currentSearch.language);
+        const langName = language ? language.english_name : 'Language';
+        
+        filters.push({
+          name: `Language: ${langName}`,
+          key: 'language',
+          value: null
+        });
+      }
+      
+      if (currentSearch.sort !== 'popularity.desc') {
+        let sortName = '';
+        switch(currentSearch.sort) {
+          case 'vote_average.desc': sortName = 'Rating'; break;
+          case 'release_date.desc': sortName = 'Newest'; break;
+          case 'release_date.asc': sortName = 'Oldest'; break;
+          case 'revenue.desc': sortName = 'Revenue'; break;
+          default: sortName = 'Popularity';
+        }
+        
+        filters.push({
+          name: `Sort: ${sortName}`,
+          key: 'sort',
+          value: 'popularity.desc'
+        });
+      }
+      
+      if (filters.length > 0) {
+        activeFilters.classList.remove('hidden');
+        
+        filters.forEach(filter => {
+          const chip = document.createElement('div');
+          chip.className = 'flex items-center gap-1 bg-dark text-sm px-3 py-1 rounded-full filter-chip';
+          chip.innerHTML = `
+            <span>${filter.name}</span>
+            <button class="text-gray-400 hover:text-white" 
+                    onclick="removeFilter('${filter.key}', '${filter.value}')">
+              <i class="fas fa-times"></i>
+            </button>
+          `;
+          activeFilters.appendChild(chip);
+        });
+      } else {
+        activeFilters.classList.add('hidden');
+      }
+    }
+    
+    // Remove a specific filter
+    function removeFilter(key, value) {
+      if (key === 'type') {
+        currentSearch.type = value;
+        document.querySelectorAll('.type-filter').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.type-filter[data-type="${value}"]`).classList.add('active');
+      } else if (key === 'genre') {
+        currentSearch.genre = value;
+        document.getElementById('genre-select').value = '';
+      } else if (key === 'year') {
+        currentSearch.yearFrom = value;
+        currentSearch.yearTo = value;
+        document.getElementById('year-from').value = '';
+        document.getElementById('year-to').value = '';
+      } else if (key === 'language') {
+        currentSearch.language = value;
+        document.getElementById('language-select').value = '';
+      } else if (key === 'sort') {
+        currentSearch.sort = value;
+        document.querySelectorAll('.sort-option').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.sort-option[data-sort="${value}"]`).classList.add('active');
+      }
+      
+      // Reset to first page
+      currentSearch.page = 1;
+      currentSearch.totalPages = 1;
+      currentSearch.totalResults = 0;
+      
+      // Update URL
+      updateUrl();
+      
+      // Update active filters
+      updateActiveFilters();
+      
+      // Perform the search
+      resultsGrid.innerHTML = '';
+      loadingMore.classList.remove('hidden');
+      fetchSearchResults();
+    }
+    
+    // Fetch search results from TMDB
+    async function fetchSearchResults() {
+      if (currentSearch.loading) return;
+      
+      currentSearch.loading = true;
+      
+      try {
+        let endpoint = '';
+        let params = `api_key=${TMDB_API_KEY}&query=${encodeURIComponent(currentSearch.query)}`;
+        
+        // Add filters to params
+        if (currentSearch.type !== 'all') params += `&include_adult=false`;
+        if (currentSearch.genre) params += `&with_genres=${currentSearch.genre}`;
+        if (currentSearch.yearFrom || currentSearch.yearTo) {
+          if (currentSearch.type === 'movie' || currentSearch.type === 'all') {
+            if (currentSearch.yearFrom) params += `&primary_release_date.gte=${currentSearch.yearFrom}-01-01`;
+            if (currentSearch.yearTo) params += `&primary_release_date.lte=${currentSearch.yearTo}-12-31`;
+          }
+          if (currentSearch.type === 'tv' || currentSearch.type === 'all') {
+            if (currentSearch.yearFrom) params += `&first_air_date.gte=${currentSearch.yearFrom}-01-01`;
+            if (currentSearch.yearTo) params += `&first_air_date.lte=${currentSearch.yearTo}-12-31`;
+          }
+        }
+        if (currentSearch.language) params += `&with_original_language=${currentSearch.language}`;
+        if (currentSearch.sort) params += `&sort_by=${currentSearch.sort}`;
+        params += `&page=${currentSearch.page}`;
+        
+        if (currentSearch.type === 'all') {
+          // Search both movies and TV shows
+          const [movieRes, tvRes] = await Promise.all([
+            fetch(`${BASE_URL}/search/movie?${params}`),
+            fetch(`${BASE_URL}/search/tv?${params}`)
+          ]);
+          
+          const movieData = await movieRes.json();
+          const tvData = await tvRes.json();
+          
+          // Combine results with type information
+          const movieResults = movieData.results.map(item => ({ ...item, media_type: 'movie' }));
+          const tvResults = tvData.results.map(item => ({ ...item, media_type: 'tv' }));
+          
+          // Combine and sort by popularity
+          const combinedResults = [...movieResults, ...tvResults]
+            .sort((a, b) => b.popularity - a.popularity);
+          
+          processResults(combinedResults, movieData.total_results + tvData.total_results);
+          
+        } else {
+          // Search specific type
+          endpoint = currentSearch.type === 'movie' ? '/search/movie' : '/search/tv';
+          const res = await fetch(`${BASE_URL}${endpoint}?${params}`);
+          const data = await res.json();
+          
+          // Add type information
+          const typedResults = data.results.map(item => ({ ...item, media_type: currentSearch.type }));
+          processResults(typedResults, data.total_results);
+        }
+        
+      } catch (err) {
+        console.error('Error fetching search results:', err);
+        loadingMore.classList.add('hidden');
+      } finally {
+        currentSearch.loading = false;
+      }
+    }
+    
+    // Process and display results
+    function processResults(results, totalResults) {
+      // Update total results count
+      currentSearch.totalResults = totalResults;
+      resultCount.textContent = `${totalResults.toLocaleString()} results found`;
+      
+      // Check if no results
+      if (currentSearch.page === 1 && results.length === 0) {
+        noResults.classList.remove('hidden');
+        searchResults.classList.add('hidden');
+        return;
+      }
+      
+      // Append results to grid
+      results.forEach(item => {
+        const card = createResultCard(item);
+        resultsGrid.appendChild(card);
+      });
+      
+      // Update page info
+      if (currentSearch.page < currentSearch.totalPages) {
+        loadingMore.classList.remove('hidden');
+      } else {
+        loadingMore.classList.add('hidden');
+      }
+    }
+    
+    // Load more results for infinite scroll
+    function loadMoreResults() {
+      if (currentSearch.page >= currentSearch.totalPages) return;
+      
+      currentSearch.page++;
+      fetchSearchResults();
+    }
+    
+    // Create a result card
+    function createResultCard(item) {
+      const card = document.createElement('div');
+      card.className = 'movie-card-container';
+      
+      const title = item.title || item.name;
+      const releaseDate = item.release_date || item.first_air_date;
+      const percentage = Math.round((item.vote_average || 0) * 10);
+      const type = item.media_type || (item.title ? 'movie' : 'tv');
+      
+      card.innerHTML = `
+        <div class="movie-card">
+          <a href="info.html?id=${item.id}&type=${type}" class="block relative">
+            <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
+              <img 
+                src="${IMAGE_URL}${item.poster_path}" 
+                alt="${title}"
+                class="w-full h-full object-cover"
+                onerror="this.src='https://via.placeholder.com/500x750?text=No+Poster'"
+              >
+              <div class="rating-circle" data-rating="${percentage}%" style="--percentage: ${percentage}"></div>
+              ${type === 'tv' ? `
+                <div class="absolute top-2 right-2 bg-primary text-xs px-1.5 py-0.5 rounded">
+                  TV
+                </div>
+              ` : ''}
+            </div>
+            <h3 class="font-medium truncate">${title}</h3>
+            <p class="text-xs text-gray-400">${releaseDate?.substring(0,4) || 'N/A'}</p>
+          </a>
+        </div>
+      `;
+      
+      return card;
+    }
+    
+    // Make removeFilter available globally
+    window.removeFilter = removeFilter;
+  </script>
+  
+</body>
+</html>
