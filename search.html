@@ -1,149 +1,253 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TMDB Search</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="bg-gray-900 text-white">
-    <!-- Header (copied from index.html structure) -->
-    <header class="bg-gray-800 p-4 flex items-center justify-between">
-      <h1 class="text-2xl font-bold">TMDB Search</h1>
-      <form id="search-form" class="flex items-center space-x-2">
-        <input id="search-input" type="text" placeholder="Search movies..." class="p-2 rounded bg-gray-700 text-white" />
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 p-2 rounded">Search</button>
-      </form>
-    </header>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MovieNeek Search</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            glass: "rgba(255, 255, 255, 0.1)",
+            borderGlass: "rgba(255, 255, 255, 0.2)",
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-gradient-to-b from-gray-900 to-black text-white min-h-screen">
+  <!-- Header -->
+  <header class="backdrop-blur-md bg-glass border-b border-borderGlass sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <a href="index.html" class="text-3xl font-extrabold tracking-tight hover:text-indigo-400 transition">
+        MovieNeek
+      </a>
 
-    <!-- Filters -->
-    <section class="p-4 space-y-4 bg-gray-800">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <select id="genre-filter" class="bg-gray-700 p-2 rounded w-full">
-          <option value="">All Genres</option>
-        </select>
-        <select id="year-filter" class="bg-gray-700 p-2 rounded w-full">
-          <option value="">All Years</option>
-        </select>
-        <select id="sort-filter" class="bg-gray-700 p-2 rounded w-full">
-          <option value="popularity.desc">Most Popular</option>
-          <option value="release_date.desc">Latest Release</option>
-          <option value="vote_average.desc">Top Rated</option>
-        </select>
-      </div>
-    </section>
+      <nav class="flex items-center gap-6">
+        <!-- Toggle Movies/TV -->
+        <div class="flex items-center space-x-2 text-sm font-medium select-none">
+          <label class="cursor-pointer relative inline-flex items-center">
+            <input type="checkbox" id="toggleType" class="sr-only" />
+            <div class="w-12 h-6 bg-gray-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-500 peer-checked:bg-indigo-600 transition"></div>
+            <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-6"></span>
+          </label>
+          <span id="typeLabel">Movies</span>
+        </div>
+      </nav>
+    </div>
+  </header>
 
-    <!-- Results -->
-    <main id="results" class="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></main>
-    <div id="loading" class="text-center py-4 hidden">Loading...</div>
+  <!-- Search & Filters -->
+  <main class="max-w-7xl mx-auto px-6 mt-8">
+    <div class="flex flex-col md:flex-row md:items-center md:space-x-6 mb-6 gap-4">
+      <input
+        type="search"
+        id="searchInput"
+        placeholder="Search for movies or TV series..."
+        class="flex-grow bg-glass rounded-md border border-borderGlass px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+        autocomplete="off"
+        autofocus
+      />
+      <select id="genreFilter" class="bg-glass border border-borderGlass rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition max-w-xs">
+        <option value="">All Genres</option>
+      </select>
+    </div>
 
-    <script>
-      const apiKey = 'e3afd4c89e3351edad9e875ff7a01f0c';
-      const resultsContainer = document.getElementById('results');
-      const loading = document.getElementById('loading');
-      const searchForm = document.getElementById('search-form');
-      const searchInput = document.getElementById('search-input');
-      const genreFilter = document.getElementById('genre-filter');
-      const yearFilter = document.getElementById('year-filter');
-      const sortFilter = document.getElementById('sort-filter');
+    <!-- Results Grid -->
+    <section id="results" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6"></section>
 
-      let page = 1;
-      let query = '';
-      let genres = {};
+    <!-- Loading Spinner -->
+    <div id="loading" class="flex justify-center py-8 hidden">
+      <svg class="animate-spin h-10 w-10 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+      </svg>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      const API_KEY = "e3afd4c89e3351edad9e875ff7a01f0c";
+      const BASE_URL = "https://api.themoviedb.org/3";
+      const IMAGE_BASE = "https://image.tmdb.org/t/p/w300";
+
+      // Elements
+      const toggleType = document.getElementById("toggleType");
+      const typeLabel = document.getElementById("typeLabel");
+      const searchInput = document.getElementById("searchInput");
+      const genreFilter = document.getElementById("genreFilter");
+      const results = document.getElementById("results");
+      const loading = document.getElementById("loading");
+
+      // State
+      let currentType = "movie"; // 'movie' or 'tv'
+      let currentQuery = "";
+      let currentPage = 1;
+      let totalPages = 1;
+      let currentGenre = "";
       let isLoading = false;
 
-      async function fetchGenres() {
-        const res = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}`);
-        const data = await res.json();
-        data.genres.forEach(genre => {
-          genres[genre.id] = genre.name;
-          const option = document.createElement('option');
-          option.value = genre.id;
-          option.textContent = genre.name;
+      // Debounce utility
+      function debounce(fn, delay) {
+        let timeout;
+        return (...args) => {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => fn(...args), delay);
+        };
+      }
+
+      // Update toggle label text
+      function updateToggleLabel() {
+        typeLabel.textContent = currentType === "movie" ? "Movies" : "TV Series";
+      }
+
+      // Fetch genres for movies and TV and populate genreFilter dropdown
+      async function fetchGenres(type) {
+        try {
+          const res = await fetch(`${BASE_URL}/genre/${type}/list?api_key=${API_KEY}&language=en-US`);
+          const data = await res.json();
+          populateGenreDropdown(data.genres);
+        } catch (e) {
+          console.error("Error fetching genres:", e);
+        }
+      }
+
+      // Populate genre dropdown
+      function populateGenreDropdown(genres) {
+        genreFilter.innerHTML = `<option value="">All Genres</option>`;
+        genres.forEach(({ id, name }) => {
+          const option = document.createElement("option");
+          option.value = id;
+          option.textContent = name;
           genreFilter.appendChild(option);
         });
       }
 
-      function buildUrl() {
-        const genre = genreFilter.value;
-        const year = yearFilter.value;
-        const sort = sortFilter.value;
-        const url = new URL('https://api.themoviedb.org/3/discover/movie');
-        url.searchParams.append('api_key', apiKey);
-        url.searchParams.append('page', page);
-        if (genre) url.searchParams.append('with_genres', genre);
-        if (year) url.searchParams.append('primary_release_year', year);
-        if (sort) url.searchParams.append('sort_by', sort);
-        if (query) {
-          url.pathname = '/3/search/movie';
-          url.searchParams.set('query', query);
-        }
-        return url.toString();
+      // Clear current results
+      function clearResults() {
+        results.innerHTML = "";
       }
 
-      async function fetchMovies() {
-        if (isLoading) return;
-        isLoading = true;
-        loading.classList.remove('hidden');
+      // Show/hide loading spinner
+      function showLoading(show) {
+        loading.style.display = show ? "flex" : "none";
+        isLoading = show;
+      }
 
-        const res = await fetch(buildUrl());
-        const data = await res.json();
-        data.results.forEach(movie => {
-          const card = document.createElement('div');
-          card.className = 'bg-gray-800 rounded shadow overflow-hidden';
-          card.innerHTML = `
-            <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}" class="w-full h-72 object-cover" />
-            <div class="p-2">
-              <h2 class="text-lg font-semibold">${movie.title}</h2>
-              <p class="text-sm text-gray-400">${movie.release_date}</p>
-              <p class="text-sm text-yellow-400">⭐ ${movie.vote_average}</p>
+      // Create card HTML for a movie or TV item
+      function createCard(item) {
+        // For movie: title, release_date; for tv: name, first_air_date
+        const title = item.title || item.name || "Untitled";
+        const date = item.release_date || item.first_air_date || "";
+        const posterPath = item.poster_path ? IMAGE_BASE + item.poster_path : null;
+        // Link to TMDB page
+        const tmdbUrl = `https://www.themoviedb.org/${currentType}/${item.id}`;
+
+        return `
+          <a href="${tmdbUrl}" target="_blank" rel="noopener noreferrer" class="block bg-glass rounded-md overflow-hidden shadow-lg hover:shadow-indigo-500 transition">
+            ${posterPath ? `<img src="${posterPath}" alt="${title}" loading="lazy" class="w-full h-auto object-cover"/>` :
+              `<div class="flex items-center justify-center h-44 bg-gray-700 text-gray-400 font-semibold">No Image</div>`}
+            <div class="p-3">
+              <h3 class="font-semibold truncate" title="${title}">${title}</h3>
+              <p class="text-sm text-gray-400">${date}</p>
             </div>
-          `;
-          resultsContainer.appendChild(card);
-        });
-        loading.classList.add('hidden');
-        isLoading = false;
+          </a>
+        `;
       }
 
-      function resetResults() {
-        page = 1;
-        resultsContainer.innerHTML = '';
+      // Fetch search results
+      async function fetchResults() {
+        if (isLoading) return;
+        if (currentPage > totalPages) return;
+
+        showLoading(true);
+
+        const genreParam = currentGenre ? `&with_genres=${currentGenre}` : "";
+
+        // If no query, do nothing or show popular (optional) - here we just do nothing.
+        if (!currentQuery.trim()) {
+          clearResults();
+          showLoading(false);
+          return;
+        }
+
+        try {
+          const url = `${BASE_URL}/search/${currentType}?api_key=${API_KEY}&language=en-US&query=${encodeURIComponent(
+            currentQuery
+          )}&page=${currentPage}${genreParam}`;
+          const res = await fetch(url);
+          const data = await res.json();
+
+          totalPages = data.total_pages;
+
+          if (currentPage === 1) clearResults();
+
+          if (data.results.length === 0 && currentPage === 1) {
+            results.innerHTML = `<p class="col-span-full text-center text-gray-400">No results found.</p>`;
+          } else {
+            const cardsHtml = data.results.map(createCard).join("");
+            results.insertAdjacentHTML("beforeend", cardsHtml);
+          }
+
+          currentPage++;
+        } catch (e) {
+          console.error("Error fetching search results:", e);
+        } finally {
+          showLoading(false);
+        }
       }
 
-      searchForm.addEventListener('submit', e => {
-        e.preventDefault();
-        query = searchInput.value.trim();
-        resetResults();
-        fetchMovies();
+      // Handle type toggle switch
+      toggleType.addEventListener("change", () => {
+        currentType = toggleType.checked ? "tv" : "movie";
+        updateToggleLabel();
+        currentPage = 1;
+        totalPages = 1;
+        currentGenre = "";
+        genreFilter.value = "";
+        fetchGenres(currentType);
+        fetchResults();
       });
 
-      [genreFilter, yearFilter, sortFilter].forEach(filter => {
-        filter.addEventListener('change', () => {
-          resetResults();
-          fetchMovies();
-        });
+      // Handle genre change
+      genreFilter.addEventListener("change", () => {
+        currentGenre = genreFilter.value;
+        currentPage = 1;
+        totalPages = 1;
+        fetchResults();
       });
 
-      window.addEventListener('scroll', () => {
-        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100 && !isLoading) {
-          page++;
-          fetchMovies();
+      // Handle search input with debounce
+      searchInput.addEventListener("input", debounce(() => {
+        currentQuery = searchInput.value.trim();
+        currentPage = 1;
+        totalPages = 1;
+        fetchResults();
+      }, 500));
+
+      // Infinite scrolling
+      window.addEventListener("scroll", () => {
+        if (
+          window.innerHeight + window.scrollY >=
+          document.body.offsetHeight - 300
+        ) {
+          fetchResults();
         }
       });
 
-      function populateYearFilter() {
-        const currentYear = new Date().getFullYear();
-        for (let y = currentYear; y >= 1900; y--) {
-          const option = document.createElement('option');
-          option.value = y;
-          option.textContent = y;
-          yearFilter.appendChild(option);
-        }
+      // Init page
+      function init() {
+        updateToggleLabel();
+        fetchGenres(currentType);
+        // Optionally can focus input here
+        searchInput.focus();
       }
 
-      fetchGenres();
-      populateYearFilter();
-      fetchMovies();
-    </script>
-  </body>
+      init();
+    })();
+  </script>
+</body>
 </html>
