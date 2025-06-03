@@ -1,70 +1,204 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MovieNeek Search</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MovieNeek | Search</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            glass: "rgba(255, 255, 255, 0.1)",
-            borderGlass: "rgba(255, 255, 255, 0.2)",
+            dark: '#222',
+            primary: '#ff4444',
+          },
+          fontSize: {
+            'xs': '0.75rem',
+            'sm': '0.875rem',
+            'base': '1rem',
+            'lg': '1.125rem',
+            'xl': '1.25rem',
+            '2xl': '1.5rem',
+            '3xl': '1.75rem',
+            '4xl': '2rem',
+            '5xl': '2.5rem',
           }
-        }
-      }
+        },
+      },
     };
   </script>
+  <style>
+    .glass-nav {
+      background: rgba(10, 10, 10, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(20, 20, 20, 0.95);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      z-index: 1000;
+    }
+    .movie-card {
+      transition: all 0.3s ease;
+      transform-origin: center bottom;
+    }
+    .movie-card:hover {
+      transform: scale(1.05);
+      z-index: 20;
+    }
+    .movie-card-container {
+      position: relative;
+      overflow: visible;
+    }
+    .movie-poster {
+      position: relative;
+      overflow: hidden;
+    }
+    .movie-poster::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 30%;
+      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+    }
+    .rating-circle {
+      --percentage: 0;
+      --primary: #ff4444;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: 
+        radial-gradient(closest-side, #111 85%, transparent 86%),
+        conic-gradient(var(--primary) calc(var(--percentage)*1%), #222 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      border: 2px solid #111;
+      z-index: 2;
+    }
+    .rating-circle::before {
+      content: attr(data-rating);
+      font-size: 9px;
+      font-weight: bold;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 120px;
+      height: 32px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #222;
+      border-radius: 9999px;
+      transition: .4s;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "Movies";
+      height: 24px;
+      width: 60px;
+      left: 4px;
+      bottom: 4px;
+      background-color: #ff4444;
+      border-radius: 9999px;
+      transition: .4s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: white;
+    }
+    input:checked + .toggle-slider:before {
+      transform: translateX(52px);
+      content: "Series";
+    }
+    #hero-slider-container {
+      overflow: hidden;
+    }
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 1.75rem !important;
+      }
+      .hero-overview {
+        font-size: 0.875rem !important;
+      }
+      .section-title {
+        font-size: 1.25rem !important;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gradient-to-b from-gray-900 to-black text-white min-h-screen">
-  <!-- Header -->
-  <header class="backdrop-blur-md bg-glass border-b border-borderGlass sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <a href="index.html" class="text-3xl font-extrabold tracking-tight hover:text-indigo-400 transition">
-        MovieNeek
-      </a>
+<body class="bg-black text-white">
 
-      <nav class="flex items-center gap-6">
-        <!-- Toggle Movies/TV -->
-        <div class="flex items-center space-x-2 text-sm font-medium select-none">
-          <label class="cursor-pointer relative inline-flex items-center">
-            <input type="checkbox" id="toggleType" class="sr-only" />
-            <div class="w-12 h-6 bg-gray-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-500 peer-checked:bg-indigo-600 transition"></div>
-            <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-6"></span>
-          </label>
-          <span id="typeLabel">Movies</span>
-        </div>
-      </nav>
-    </div>
-  </header>
+  <!-- Header -->
+  <div id="header"></div>
 
   <!-- Search & Filters -->
-  <main class="max-w-7xl mx-auto px-6 mt-8">
-    <div class="flex flex-col md:flex-row md:items-center md:space-x-6 mb-6 gap-4">
-      <input
-        type="search"
-        id="searchInput"
-        placeholder="Search for movies or TV series..."
-        class="flex-grow bg-glass rounded-md border border-borderGlass px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-        autocomplete="off"
-        autofocus
-      />
-      <select id="genreFilter" class="bg-glass border border-borderGlass rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition max-w-xs">
-        <option value="">All Genres</option>
-      </select>
+  <main class="container mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+      <div class="relative flex-grow">
+        <input
+          type="search"
+          id="searchInput"
+          placeholder="Search for movies or TV series..."
+          class="w-full bg-dark rounded-lg border border-gray-800 px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary transition pl-12"
+          autocomplete="off"
+          autofocus
+        />
+        <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleType">
+          <span class="toggle-slider"></span>
+        </label>
+        
+        <select id="genreFilter" class="bg-dark border border-gray-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary transition">
+          <option value="">All Genres</option>
+        </select>
+      </div>
     </div>
 
     <!-- Results Grid -->
-    <section id="results" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6"></section>
+    <section id="results" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6"></section>
 
     <!-- Loading Spinner -->
     <div id="loading" class="flex justify-center py-8 hidden">
-      <svg class="animate-spin h-10 w-10 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <svg class="animate-spin h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
       </svg>
+    </div>
+
+    <!-- No Results Message -->
+    <div id="noResults" class="hidden text-center py-12">
+      <i class="fas fa-search text-4xl text-gray-600 mb-4"></i>
+      <h3 class="text-xl font-medium mb-2">No results found</h3>
+      <p class="text-gray-400">Try different keywords or filters</p>
     </div>
   </main>
 
@@ -72,15 +206,15 @@
     (() => {
       const API_KEY = "e3afd4c89e3351edad9e875ff7a01f0c";
       const BASE_URL = "https://api.themoviedb.org/3";
-      const IMAGE_BASE = "https://image.tmdb.org/t/p/w300";
+      const IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
       // Elements
       const toggleType = document.getElementById("toggleType");
-      const typeLabel = document.getElementById("typeLabel");
       const searchInput = document.getElementById("searchInput");
       const genreFilter = document.getElementById("genreFilter");
       const results = document.getElementById("results");
       const loading = document.getElementById("loading");
+      const noResults = document.getElementById("noResults");
 
       // State
       let currentType = "movie"; // 'movie' or 'tv'
@@ -89,6 +223,7 @@
       let totalPages = 1;
       let currentGenre = "";
       let isLoading = false;
+      let genres = [];
 
       // Debounce utility
       function debounce(fn, delay) {
@@ -99,17 +234,13 @@
         };
       }
 
-      // Update toggle label text
-      function updateToggleLabel() {
-        typeLabel.textContent = currentType === "movie" ? "Movies" : "TV Series";
-      }
-
       // Fetch genres for movies and TV and populate genreFilter dropdown
       async function fetchGenres(type) {
         try {
           const res = await fetch(`${BASE_URL}/genre/${type}/list?api_key=${API_KEY}&language=en-US`);
           const data = await res.json();
-          populateGenreDropdown(data.genres);
+          genres = data.genres;
+          populateGenreDropdown(genres);
         } catch (e) {
           console.error("Error fetching genres:", e);
         }
@@ -129,6 +260,7 @@
       // Clear current results
       function clearResults() {
         results.innerHTML = "";
+        noResults.classList.add("hidden");
       }
 
       // Show/hide loading spinner
@@ -139,22 +271,31 @@
 
       // Create card HTML for a movie or TV item
       function createCard(item) {
-        // For movie: title, release_date; for tv: name, first_air_date
         const title = item.title || item.name || "Untitled";
         const date = item.release_date || item.first_air_date || "";
-        const posterPath = item.poster_path ? IMAGE_BASE + item.poster_path : null;
-        // Link to TMDB page
-        const tmdbUrl = `https://www.themoviedb.org/${currentType}/${item.id}`;
+        const year = date.substring(0, 4) || "";
+        const posterPath = item.poster_path ? IMAGE_BASE + item.poster_path : "https://via.placeholder.com/500x750?text=No+Poster";
+        const percentage = Math.round(item.vote_average * 10);
+        const tmdbUrl = `info.html?id=${item.id}&type=${currentType}`;
 
         return `
-          <a href="${tmdbUrl}" target="_blank" rel="noopener noreferrer" class="block bg-glass rounded-md overflow-hidden shadow-lg hover:shadow-indigo-500 transition">
-            ${posterPath ? `<img src="${posterPath}" alt="${title}" loading="lazy" class="w-full h-auto object-cover"/>` :
-              `<div class="flex items-center justify-center h-44 bg-gray-700 text-gray-400 font-semibold">No Image</div>`}
-            <div class="p-3">
-              <h3 class="font-semibold truncate" title="${title}">${title}</h3>
-              <p class="text-sm text-gray-400">${date}</p>
+          <div class="movie-card-container">
+            <div class="movie-card">
+              <a href="${tmdbUrl}" class="block">
+                <div class="movie-poster aspect-[2/3] bg-dark rounded-lg overflow-hidden mb-2">
+                  <img 
+                    src="${posterPath}" 
+                    alt="${title}"
+                    class="w-full h-full object-cover"
+                    loading="lazy"
+                  >
+                  <div class="rating-circle" data-rating="${percentage}%" style="--percentage: ${percentage}"></div>
+                </div>
+                <h3 class="font-medium truncate" title="${title}">${title}</h3>
+                <p class="text-xs text-gray-400">${year}</p>
+              </a>
             </div>
-          </a>
+          </div>
         `;
       }
 
@@ -165,19 +306,43 @@
 
         showLoading(true);
 
-        const genreParam = currentGenre ? `&with_genres=${currentGenre}` : "";
-
-        // If no query, do nothing or show popular (optional) - here we just do nothing.
+        // If no query, show popular items
         if (!currentQuery.trim()) {
-          clearResults();
-          showLoading(false);
+          try {
+            const url = currentGenre 
+              ? `${BASE_URL}/discover/${currentType}?api_key=${API_KEY}&language=en-US&sort_by=popularity.desc&page=${currentPage}&with_genres=${currentGenre}`
+              : `${BASE_URL}/${currentType}/popular?api_key=${API_KEY}&language=en-US&page=${currentPage}`;
+            
+            const res = await fetch(url);
+            const data = await res.json();
+
+            totalPages = data.total_pages;
+
+            if (currentPage === 1) clearResults();
+
+            if (data.results.length === 0 && currentPage === 1) {
+              noResults.classList.remove("hidden");
+              results.innerHTML = "";
+            } else {
+              const cardsHtml = data.results.map(createCard).join("");
+              results.insertAdjacentHTML("beforeend", cardsHtml);
+            }
+
+            currentPage++;
+          } catch (e) {
+            console.error("Error fetching popular results:", e);
+          } finally {
+            showLoading(false);
+          }
           return;
         }
 
+        // Search with query
         try {
           const url = `${BASE_URL}/search/${currentType}?api_key=${API_KEY}&language=en-US&query=${encodeURIComponent(
             currentQuery
-          )}&page=${currentPage}${genreParam}`;
+          )}&page=${currentPage}&with_genres=${currentGenre}`;
+          
           const res = await fetch(url);
           const data = await res.json();
 
@@ -186,7 +351,8 @@
           if (currentPage === 1) clearResults();
 
           if (data.results.length === 0 && currentPage === 1) {
-            results.innerHTML = `<p class="col-span-full text-center text-gray-400">No results found.</p>`;
+            noResults.classList.remove("hidden");
+            results.innerHTML = "";
           } else {
             const cardsHtml = data.results.map(createCard).join("");
             results.insertAdjacentHTML("beforeend", cardsHtml);
@@ -203,7 +369,6 @@
       // Handle type toggle switch
       toggleType.addEventListener("change", () => {
         currentType = toggleType.checked ? "tv" : "movie";
-        updateToggleLabel();
         currentPage = 1;
         totalPages = 1;
         currentGenre = "";
@@ -240,14 +405,23 @@
 
       // Init page
       function init() {
-        updateToggleLabel();
         fetchGenres(currentType);
-        // Optionally can focus input here
         searchInput.focus();
+        fetchResults(); // Show popular items by default
       }
 
       init();
     })();
+  </script>
+
+  <script>
+    // Fetch the header.html content and insert it into the #header div
+    fetch('header.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('header').innerHTML = data;
+      })
+      .catch(error => console.error('Error fetching header:', error));
   </script>
 </body>
 </html>
