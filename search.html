@@ -159,17 +159,9 @@
   <!-- Search & Filters -->
   <main class="container mx-auto px-4 py-8">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-      <div class="relative flex-grow">
-        <input
-          type="search"
-          id="searchInput"
-          placeholder="Search for movies or TV series..."
-          class="w-full bg-dark rounded-lg border border-gray-800 px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary transition pl-12"
-          autocomplete="off"
-          autofocus
-        />
-        <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-      </div>
+      <h1 class="text-2xl font-bold">
+        Search Results for: <span id="searchQuery" class="text-primary"></span>
+      </h1>
       
       <div class="flex items-center gap-4">
         <label class="toggle-switch">
@@ -200,6 +192,21 @@
       <h3 class="text-xl font-medium mb-2">No results found</h3>
       <p class="text-gray-400">Try different keywords or filters</p>
     </div>
+
+    <!-- Pagination -->
+    <div id="pagination" class="flex justify-center gap-2 mt-8 hidden">
+      <button id="prevPage" class="bg-dark hover:bg-primary px-4 py-2 rounded-lg disabled:opacity-50">
+        <i class="fas fa-chevron-left mr-2"></i> Previous
+      </button>
+      <div class="flex items-center px-4">
+        <span id="currentPage">1</span>
+        <span class="mx-1">/</span>
+        <span id="totalPages">1</span>
+      </div>
+      <button id="nextPage" class="bg-dark hover:bg-primary px-4 py-2 rounded-lg disabled:opacity-50">
+        Next <i class="fas fa-chevron-right ml-2"></i>
+      </button>
+    </div>
   </main>
 
   <script>
@@ -210,11 +217,16 @@
 
       // Elements
       const toggleType = document.getElementById("toggleType");
-      const searchInput = document.getElementById("searchInput");
       const genreFilter = document.getElementById("genreFilter");
       const results = document.getElementById("results");
       const loading = document.getElementById("loading");
       const noResults = document.getElementById("noResults");
+      const searchQuery = document.getElementById("searchQuery");
+      const pagination = document.getElementById("pagination");
+      const prevPage = document.getElementById("prevPage");
+      const nextPage = document.getElementById("nextPage");
+      const currentPageEl = document.getElementById("currentPage");
+      const totalPagesEl = document.getElementById("totalPages");
 
       // State
       let currentType = "movie"; // 'movie' or 'tv'
@@ -225,13 +237,44 @@
       let isLoading = false;
       let genres = [];
 
-      // Debounce utility
-      function debounce(fn, delay) {
-        let timeout;
-        return (...args) => {
-          clearTimeout(timeout);
-          timeout = setTimeout(() => fn(...args), delay);
+      // Get URL parameters
+      function getUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+          query: params.get('query') || "",
+          page: parseInt(params.get('page')) || 1,
+          genre: params.get('genre') || "",
+          type: params.get('type') || "movie"
         };
+      }
+
+      // Update URL parameters
+      function updateUrlParams() {
+        const params = new URLSearchParams();
+        if (currentQuery) params.set('query', currentQuery);
+        if (currentPage > 1) params.set('page', currentPage);
+        if (currentGenre) params.set('genre', currentGenre);
+        if (currentType !== "movie") params.set('type', currentType);
+        
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.pushState({}, '', newUrl);
+      }
+
+      // Initialize page from URL params
+      function initFromUrl() {
+        const { query, page, genre, type } = getUrlParams();
+        currentQuery = query;
+        currentPage = page;
+        currentGenre = genre;
+        currentType = type;
+        
+        // Update UI to match state
+        searchQuery.textContent = currentQuery || "Popular";
+        toggleType.checked = currentType === "tv";
+        if (genre) genreFilter.value = genre;
+        
+        // Load genres and results
+        fetchGenres(currentType).then(fetchResults);
       }
 
       // Fetch genres for movies and TV and populate genreFilter dropdown
@@ -261,12 +304,22 @@
       function clearResults() {
         results.innerHTML = "";
         noResults.classList.add("hidden");
+        pagination.classList.add("hidden");
       }
 
       // Show/hide loading spinner
       function showLoading(show) {
         loading.style.display = show ? "flex" : "none";
         isLoading = show;
+      }
+
+      // Update pagination controls
+      function updatePagination() {
+        currentPageEl.textContent = currentPage;
+        totalPagesEl.textContent = totalPages;
+        prevPage.disabled = currentPage <= 1;
+        nextPage.disabled = currentPage >= totalPages;
+        pagination.classList.remove("hidden");
       }
 
       // Create card HTML for a movie or TV item
@@ -302,65 +355,63 @@
       // Fetch search results
       async function fetchResults() {
         if (isLoading) return;
-        if (currentPage > totalPages) return;
-
+        
         showLoading(true);
+        clearResults();
 
-        // If no query, show popular items
-        if (!currentQuery.trim()) {
-          try {
-            const url = currentGenre 
-              ? `${BASE_URL}/discover/${currentType}?api_key=${API_KEY}&language=en-US&sort_by=popularity.desc&page=${currentPage}&with_genres=${currentGenre}`
-              : `${BASE_URL}/${currentType}/popular?api_key=${API_KEY}&language=en-US&page=${currentPage}`;
-            
-            const res = await fetch(url);
-            const data = await res.json();
-
-            totalPages = data.total_pages;
-
-            if (currentPage === 1) clearResults();
-
-            if (data.results.length === 0 && currentPage === 1) {
-              noResults.classList.remove("hidden");
-              results.innerHTML = "";
-            } else {
-              const cardsHtml = data.results.map(createCard).join("");
-              results.insertAdjacentHTML("beforeend", cardsHtml);
-            }
-
-            currentPage++;
-          } catch (e) {
-            console.error("Error fetching popular results:", e);
-          } finally {
-            showLoading(false);
-          }
-          return;
-        }
-
-        // Search with query
         try {
-          const url = `${BASE_URL}/search/${currentType}?api_key=${API_KEY}&language=en-US&query=${encodeURIComponent(
-            currentQuery
-          )}&page=${currentPage}&with_genres=${currentGenre}`;
+          let url;
+          if (currentQuery) {
+            // Search with query
+            url = `${BASE_URL}/search/${currentType}?api_key=${API_KEY}&language=en-US&query=${encodeURIComponent(
+              currentQuery
+            )}&page=${currentPage}`;
+            
+            if (currentGenre) {
+              // For search with genre filter, we need to filter client-side
+              const res = await fetch(url);
+              const data = await res.json();
+              
+              // Filter results by genre
+              const filtered = data.results.filter(item => 
+                item.genre_ids.includes(parseInt(currentGenre))
+              );
+              
+              totalPages = Math.ceil(filtered.length / 20); // Approximate pages
+              
+              if (filtered.length === 0) {
+                noResults.classList.remove("hidden");
+              } else {
+                const cardsHtml = filtered.map(createCard).join("");
+                results.innerHTML = cardsHtml;
+                updatePagination();
+              }
+              return;
+            }
+          } else {
+            // Browse popular with optional genre filter
+            if (currentGenre) {
+              url = `${BASE_URL}/discover/${currentType}?api_key=${API_KEY}&language=en-US&sort_by=popularity.desc&page=${currentPage}&with_genres=${currentGenre}`;
+            } else {
+              url = `${BASE_URL}/${currentType}/popular?api_key=${API_KEY}&language=en-US&page=${currentPage}`;
+            }
+          }
           
           const res = await fetch(url);
           const data = await res.json();
 
           totalPages = data.total_pages;
 
-          if (currentPage === 1) clearResults();
-
-          if (data.results.length === 0 && currentPage === 1) {
+          if (data.results.length === 0) {
             noResults.classList.remove("hidden");
-            results.innerHTML = "";
           } else {
             const cardsHtml = data.results.map(createCard).join("");
-            results.insertAdjacentHTML("beforeend", cardsHtml);
+            results.innerHTML = cardsHtml;
+            updatePagination();
           }
-
-          currentPage++;
         } catch (e) {
-          console.error("Error fetching search results:", e);
+          console.error("Error fetching results:", e);
+          noResults.classList.remove("hidden");
         } finally {
           showLoading(false);
         }
@@ -370,47 +421,39 @@
       toggleType.addEventListener("change", () => {
         currentType = toggleType.checked ? "tv" : "movie";
         currentPage = 1;
-        totalPages = 1;
         currentGenre = "";
         genreFilter.value = "";
-        fetchGenres(currentType);
-        fetchResults();
+        updateUrlParams();
+        fetchGenres(currentType).then(fetchResults);
       });
 
       // Handle genre change
       genreFilter.addEventListener("change", () => {
         currentGenre = genreFilter.value;
         currentPage = 1;
-        totalPages = 1;
+        updateUrlParams();
         fetchResults();
       });
 
-      // Handle search input with debounce
-      searchInput.addEventListener("input", debounce(() => {
-        currentQuery = searchInput.value.trim();
-        currentPage = 1;
-        totalPages = 1;
-        fetchResults();
-      }, 500));
-
-      // Infinite scrolling
-      window.addEventListener("scroll", () => {
-        if (
-          window.innerHeight + window.scrollY >=
-          document.body.offsetHeight - 300
-        ) {
+      // Handle pagination
+      prevPage.addEventListener("click", () => {
+        if (currentPage > 1) {
+          currentPage--;
+          updateUrlParams();
           fetchResults();
         }
       });
 
-      // Init page
-      function init() {
-        fetchGenres(currentType);
-        searchInput.focus();
-        fetchResults(); // Show popular items by default
-      }
+      nextPage.addEventListener("click", () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          updateUrlParams();
+          fetchResults();
+        }
+      });
 
-      init();
+      // Initialize page
+      initFromUrl();
     })();
   </script>
 
