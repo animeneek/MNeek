@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MovieNeek | Now Playing</title>
+  <title>MovieNeek | Popular</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script>
@@ -219,7 +219,7 @@
       isLoading = true;
       
       try {
-        const endpoint = contentType === 'movie' ? '/movie/now_playing' : '/tv/on_the_air';
+        const endpoint = contentType === 'movie' ? '/movie/' : '/tv/';
         const response = await fetch(`${BASE_URL}${endpoint}?page=${currentPage}&api_key=${TMDB_API_KEY}`);
         const data = await response.json();
         
