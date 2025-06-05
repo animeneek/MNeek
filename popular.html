@@ -137,7 +137,7 @@
     <!-- Page Title and Toggle -->
     <div class="sticky top-20 md:top-16 z-30 bg-black/80 backdrop-blur-sm py-4">
       <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl md:text-3xl font-bold">Now Playing</h1>
+        <h1 class="text-2xl md:text-3xl font-bold">Popular</h1>
         <label class="toggle-switch">
           <input type="checkbox" id="content-toggle">
           <span class="toggle-slider"></span>
@@ -219,7 +219,7 @@
       isLoading = true;
       
       try {
-        const endpoint = contentType === 'movie' ? '/movie/' : '/tv/';
+        const endpoint = contentType === 'movie' ? '/movie/popular' : '/tv/popular';
         const response = await fetch(`${BASE_URL}${endpoint}?page=${currentPage}&api_key=${TMDB_API_KEY}`);
         const data = await response.json();
         
